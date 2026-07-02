@@ -1,38 +1,48 @@
 "use client";
 
-import React, { useState } from "react";
-import { useBooking, Cabin, User } from "../context/BookingContext";
-import { 
-  Plus, 
-  Trash2, 
-  Edit3, 
-  Wrench, 
-  Settings, 
-  Download, 
-  Users, 
-  HelpCircle,
-  X,
+import {
+  Edit3,
   FileSpreadsheet,
   FileText,
-  Lock,
-  Unlock,
-  CheckCircle,
-  Hash
+  Plus,
+  Settings,
+  Trash2,
+  Users,
+  Wrench,
+  X
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Cabin, useBooking } from "../context/BookingContext";
+import { listOfUsers } from "../http";
 
 export default function AdminView() {
-  const { 
-    cabins, 
-    bookings, 
-    users, 
-    addCabin, 
-    editCabin, 
-    deleteCabin, 
-    toggleCabinMaintenance 
+  const {
+    cabins,
+    bookings,
+    users,
+    addCabin,
+    editCabin,
+    deleteCabin,
+    toggleCabinMaintenance
   } = useBooking();
 
-  const [activeSubTab, setActiveSubTab] = useState<"cabins" | "reports" | "users">("cabins");
+  const [usersList, setUsersList] = useState<any>([]);
+  console.log("🚀 ~ AdminView ~ usersList:", usersList)
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await listOfUsers();
+        setUsersList(response.data);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+
+  const [activeSubTab, setActiveSubTab] = useState<"cabins" | "reports" | "users">("cabins");
   // Cabin Form Dialog
   const [showCabinModal, setShowCabinModal] = useState(false);
   const [editingCabin, setEditingCabin] = useState<Cabin | null>(null);
@@ -133,7 +143,7 @@ export default function AdminView() {
       const cabin = cabins.find(c => c.id === b.cabinId);
       return `"${b.id}","${cabin?.name || 'Deleted'}","${b.userName}","${b.date}","${b.startTime}","${b.endTime}",${b.attendees},"${b.purpose}","${b.department}","${b.status}"`;
     }).join("\n");
-    
+
     const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(headers + rows);
     const link = document.createElement("a");
     link.setAttribute("href", csvContent);
@@ -145,38 +155,35 @@ export default function AdminView() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      
+
       {/* Admin sub navigation tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-px text-xs font-semibold uppercase tracking-wider">
         <button
           onClick={() => setActiveSubTab("cabins")}
-          className={`px-4 py-2 border-b-2 transition-all ${
-            activeSubTab === "cabins" 
-              ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold" 
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-          }`}
+          className={`px-4 py-2 border-b-2 transition-all ${activeSubTab === "cabins"
+            ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold"
+            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            }`}
         >
           Manage Cabins
         </button>
         <button
           onClick={() => setActiveSubTab("reports")}
-          className={`px-4 py-2 border-b-2 transition-all ${
-            activeSubTab === "reports" 
-              ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold" 
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-          }`}
+          className={`px-4 py-2 border-b-2 transition-all ${activeSubTab === "reports"
+            ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold"
+            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            }`}
         >
           Reports & History
         </button>
         <button
           onClick={() => setActiveSubTab("users")}
-          className={`px-4 py-2 border-b-2 transition-all ${
-            activeSubTab === "users" 
-              ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold" 
-              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-          }`}
+          className={`px-4 py-2 border-b-2 transition-all ${activeSubTab === "users"
+            ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold"
+            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+            }`}
         >
-          User Directories
+          User List
         </button>
       </div>
 
@@ -227,23 +234,21 @@ export default function AdminView() {
                       </div>
                     </td>
                     <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        cabin.status === 'available' ? 'bg-emerald-105 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${cabin.status === 'available' ? 'bg-emerald-105 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
                         cabin.status === 'maintenance' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
-                        cabin.status === 'reserved' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' :
-                        'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300'
-                      }`}>
+                          cabin.status === 'reserved' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' :
+                            'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300'
+                        }`}>
                         {cabin.status}
                       </span>
                     </td>
                     <td className="p-3 text-right space-x-1.5 shrink-0">
                       <button
                         onClick={() => toggleCabinMaintenance(cabin.id)}
-                        className={`p-1.5 rounded-lg border transition-colors ${
-                          cabin.status === "maintenance" 
-                            ? "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400" 
-                            : "hover:bg-slate-100 border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
-                        }`}
+                        className={`p-1.5 rounded-lg border transition-colors ${cabin.status === "maintenance"
+                          ? "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
+                          : "hover:bg-slate-100 border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                          }`}
                         title={cabin.status === "maintenance" ? "Put back online" : "Block for maintenance"}
                       >
                         <Wrench size={12} />
@@ -279,7 +284,7 @@ export default function AdminView() {
               <h3 className="font-bold text-slate-800 dark:text-slate-200">System Utilization Reports</h3>
               <p className="text-xs text-slate-400 mt-0.5">Booking logs and statistics logs</p>
             </div>
-            
+
             {/* Export buttons */}
             <div className="flex gap-2">
               <button
@@ -325,11 +330,10 @@ export default function AdminView() {
                       <td className="p-3 font-semibold">{b.startTime} - {b.endTime}</td>
                       <td className="p-3 uppercase">{b.department}</td>
                       <td className="p-3 text-right">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          b.status === 'checked-in' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${b.status === 'checked-in' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
                           b.status === 'confirmed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300' :
-                          'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                        }`}>
+                            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+                          }`}>
                           {b.status}
                         </span>
                       </td>
@@ -347,7 +351,7 @@ export default function AdminView() {
         <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
             <Users size={18} className="text-slate-400" />
-            <h3 className="font-bold text-slate-800 dark:text-slate-200">Active Employee Directory</h3>
+            <h3 className="font-bold text-slate-800 dark:text-slate-200">List of Users {usersList.count > 0 && `(${usersList.count})`}</h3>
           </div>
 
           <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
@@ -355,23 +359,38 @@ export default function AdminView() {
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                   <th className="p-3">Employee Name</th>
-                  <th className="p-3">ID Code</th>
                   <th className="p-3">Email Address</th>
                   <th className="p-3">Department</th>
                   <th className="p-3 text-right">System Role</th>
+                  <th className="p-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {users.map((user) => (
+                {usersList?.users?.length > 0 && usersList.users.map((user: any, index: number) => (
                   <tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
                     <td className="p-3 flex items-center gap-2.5">
                       <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover" />
                       <span className="font-bold text-slate-800 dark:text-slate-200">{user.name}</span>
                     </td>
-                    <td className="p-3 font-mono">{user.empId}</td>
                     <td className="p-3">{user.email}</td>
                     <td className="p-3 uppercase">{user.department}</td>
                     <td className="p-3 text-right font-bold uppercase">{user.role}</td>
+                    <td className="p-3 text-right space-x-1.5 shrink-0">
+                      <button
+                        // onClick={() => handleOpenEdit(cabin)}
+                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                        title="Edit cabin details"
+                      >
+                        <Edit3 size={12} />
+                      </button>
+                      <button
+                        // onClick={() => deleteCabin(cabin.id)}
+                        className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
+                        title="Delete cabin"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -384,12 +403,12 @@ export default function AdminView() {
       {showCabinModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto animate-enter">
-            
+
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <h3 className="text-sm font-bold text-slate-800 dark:text-white">
                 {editingCabin ? `Edit Cabin: ${editingCabin.name}` : "Add New System Cabin"}
               </h3>
-              <button 
+              <button
                 onClick={() => setShowCabinModal(false)}
                 className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
@@ -398,7 +417,7 @@ export default function AdminView() {
             </div>
 
             <form onSubmit={handleCabinFormSubmit} className="space-y-4 text-xs font-semibold">
-              
+
               {/* Name & Type */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div className="space-y-1">
@@ -517,12 +536,12 @@ export default function AdminView() {
                   {availableFacilities.map((fac) => {
                     const isChecked = facilities.includes(fac);
                     return (
-                      <label 
-                        key={fac} 
+                      <label
+                        key={fac}
                         className={`
                           flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none text-[11px] font-semibold transition-all
-                          ${isChecked 
-                            ? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400" 
+                          ${isChecked
+                            ? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400"
                             : "bg-slate-50/50 border-slate-100 hover:bg-slate-100/50 dark:bg-slate-850 dark:border-slate-800/80"}
                         `}
                       >

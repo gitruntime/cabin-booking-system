@@ -1,27 +1,31 @@
 "use client";
 
-import React, { useState } from "react";
-import { useBooking } from "../context/BookingContext";
-import { 
-  LayoutDashboard, 
-  CalendarRange, 
-  Map, 
-  Calendar, 
-  BookmarkCheck, 
-  Bell, 
-  User, 
-  Settings, 
-  LogOut, 
-  Sun, 
-  Moon, 
-  Menu, 
-  X, 
-  Building 
+import {
+  AlertTriangle,
+  Bell,
+  BookmarkCheck,
+  Building,
+  Calendar,
+  CalendarRange,
+  LayoutDashboard,
+  LogOut,
+  Map,
+  Menu,
+  Moon,
+  Settings,
+  Sun,
+  User,
+  X
 } from "lucide-react";
+import { useState } from "react";
+import { useBooking } from "../context/BookingContext";
+import { logoutUser } from "../http";
 
 export default function Sidebar() {
   const { currentTab, setCurrentTab, theme, setTheme, logout, notifications, currentUser } = useBooking();
   const [isOpen, setIsOpen] = useState(false);
+  const [logoutConfirm, setLogoutConfirm] = useState(false);
+  const [loadingSignOut, setLoadingSignOut] = useState(false);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -43,10 +47,25 @@ export default function Sidebar() {
     setIsOpen(false);
   };
 
+  const handleLogout = async () => {
+    setLoadingSignOut(true);
+    try {
+      const response = await logoutUser();
+      if (response.status === 200) {
+        setLogoutConfirm(false);
+        logout();
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    } finally {
+      setLoadingSignOut(false);
+    }
+  }
+
   return (
     <>
       {/* Mobile Toggle Button */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed top-4 left-4 z-50 p-2 rounded-xl bg-white shadow-md text-slate-800 dark:bg-slate-800 dark:text-slate-200 md:hidden"
         aria-label="Toggle Menu"
@@ -70,7 +89,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* User Card */}
+        {/* 
         <div className="mx-4 my-4 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/80 flex items-center gap-3">
           <img 
             src={currentUser.avatar} 
@@ -88,7 +107,7 @@ export default function Sidebar() {
               {currentUser.role}
             </span>
           </div>
-        </div>
+        </div> */}
 
         {/* Navigation list */}
         <nav className="flex-1 space-y-1 px-3 py-2 overflow-y-auto">
@@ -101,14 +120,14 @@ export default function Sidebar() {
                 onClick={() => handleNav(item.id)}
                 className={`
                   flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group
-                  ${isActive 
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 font-semibold" 
+                  ${isActive
+                    ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50"}
                 `}
               >
                 <Icon size={18} className={isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500 group-hover:text-slate-500"} />
                 <span>{item.label}</span>
-                
+
                 {/* Notification badge */}
                 {item.badge && item.badge > 0 ? (
                   <span className="ml-auto flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white leading-none">
@@ -132,8 +151,8 @@ export default function Sidebar() {
                 onClick={() => handleNav(adminItem.id)}
                 className={`
                   flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group
-                  ${currentTab === adminItem.id 
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 font-semibold" 
+                  ${currentTab === adminItem.id
+                    ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 font-semibold"
                     : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50"}
                 `}
               >
@@ -153,22 +172,20 @@ export default function Sidebar() {
           <div className="flex items-center justify-between p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800">
             <button
               onClick={() => setTheme("light")}
-              className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                theme === "light" 
-                  ? "bg-white text-blue-600 shadow-sm" 
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800"
-              }`}
+              className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-medium transition-all ${theme === "light"
+                ? "bg-white text-blue-600 shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-800"
+                }`}
             >
               <Sun size={14} />
               <span>Light</span>
             </button>
             <button
               onClick={() => setTheme("dark")}
-              className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                theme === "dark" 
-                  ? "bg-slate-700 text-blue-400 shadow-sm" 
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-200"
-              }`}
+              className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-lg text-xs font-medium transition-all ${theme === "dark"
+                ? "bg-slate-700 text-blue-400 shadow-sm"
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-200"
+                }`}
             >
               <Moon size={14} />
               <span>Dark</span>
@@ -177,7 +194,7 @@ export default function Sidebar() {
 
           {/* Logout Button */}
           <button
-            onClick={logout}
+            onClick={() => setLogoutConfirm(true)}
             className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50/50 dark:text-red-400 dark:hover:bg-red-950/20 transition-colors"
           >
             <LogOut size={18} />
@@ -186,9 +203,45 @@ export default function Sidebar() {
         </div>
       </aside>
 
+      {/* Logout Confirmation Modal */}
+      {logoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 text-center space-y-4">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/50 text-red-500 dark:text-red-400">
+              <AlertTriangle size={24} />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white">Sign Out?</h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-normal">
+                Are you sure you want to sign out of your account?
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 mt-4">
+              <button
+                onClick={() => setLogoutConfirm(false)}
+                className="flex-1 py-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  handleLogout();
+                }}
+                disabled={loadingSignOut}
+                className={`flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors ${loadingSignOut ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                {loadingSignOut ? "Signing Out..." : "Sign Out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Overlay for mobile drawer */}
       {isOpen && (
-        <div 
+        <div
           onClick={() => setIsOpen(false)}
           className="fixed inset-0 z-30 bg-black/35 backdrop-blur-xs md:hidden"
         />

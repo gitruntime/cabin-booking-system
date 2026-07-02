@@ -62,6 +62,7 @@ interface BookingContextType {
   users: User[];
   currentUser: User;
   isAuthenticated: boolean;
+  setIsAuthenticated: (auth: boolean) => void;
   currentTab: string;
   theme: "light" | "dark";
   notifications: NotificationItem[];
@@ -696,6 +697,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         users: initialUsers,
         currentUser,
         isAuthenticated,
+        setIsAuthenticated,
         currentTab,
         theme,
         notifications,

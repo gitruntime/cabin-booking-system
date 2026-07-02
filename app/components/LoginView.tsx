@@ -1,20 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { useBooking } from "../context/BookingContext";
 import { Building, ShieldCheck, Mail, Lock, AlertCircle, ArrowRight } from "lucide-react";
-
+import { login } from "../http";
+import { useBooking } from "../context/BookingContext";
 export default function LoginView() {
-  const { login } = useBooking();
-  const [emailOrId, setEmailOrId] = useState("alex.rivera@enterprise.com");
-  const [password, setPassword] = useState("password123");
+  const { setIsAuthenticated } = useBooking();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!emailOrId || !password) {
+    if (!email || !password) {
       setError("Please fill in all fields.");
       return;
     }
@@ -22,23 +22,28 @@ export default function LoginView() {
     setLoading(true);
     setError("");
 
-    // Simulate network delay
-    setTimeout(() => {
-      const success = login(emailOrId);
+    try {
+      const res = await login({ email, password });
       setLoading(false);
-      if (!success) {
-        setError("Invalid credentials. Try: alex.rivera@enterprise.com or EMP-4920");
+      if (!res) {
+        setError("Invalid credentials");
       }
-    }, 800);
+      if (res?.status === 200) {
+        setIsAuthenticated(true);
+      }
+    } catch (error: any) {
+      setLoading(false);
+      setError(error?.response?.data?.message || "An error occurred. Please try again.");
+    }
   };
 
   return (
     <div className="flex min-h-screen w-full flex-col lg:flex-row bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      
+
       {/* Left side: Form (Glass Card on Dark background for mobile, or Clean panel on Desktop) */}
-      <div className="flex flex-1 flex-col justify-center items-center px-6 py-12 md:px-12 lg:flex-initial lg:w-[500px] bg-white dark:bg-slate-900 shadow-xl border-r border-slate-100 dark:border-slate-800/50 z-10">
+      <div className="flex flex-1 flex-col justify-center items-center px-6 py-12 md:px-12 lg:flex-initial lg:w-125 bg-white dark:bg-slate-900 shadow-xl border-r border-slate-100 dark:border-slate-800/50 z-10">
         <div className="w-full max-w-md space-y-8">
-          
+
           {/* Logo */}
           <div className="flex items-center gap-3 justify-center lg:justify-start">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-md shadow-blue-500/20">
@@ -58,7 +63,7 @@ export default function LoginView() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            
+
             {/* Display errors */}
             {error && (
               <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-xs">
@@ -70,7 +75,7 @@ export default function LoginView() {
             {/* Email / Emp ID input */}
             <div className="space-y-1.5">
               <label className="text-xs font-semibold text-slate-600 dark:text-slate-400" htmlFor="email">
-                Employee Login (Email or ID)
+                Email
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
@@ -79,10 +84,10 @@ export default function LoginView() {
                 <input
                   id="email"
                   type="text"
-                  placeholder="name@enterprise.com or EMP-XXXX"
-                  value={emailOrId}
-                  onChange={(e) => setEmailOrId(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-100"
+                  placeholder="name@enterprise.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-100"
                 />
               </div>
             </div>
@@ -107,13 +112,13 @@ export default function LoginView() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-100"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 placeholder-slate-400 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-100"
                 />
               </div>
             </div>
 
             {/* Remember Me */}
-            <div className="flex items-center">
+            {/* <div className="flex items-center">
               <input
                 id="remember"
                 type="checkbox"
@@ -124,7 +129,7 @@ export default function LoginView() {
               <label htmlFor="remember" className="ml-2.5 text-xs text-slate-500 dark:text-slate-400 font-medium cursor-pointer selection:bg-transparent">
                 Remember this device for 30 days
               </label>
-            </div>
+            </div> */}
 
             {/* Sign In Button */}
             <button
@@ -154,7 +159,7 @@ export default function LoginView() {
 
       {/* Right side: Modern Office Vector Illustration with Soft Gradients */}
       <div className="hidden lg:flex flex-1 relative bg-gradient-to-tr from-slate-900 via-blue-950 to-slate-900 overflow-hidden items-center justify-center">
-        
+
         {/* Soft Background Gradients Glowing Blobs */}
         <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-blue-600/10 rounded-full filter blur-[100px] animate-pulse-subtle" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-cyan-500/10 rounded-full filter blur-[80px]" />
@@ -165,33 +170,33 @@ export default function LoginView() {
             {/* Grid layout */}
             <path d="M 50,400 L 450,400" stroke="#1e293b" strokeWidth="2" strokeDasharray="5 5" />
             <path d="M 50,200 L 450,200" stroke="#1e293b" strokeWidth="1" strokeDasharray="3 3" />
-            
+
             {/* Building 3D Abstract Box */}
             <rect x="120" y="80" width="260" height="320" rx="20" fill="url(#buildingGrad)" stroke="#1e40af" strokeWidth="2" opacity="0.85" />
-            
+
             {/* Glass window lines */}
             <rect x="150" y="120" width="60" height="50" rx="8" fill="#1d4ed8" fillOpacity="0.15" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.5" />
             <rect x="290" y="120" width="60" height="50" rx="8" fill="#1d4ed8" fillOpacity="0.15" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.5" />
-            
+
             <rect x="150" y="200" width="60" height="50" rx="8" fill="#1d4ed8" fillOpacity="0.15" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.5" />
             <rect x="290" y="200" width="60" height="50" rx="8" fill="#1d4ed8" fillOpacity="0.15" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.5" />
-            
+
             <rect x="150" y="280" width="60" height="50" rx="8" fill="#1d4ed8" fillOpacity="0.15" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.5" />
             <rect x="290" y="280" width="60" height="50" rx="8" fill="#1d4ed8" fillOpacity="0.15" stroke="#3b82f6" strokeWidth="1.5" strokeOpacity="0.5" />
-            
+
             {/* Giant Glass Meeting Room Overlay */}
             <rect x="80" y="170" width="340" height="150" rx="16" fill="url(#meetingRoomGrad)" stroke="#60a5fa" strokeWidth="2" fillOpacity="0.3" className="backdrop-blur-sm" />
-            
+
             {/* Conference Table inside Glass Room */}
             <ellipse cx="250" cy="270" rx="110" ry="22" fill="#1e293b" stroke="#3b82f6" strokeWidth="2.5" />
-            
+
             {/* People dots/seats around the table */}
             <circle cx="160" cy="262" r="7" fill="#60a5fa" />
             <circle cx="210" cy="254" r="7" fill="#60a5fa" />
             <circle cx="250" cy="252" r="7" fill="#93c5fd" />
             <circle cx="290" cy="254" r="7" fill="#60a5fa" />
             <circle cx="340" cy="262" r="7" fill="#60a5fa" />
-            
+
             <circle cx="180" cy="282" r="7" fill="#3b82f6" />
             <circle cx="250" cy="288" r="7" fill="#2563eb" />
             <circle cx="320" cy="282" r="7" fill="#3b82f6" />

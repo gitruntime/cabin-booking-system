@@ -1,28 +1,50 @@
 "use client";
 
-import React from "react";
-import { BookingProvider, useBooking } from "./context/BookingContext";
-import LoginView from "./components/LoginView";
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
-import DashboardView from "./components/DashboardView";
+import { useEffect, useState } from "react";
+import AdminView from "./components/AdminView";
 import BookingView from "./components/BookingView";
-import FloorMapView from "./components/FloorMapView";
 import CalendarView from "./components/CalendarView";
+import DashboardView from "./components/DashboardView";
+import FloorMapView from "./components/FloorMapView";
+import Header from "./components/Header";
+import LoginView from "./components/LoginView";
 import MyBookingsView from "./components/MyBookingsView";
 import NotificationsPanel from "./components/NotificationsPanel";
 import ProfileView from "./components/ProfileView";
-import AdminView from "./components/AdminView";
+import Sidebar from "./components/Sidebar";
+import SplashScreen from "./components/SplashScreen";
+import { BookingProvider, useBooking } from "./context/BookingContext";
+import { profile } from "./http";
 
 function MainAppShell() {
-  const { isAuthenticated, currentTab } = useBooking();
+  const { isAuthenticated, currentTab, setIsAuthenticated, setCurrentUser } = useBooking();
+  const [spalshVisible, setSplashVisible] = useState(true);
 
-  // If not logged in, show login page
+  const checkAuthentication = async () => {
+    try {
+      const response = await profile();
+      if (response?.status === 200) {
+        setCurrentUser(response.data);
+        setIsAuthenticated(true);
+        setSplashVisible(false);
+      }
+    } catch (error) {
+      setSplashVisible(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAuthentication();
+  }, []);
+
+  if (spalshVisible) {
+    return <SplashScreen />;
+  }
+
   if (!isAuthenticated) {
     return <LoginView />;
   }
 
-  // Render active view dynamically based on tab selection
   const renderActiveView = () => {
     switch (currentTab) {
       case "dashboard":
@@ -48,15 +70,9 @@ function MainAppShell() {
 
   return (
     <>
-      {/* Sidebar Navigation */}
       <Sidebar />
-
-      {/* Main Content Pane */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {/* Header Breadcrumbs, digital clock, quick user-switching */}
         <Header />
-
-        {/* Dynamic Inner Tab View */}
         <main className="flex-1 flex flex-col overflow-hidden min-h-0 relative">
           <div className="flex-1 flex flex-col overflow-hidden transition-all duration-200">
             {renderActiveView()}

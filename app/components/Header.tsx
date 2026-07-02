@@ -5,21 +5,21 @@ import { useBooking } from "../context/BookingContext";
 import { Bell, Clock, ChevronDown, Check, UserCircle } from "lucide-react";
 
 export default function Header() {
-  const { 
-    currentTab, 
-    setCurrentTab, 
-    currentUser, 
-    users, 
-    setCurrentUser, 
+  const {
+    currentTab,
+    setCurrentTab,
+    currentUser,
+    users,
+    setCurrentUser,
     notifications,
     markNotificationsAsRead
   } = useBooking();
-  
+
   const [timeStr, setTimeStr] = useState("");
   const [dateStr, setDateStr] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  
+
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +32,7 @@ export default function Header() {
     const updateTime = () => {
       const elapsed = Date.now() - startTime;
       const currentSimulated = new Date(baseTime + elapsed);
-      
+
       const timeFormatter = new Intl.DateTimeFormat("en-US", {
         hour: "numeric",
         minute: "2-digit",
@@ -127,7 +127,7 @@ export default function Header() {
 
         {/* Notifications Quick-Peek */}
         <div className="relative" ref={notifRef}>
-          <button 
+          <button
             onClick={handleBellClick}
             className={`
               relative p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/80 dark:text-slate-300
@@ -147,7 +147,7 @@ export default function Header() {
             <div className="absolute right-0 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950 z-50">
               <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
                 <span className="font-semibold text-sm text-slate-800 dark:text-slate-200">Recent Alerts</span>
-                <button 
+                <button
                   onClick={() => { setCurrentTab("notifications"); setNotifOpen(false); }}
                   className="text-xs text-blue-500 hover:text-blue-600 hover:underline font-medium"
                 >
@@ -159,11 +159,10 @@ export default function Header() {
                 {recentNotifications.length > 0 ? (
                   recentNotifications.map((n) => (
                     <div key={n.id} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
-                        n.type === 'success' ? 'bg-emerald-500' :
-                        n.type === 'warning' ? 'bg-amber-500' :
-                        n.type === 'alert' ? 'bg-rose-500' : 'bg-blue-500'
-                      }`} />
+                      <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${n.type === 'success' ? 'bg-emerald-500' :
+                          n.type === 'warning' ? 'bg-amber-500' :
+                            n.type === 'alert' ? 'bg-rose-500' : 'bg-blue-500'
+                        }`} />
                       <div className="overflow-hidden">
                         <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug">{n.title}</p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
@@ -183,26 +182,28 @@ export default function Header() {
 
         {/* Quick User-Switch Profile */}
         <div className="relative" ref={profileRef}>
-          <button 
-            onClick={() => setProfileOpen(!profileOpen)}
+          <button
+            // onClick={() => setProfileOpen(!profileOpen)}
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/80"
           >
-            <img 
-              src={currentUser.avatar} 
-              alt={currentUser.name} 
-              className="w-7 h-7 rounded-full object-cover" 
-            />
+            {currentUser.avatar ? <img
+              src={currentUser.avatar}
+              alt={currentUser.name}
+              className="w-7 h-7 rounded-full object-cover"
+            /> :
+              <UserCircle size={28} className="text-slate-400 dark:text-slate-500" />
+            }
             <div className="hidden sm:block text-left">
               <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-none">{currentUser.name}</p>
               <span className="text-[9px] text-slate-400 dark:text-slate-500 capitalize">{currentUser.role}</span>
             </div>
-            <ChevronDown size={14} className="text-slate-400" />
+            {/* <ChevronDown size={14} className="text-slate-400" /> */}
           </button>
 
           {profileOpen && (
             <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950 z-50 p-2 space-y-1">
               <p className="px-3 py-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Switch Active Profile</p>
-              
+
               {users.map((user) => (
                 <button
                   key={user.id}
@@ -212,8 +213,8 @@ export default function Header() {
                   }}
                   className={`
                     w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors
-                    ${currentUser.id === user.id 
-                      ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400" 
+                    ${currentUser.id === user.id
+                      ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
                       : "text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900"}
                   `}
                 >
