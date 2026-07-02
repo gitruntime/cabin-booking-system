@@ -281,7 +281,7 @@ export default function AdminView() {
                     <td className="p-3 font-semibold">{cabin.building} • Floor {cabin.floor.split(" ")[0]}</td>
                     <td className="p-3 font-bold">{cabin.capacity} seats</td>
                     <td className="p-3">
-                      <div className="flex flex-wrap gap-1 max-w-[200px]">
+                      <div className="flex flex-wrap gap-1 max-w-50">
                         {cabin.facilities.map((f, i) => (
                           <span key={i} className="px-1.5 py-0.5 text-[9px] bg-slate-100 text-slate-500 rounded dark:bg-slate-800 dark:text-slate-400 font-medium">
                             {f}
@@ -459,9 +459,8 @@ export default function AdminView() {
                                   <Edit3 size={12} />
                                 </button>
                                 <button
-                                  // onClick={() => deleteCabin(cabin.id)}
                                   className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
-                                  title="Delete cabin"
+                                  title="Delete user"
                                 >
                                   <Trash2 size={12} />
                                 </button>

@@ -80,7 +80,7 @@ export default function Sidebar() {
       `}>
         {/* Branding header */}
         <div className="flex h-16 items-center gap-3 px-6 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-md shadow-blue-500/20">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-tr from-blue-600 to-blue-400 text-white shadow-md shadow-blue-500/20">
             <Building size={20} className="animate-pulse-subtle" />
           </div>
           <div>
