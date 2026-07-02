@@ -1,47 +1,114 @@
 "use client";
 
 import {
+  AlertCircle,
+  Camera,
   Edit3,
+  Eye,
+  EyeOff,
   FileSpreadsheet,
   FileText,
   Plus,
   Settings,
   Trash2,
   UserCircle,
+  UserPlus,
   Users,
   Wrench,
   X
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Cabin, useBooking } from "../context/BookingContext";
-import { listOfUsers } from "../http";
+import { listOfUsers, register } from "../http";
+import toast from "react-hot-toast";
 
 export default function AdminView() {
   const {
     cabins,
     bookings,
     addCabin,
+    currentUser,
     editCabin,
     deleteCabin,
     toggleCabinMaintenance
   } = useBooking();
+    console.log("🚀 ~ AdminView ~ currentUser:", currentUser)
 
   const [usersList, setUsersList] = useState<any>([]);
+  const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
         const response = await listOfUsers();
         setUsersList(response.data);
+        setLoadingUsers(false);
       } catch (error) {
         console.error("Error fetching users:", error);
+        setLoadingUsers(false);
       }
     };
     fetchUsers();
-  }, []);
+  }, [showAddUserModal]);
 
 
-  const [activeSubTab, setActiveSubTab] = useState<"cabins" | "reports" | "users">("cabins");
+  const [activeSubTab, setActiveSubTab] = useState<"cabins" | "reports" | "users">("users");
+
+  // Add User Modal
+  const [addUserLoading, setAddUserLoading] = useState(false);
+  const [addUserError, setAddUserError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const [newUserName, setNewUserName] = useState("");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPhone, setNewUserPhone] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
+  const [newUserDept, setNewUserDept] = useState("IT");
+  const [newUserGender, setNewUserGender] = useState("male");
+  const [newUserDesignation, setNewUserDesignation] = useState("");
+  const [newUserAvatar, setNewUserAvatar] = useState<File | null>(null);
+
+  const handleOpenAddUser = () => {
+    setNewUserName(""); setNewUserEmail(""); setNewUserPhone("");
+    setNewUserPassword(""); setNewUserDept("IT"); setNewUserGender("male");
+    setNewUserDesignation(""); setNewUserAvatar(null); setAvatarPreview(null);
+    setAddUserError(""); setShowPassword(false);
+    setShowAddUserModal(true);
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setNewUserAvatar(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  const handleAddUserSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddUserError("");
+    setAddUserLoading(true);
+    try {
+      const response = await register({
+        name: newUserName,
+        email: newUserEmail,
+        phone: newUserPhone,
+        password: newUserPassword,
+        department: newUserDept,
+        designation: newUserDesignation,
+        gender: newUserGender,
+        avatar: newUserAvatar
+      });
+      toast.success(response?.data?.message || "User created successfully!");
+      setShowAddUserModal(false);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to create user. Please try again.");
+    } finally {
+      setAddUserLoading(false);
+    }
+  };
   // Cabin Form Dialog
   const [showCabinModal, setShowCabinModal] = useState(false);
   const [editingCabin, setEditingCabin] = useState<Cabin | null>(null);
@@ -336,54 +403,267 @@ export default function AdminView() {
       )}
 
       {/* SUB TAB: USERS LIST VIEW */}
-      {activeSubTab === "users" && (
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
-            <Users size={18} className="text-slate-400" />
-            <h3 className="font-bold text-slate-800 dark:text-slate-200">List of Users {usersList.count > 0 && `(${usersList.count})`}</h3>
+      {activeSubTab === "users" &&
+        <>
+          <div className="flex justify-end items-start sm:items-center gap-4 pb-2">
+            <button
+              onClick={handleOpenAddUser}
+              className="flex gap-2 items-center p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-xs w-full sm:w-fit justify-center sm:justify-start"
+            >
+              <UserPlus size={18} className="text-white" />
+              Add New User
+            </button>
           </div>
+          {
 
-          <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
-            <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
-                  <th className="p-3">Employee Name</th>
-                  <th className="p-3">Email Address</th>
-                  <th className="p-3">Department</th>
-                  <th className="p-3 text-right">System Role</th>
-                  <th className="p-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {usersList?.users?.length > 0 && usersList.users.map((user: any, index: number) => (
-                  <tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
-                    <td className="p-3 flex items-center gap-2.5">
-                      {user.avatar ? <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover" /> : <UserCircle size={28} className="text-slate-400 dark:text-slate-500" />}
-                      <span className="font-bold text-slate-800 dark:text-slate-200">{user.name}</span>
-                    </td>
-                    <td className="p-3">{user.email}</td>
-                    <td className="p-3 uppercase">{user.department}</td>
-                    <td className="p-3 text-right font-bold uppercase">{user.role}</td>
-                    <td className="p-3 text-right space-x-1.5 shrink-0">
-                      <button
-                        // onClick={() => handleOpenEdit(cabin)}
-                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
-                        title="Edit cabin details"
+            loadingUsers ?
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
+                loading users...
+              </div>
+              :
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
+                  <Users size={18} className="text-slate-400" />
+                  <h3 className="font-bold text-slate-800 dark:text-slate-200">List of Users {usersList.count > 0 && `(${usersList.count})`}</h3>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
+                  <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
+                    <thead>
+                      <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                        <th className="p-3">Employee Name</th>
+                        <th className="p-3">Email Address</th>
+                        <th className="p-3">Department</th>
+                        <th className="p-3 text-right">System Role</th>
+                        <th className="p-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                      {usersList?.users?.length > 0 ?
+                        usersList.users.map((user: any, index: number) => {
+                          return <tr key={user.id}>
+                            <td className="p-3 flex items-center gap-2.5">
+                              {user.avatar ? <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover" /> : <UserCircle size={28} className="text-slate-400 dark:text-slate-500" />}
+                              <span className="font-bold text-slate-800 dark:text-slate-200">{user.name}</span>
+                            </td>
+                            <td className="p-3">{user.email}</td>
+                            <td className="p-3 uppercase">{user.department}</td>
+                            <td className="p-3 text-right font-bold uppercase">{user.role}</td>
+                            {currentUser?._id !== user._id && (
+                              <td className="p-3 text-right space-x-1.5 shrink-0">
+                                <button
+                                  // onClick={() => handleOpenEdit(cabin)}
+                                  className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                                  title="Edit cabin details"
+                                >
+                                  <Edit3 size={12} />
+                                </button>
+                                <button
+                                  // onClick={() => deleteCabin(cabin.id)}
+                                  className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
+                                  title="Delete cabin"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </td>)}
+                          </tr>;
+                        }) : (
+                          <tr>
+                            <td colSpan={5} className="p-3 text-center text-slate-500 dark:text-slate-400">
+                              No users found.
+                            </td>
+                          </tr>
+                        )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+          }
+        </>
+      }
+
+      {/* Add New User Modal */}
+      {showAddUserModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <UserPlus size={16} className="text-blue-600 dark:text-blue-400" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white">Register New User</h3>
+              </div>
+              <button
+                onClick={() => setShowAddUserModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddUserSubmit} className="space-y-4 text-xs font-semibold">
+
+              {/* Error */}
+              {addUserError && (
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-[10px] font-semibold">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>{addUserError}</span>
+                </div>
+              )}
+
+              {/* Avatar Upload */}
+              <div className="flex flex-col items-center gap-2 py-2">
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="relative group w-20 h-20 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 flex items-center justify-center overflow-hidden transition-colors bg-slate-50 dark:bg-slate-800"
+                >
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <UserCircle size={40} className="text-slate-300 dark:text-slate-600" />
+                  )}
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                    <Camera size={18} className="text-white" />
+                  </div>
+                </button>
+                <span className="text-[10px] text-slate-400 font-medium">Click to upload profile photo</span>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+              </div>
+
+              {/* Name & Designation */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Full Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. John Smith"
+                    value={newUserName}
+                    onChange={(e) => setNewUserName(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Designation <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Senior Engineer"
+                    value={newUserDesignation}
+                    onChange={(e) => setNewUserDesignation(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                </div>
+              </div>
+
+              {/* Email & Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Email Address <span className="text-red-500">*</span></label>
+                  <input
+                    type="email"
+                    required
+                    placeholder="user@company.com"
+                    value={newUserEmail}
+                    onChange={(e) => setNewUserEmail(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Mobile Number <span className="text-red-500">*</span></label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="+1 234 567 8900"
+                    value={newUserPhone}
+                    onChange={(e) => setNewUserPhone(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1">
+                <label className="text-slate-600 dark:text-slate-400">Password <span className="text-red-500">*</span></label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    placeholder="Min. 8 characters"
+                    value={newUserPassword}
+                    onChange={(e) => setNewUserPassword(e.target.value)}
+                    className="w-full px-2.5 py-1.5 pr-9 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(p => !p)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  >
+                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Department & Gender */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Department</label>
+                  <select
+                    value={newUserDept}
+                    onChange={(e) => setNewUserDept(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    <option value="IT">IT</option>
+                    <option value="HR">HR</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Executive">Executive</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Operations">Operations</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Gender</label>
+                  <div className="flex gap-2 pt-0.5">
+                    {["male", "female", "other"].map((g) => (
+                      <label
+                        key={g}
+                        className={`flex-1 flex items-center justify-center py-1.5 rounded-lg border cursor-pointer text-[11px] font-semibold capitalize transition-all ${newUserGender === g
+                          ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/20 dark:border-blue-800 dark:text-blue-400"
+                          : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-800"
+                          }`}
                       >
-                        <Edit3 size={12} />
-                      </button>
-                      <button
-                        // onClick={() => deleteCabin(cabin.id)}
-                        className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
-                        title="Delete cabin"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <input
+                          type="radio"
+                          name="gender"
+                          value={g}
+                          checked={newUserGender === g}
+                          onChange={() => setNewUserGender(g)}
+                          className="hidden"
+                        />
+                        {g}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={addUserLoading}
+                className="w-full mt-2 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold transition-colors shadow-md shadow-blue-500/10"
+              >
+                {addUserLoading ? "Creating User..." : "Create User Account"}
+              </button>
+            </form>
           </div>
         </div>
       )}

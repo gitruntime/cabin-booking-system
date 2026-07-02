@@ -17,11 +17,11 @@ export const logoutUser = () => api.post("/auth/logout");
 
 // Admin endpoints
 export const listOfUsers = () => api.get("/users/getAllUsers");
+export const register = (data: any) => api.post("/auth/register", data);
 
 
 
 // export const whoami = () => api.get("/auth/whoami");
-// export const loginWithEmail = (data: any) => api.post("/auth/login?auth_type=email", data);
 // export const register = (data: any) => api.post("/auth/register", data);
 
 
