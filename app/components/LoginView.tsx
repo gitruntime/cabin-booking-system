@@ -141,19 +141,6 @@ export default function LoginView() {
               {!loading && <ArrowRight size={16} />}
             </button>
           </form>
-
-          {/* Quick-Help Hint */}
-          <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 dark:bg-slate-800/30 dark:border-slate-800 space-y-2">
-            <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
-              <ShieldCheck size={14} className="text-emerald-500" />
-              <span>Demo Login Accounts</span>
-            </div>
-            <div className="space-y-1 text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
-              <p>• Admin: <span className="font-mono text-blue-600 dark:text-blue-400 font-bold select-all">alex.rivera@enterprise.com</span> (or <span className="font-mono font-bold select-all text-blue-600 dark:text-blue-400">EMP-4920</span>)</p>
-              <p>• User: <span className="font-mono text-blue-600 dark:text-blue-400 font-bold select-all">sarah.chen@enterprise.com</span> (or <span className="font-mono font-bold select-all text-blue-600 dark:text-blue-400">EMP-3829</span>)</p>
-              <p>• Password: <span className="italic">anything</span></p>
-            </div>
-          </div>
         </div>
       </div>
 
