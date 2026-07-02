@@ -23,11 +23,6 @@ export const listOfUsers = () => api.get("/users/getAllUsers");
 // export const whoami = () => api.get("/auth/whoami");
 // export const loginWithEmail = (data: any) => api.post("/auth/login?auth_type=email", data);
 // export const register = (data: any) => api.post("/auth/register", data);
-// export const updateUser = (data: any) => api.put("/users/update/self", data, {
-//     headers: {
-//         "Content-Type": "multipart/form-data"
-//     }
-// });
 
 
 
@@ -95,9 +90,6 @@ export const listOfUsers = () => api.get("/users/getAllUsers");
 // export const checkout = (data: any, headers: any) => api.post(`/payments/checkout`, data, { headers });
 
 // export const verifyPayment = (data: any, headers: any) => api.post(`/payments/verify`, data, { headers });
-
-// // users endpoint
-// export const deactivateAccount = () => api.delete(`/users`);
 
 
 // // content endpoints

@@ -9,8 +9,6 @@ export default function Header() {
     currentTab,
     setCurrentTab,
     currentUser,
-    users,
-    setCurrentUser,
     notifications,
     markNotificationsAsRead
   } = useBooking();
@@ -160,8 +158,8 @@ export default function Header() {
                   recentNotifications.map((n) => (
                     <div key={n.id} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex gap-2">
                       <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${n.type === 'success' ? 'bg-emerald-500' :
-                          n.type === 'warning' ? 'bg-amber-500' :
-                            n.type === 'alert' ? 'bg-rose-500' : 'bg-blue-500'
+                        n.type === 'warning' ? 'bg-amber-500' :
+                          n.type === 'alert' ? 'bg-rose-500' : 'bg-blue-500'
                         }`} />
                       <div className="overflow-hidden">
                         <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug">{n.title}</p>
@@ -183,7 +181,6 @@ export default function Header() {
         {/* Quick User-Switch Profile */}
         <div className="relative" ref={profileRef}>
           <button
-            // onClick={() => setProfileOpen(!profileOpen)}
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/80"
           >
             {currentUser.avatar ? <img
@@ -197,39 +194,7 @@ export default function Header() {
               <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-none">{currentUser.name}</p>
               <span className="text-[9px] text-slate-400 dark:text-slate-500 capitalize">{currentUser.role}</span>
             </div>
-            {/* <ChevronDown size={14} className="text-slate-400" /> */}
           </button>
-
-          {profileOpen && (
-            <div className="absolute right-0 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950 z-50 p-2 space-y-1">
-              <p className="px-3 py-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Switch Active Profile</p>
-
-              {users.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => {
-                    setCurrentUser(user);
-                    setProfileOpen(false);
-                  }}
-                  className={`
-                    w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors
-                    ${currentUser.id === user.id
-                      ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
-                      : "text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900"}
-                  `}
-                >
-                  <div className="flex items-center gap-2">
-                    <img src={user.avatar} alt={user.name} className="w-6 h-6 rounded-full object-cover" />
-                    <div className="text-left">
-                      <p className="font-semibold">{user.name}</p>
-                      <p className="text-[9px] opacity-75">{user.role.toUpperCase()} • {user.department}</p>
-                    </div>
-                  </div>
-                  {currentUser.id === user.id && <Check size={14} className="text-blue-500 dark:text-blue-400" />}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </header>

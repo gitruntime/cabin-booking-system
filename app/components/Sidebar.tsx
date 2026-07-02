@@ -39,7 +39,7 @@ export default function Sidebar() {
     { id: "profile", label: "Profile", icon: User },
   ];
 
-  // Show Admin view only to admin users
+  // Show Admin view only to admin
   const adminItem = { id: "admin-panel", label: "Admin Panel", icon: Settings };
 
   const handleNav = (tabId: string) => {

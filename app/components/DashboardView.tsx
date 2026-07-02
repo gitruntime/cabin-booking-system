@@ -5,11 +5,9 @@ import { useBooking } from "../context/BookingContext";
 import { 
   Calendar, 
   CheckCircle, 
-  Clock, 
   Map, 
   Plus, 
   TrendingUp, 
-  Users, 
   Activity, 
   Laptop, 
   CheckSquare 

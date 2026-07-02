@@ -7,6 +7,7 @@ import {
   Plus,
   Settings,
   Trash2,
+  UserCircle,
   Users,
   Wrench,
   X
@@ -19,7 +20,6 @@ export default function AdminView() {
   const {
     cabins,
     bookings,
-    users,
     addCabin,
     editCabin,
     deleteCabin,
@@ -27,7 +27,6 @@ export default function AdminView() {
   } = useBooking();
 
   const [usersList, setUsersList] = useState<any>([]);
-  console.log("🚀 ~ AdminView ~ usersList:", usersList)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -153,38 +152,28 @@ export default function AdminView() {
     document.body.removeChild(link);
   };
 
+  const tabs = [
+    { id: "cabins", label: "Manage Cabins" },
+    { id: "reports", label: "Reports & History" },
+    { id: "users", label: "Users List" }
+  ]
+
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
       {/* Admin sub navigation tabs */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-px text-xs font-semibold uppercase tracking-wider">
-        <button
-          onClick={() => setActiveSubTab("cabins")}
-          className={`px-4 py-2 border-b-2 transition-all ${activeSubTab === "cabins"
-            ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold"
-            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-        >
-          Manage Cabins
-        </button>
-        <button
-          onClick={() => setActiveSubTab("reports")}
-          className={`px-4 py-2 border-b-2 transition-all ${activeSubTab === "reports"
-            ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold"
-            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-        >
-          Reports & History
-        </button>
-        <button
-          onClick={() => setActiveSubTab("users")}
-          className={`px-4 py-2 border-b-2 transition-all ${activeSubTab === "users"
-            ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold"
-            : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-            }`}
-        >
-          User List
-        </button>
+        {
+          tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveSubTab(tab.id as any)}
+              className={`px-4 py-2 border-b-2 transition-all ${activeSubTab === tab.id ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"}`}
+            >
+              {tab.label}
+            </button>
+          ))
+        }
       </div>
 
       {/* SUB TAB: CABINS VIEW */}
@@ -369,7 +358,7 @@ export default function AdminView() {
                 {usersList?.users?.length > 0 && usersList.users.map((user: any, index: number) => (
                   <tr key={user.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
                     <td className="p-3 flex items-center gap-2.5">
-                      <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover" />
+                      {user.avatar ? <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover" /> : <UserCircle size={28} className="text-slate-400 dark:text-slate-500" />}
                       <span className="font-bold text-slate-800 dark:text-slate-200">{user.name}</span>
                     </td>
                     <td className="p-3">{user.email}</td>

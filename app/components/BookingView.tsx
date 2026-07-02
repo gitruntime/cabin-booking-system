@@ -1,22 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useBooking, Cabin } from "../context/BookingContext";
-import { 
-  Building, 
-  Layers, 
-  DoorOpen, 
-  Calendar, 
-  Clock, 
-  Users, 
-  Briefcase, 
-  ShieldCheck, 
-  AlertTriangle, 
-  Sparkles, 
-  CheckCircle2, 
-  HelpCircle,
-  Hash
+import {
+  AlertTriangle,
+  Briefcase,
+  Building,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  DoorOpen,
+  Hash,
+  Layers,
+  ShieldCheck,
+  Sparkles,
+  Users
 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Cabin, useBooking } from "../context/BookingContext";
 
 export default function BookingView() {
   const { 

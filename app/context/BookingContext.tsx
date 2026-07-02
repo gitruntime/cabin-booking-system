@@ -36,16 +36,6 @@ export interface Booking {
   createdTime: string;
 }
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  empId: string;
-  department: "HR" | "Finance" | "Executive" | "IT" | "Marketing" | "Sales";
-  role: "admin" | "user";
-  avatar: string;
-}
-
 export interface NotificationItem {
   id: string;
   type: "info" | "success" | "warning" | "alert";
@@ -59,8 +49,7 @@ export interface NotificationItem {
 interface BookingContextType {
   cabins: Cabin[];
   bookings: Booking[];
-  users: User[];
-  currentUser: User;
+  currentUser: any;
   isAuthenticated: boolean;
   setIsAuthenticated: (auth: boolean) => void;
   currentTab: string;
@@ -72,7 +61,7 @@ interface BookingContextType {
   setTheme: (theme: "light" | "dark") => void;
   setSelectedBuilding: (b: "Main HQ" | "West Wing") => void;
   setSelectedFloor: (f: "Ground Floor" | "1st Floor" | "2nd Floor") => void;
-  setCurrentUser: (u: User) => void;
+  setCurrentUser: (u: any) => void;
   
   // Actions
   login: (emailOrEmpId: string) => boolean;
@@ -97,37 +86,6 @@ interface BookingContextType {
 }
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
-
-// Seeds Data
-const initialUsers: User[] = [
-  {
-    id: "u1",
-    name: "Alex Rivera",
-    email: "alex.rivera@enterprise.com",
-    empId: "EMP-4920",
-    department: "IT",
-    role: "admin",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
-  },
-  {
-    id: "u2",
-    name: "Sarah Chen",
-    email: "sarah.chen@enterprise.com",
-    empId: "EMP-3829",
-    department: "Finance",
-    role: "user",
-    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&auto=format&fit=crop&q=80"
-  },
-  {
-    id: "u3",
-    name: "Marcus Vance",
-    email: "marcus.vance@enterprise.com",
-    empId: "EMP-8821",
-    department: "HR",
-    role: "user",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80"
-  }
-];
 
 const initialCabins: Cabin[] = [
   // Ground Floor
@@ -282,7 +240,7 @@ const initialNotifications: NotificationItem[] = [
 ];
 
 export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User>(initialUsers[0]); // Default admin Alex Rivera
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [theme, setThemeState] = useState<"light" | "dark">("light");
@@ -388,20 +346,18 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Auth Operations
   const login = (emailOrEmpId: string): boolean => {
-    const user = initialUsers.find(
-      u => u.email.toLowerCase() === emailOrEmpId.toLowerCase() || u.empId.toLowerCase() === emailOrEmpId.toLowerCase()
-    );
-    if (user) {
-      setCurrentUser(user);
+    
+    if (currentUser && currentUser.email === emailOrEmpId) {
+      setCurrentUser(currentUser);
       setIsAuthenticated(true);
       localStorage.setItem("is_auth", "true");
-      localStorage.setItem("current_user", JSON.stringify(user));
+      localStorage.setItem("current_user", JSON.stringify(currentUser));
       // Notify
       const newNotif: NotificationItem = {
         id: "n_" + Date.now(),
         type: "info",
         title: "Logged In",
-        message: `Welcome back, ${user.name}! Access role: ${user.role.toUpperCase()}.`,
+        message: `Welcome back, ${currentUser.name}! Access role: ${currentUser.role.toUpperCase()}.`,
         time: "Just now",
         timestamp: new Date(),
         read: false
@@ -694,7 +650,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       value={{
         cabins,
         bookings,
-        users: initialUsers,
         currentUser,
         isAuthenticated,
         setIsAuthenticated,
