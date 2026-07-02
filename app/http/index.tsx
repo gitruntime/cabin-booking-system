@@ -18,6 +18,7 @@ export const logoutUser = () => api.post("/auth/logout");
 // Admin endpoints
 export const listOfUsers = () => api.get("/users/getAllUsers");
 export const register = (data: any) => api.post("/auth/register", data);
+export const updateUser = (id: string, data: any) => api.put(`/users/updateUser/${id}`, data);
 
 
 

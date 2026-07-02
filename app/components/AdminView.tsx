@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Cabin, useBooking } from "../context/BookingContext";
-import { listOfUsers, register } from "../http";
+import { listOfUsers, register, updateUser } from "../http";
 import toast from "react-hot-toast";
 
 export default function AdminView() {
@@ -32,11 +32,10 @@ export default function AdminView() {
     deleteCabin,
     toggleCabinMaintenance
   } = useBooking();
-    console.log("🚀 ~ AdminView ~ currentUser:", currentUser)
-
   const [usersList, setUsersList] = useState<any>([]);
   const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [showEditUserModal, setShowEditUserModal] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -50,7 +49,7 @@ export default function AdminView() {
       }
     };
     fetchUsers();
-  }, [showAddUserModal]);
+  }, [showAddUserModal, showEditUserModal]);
 
 
   const [activeSubTab, setActiveSubTab] = useState<"cabins" | "reports" | "users">("users");
@@ -84,6 +83,69 @@ export default function AdminView() {
     if (!file) return;
     setNewUserAvatar(file);
     setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  // Edit User Modal
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editUserLoading, setEditUserLoading] = useState(false);
+  const [editUserError, setEditUserError] = useState("");
+  const [editShowPassword, setEditShowPassword] = useState(false);
+  const [editAvatarPreview, setEditAvatarPreview] = useState<string | null>(null);
+  const editAvatarInputRef = useRef<HTMLInputElement>(null);
+
+  const [editUserName, setEditUserName] = useState("");
+  const [editUserEmail, setEditUserEmail] = useState("");
+  const [editUserPhone, setEditUserPhone] = useState("");
+  const [editUserPassword, setEditUserPassword] = useState("");
+  const [editUserDept, setEditUserDept] = useState("IT");
+  const [editUserGender, setEditUserGender] = useState("male");
+  const [editUserDesignation, setEditUserDesignation] = useState("");
+  const [editUserAvatar, setEditUserAvatar] = useState<File | null>(null);
+
+  const handleOpenEditUser = (user: any) => {
+    setEditingUser(user);
+    setEditUserName(user.name || "");
+    setEditUserEmail(user.email || "");
+    setEditUserPhone(user.phone || "");
+    setEditUserPassword("");
+    setEditUserDept(user.department || "IT");
+    setEditUserGender(user.gender || "male");
+    setEditUserDesignation(user.designation || "");
+    setEditUserAvatar(null);
+    setEditAvatarPreview(user.avatar || null);
+    setEditUserError(""); setEditShowPassword(false);
+    setShowEditUserModal(true);
+  };
+
+  const handleEditAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setEditUserAvatar(file);
+    setEditAvatarPreview(URL.createObjectURL(file));
+  };
+
+  const handleEditUserSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditUserError("");
+    setEditUserLoading(true);
+    try {
+      const response = await updateUser(editingUser._id, {
+        name: editUserName,
+        email: editUserEmail,
+        phone: editUserPhone,
+        department: editUserDept,
+        gender: editUserGender,
+        designation: editUserDesignation,
+        password: editUserPassword,
+        avatar: editUserAvatar
+      });
+      toast.success(response?.data?.message || "User updated successfully!");
+      setShowEditUserModal(false);
+    } catch (err: any) {
+      setEditUserError(err?.response?.data?.message || "Failed to update user.");
+    } finally {
+      setEditUserLoading(false);
+    }
   };
 
   const handleAddUserSubmit = async (e: React.FormEvent) => {
@@ -452,9 +514,9 @@ export default function AdminView() {
                             {currentUser?._id !== user._id && (
                               <td className="p-3 text-right space-x-1.5 shrink-0">
                                 <button
-                                  // onClick={() => handleOpenEdit(cabin)}
+                                  onClick={() => handleOpenEditUser(user)}
                                   className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
-                                  title="Edit cabin details"
+                                  title="Edit user details"
                                 >
                                   <Edit3 size={12} />
                                 </button>
@@ -661,6 +723,189 @@ export default function AdminView() {
                 className="w-full mt-2 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold transition-colors shadow-md shadow-blue-500/10"
               >
                 {addUserLoading ? "Creating User..." : "Create User Account"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditUserModal && editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto">
+
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <Edit3 size={16} className="text-blue-600 dark:text-blue-400" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white">Edit User: {editingUser.name}</h3>
+              </div>
+              <button
+                onClick={() => setShowEditUserModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditUserSubmit} className="space-y-4 text-xs font-semibold">
+
+              {/* Error */}
+              {editUserError && (
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-[10px] font-semibold">
+                  <AlertCircle size={14} className="shrink-0" />
+                  <span>{editUserError}</span>
+                </div>
+              )}
+
+              {/* Avatar Upload */}
+              <div className="flex flex-col items-center gap-2 py-2">
+                <button
+                  type="button"
+                  onClick={() => editAvatarInputRef.current?.click()}
+                  className="relative group w-20 h-20 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-400 flex items-center justify-center overflow-hidden transition-colors bg-slate-50 dark:bg-slate-800"
+                >
+                  {editAvatarPreview ? (
+                    <img src={editAvatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <UserCircle size={40} className="text-slate-300 dark:text-slate-600" />
+                  )}
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                    <Camera size={18} className="text-white" />
+                  </div>
+                </button>
+                <span className="text-[10px] text-slate-400 font-medium">Click to change profile photo</span>
+                <input
+                  ref={editAvatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleEditAvatarChange}
+                />
+              </div>
+
+              {/* Name & Designation */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Full Name <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    value={editUserName}
+                    onChange={(e) => setEditUserName(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Designation <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Senior Engineer"
+                    value={editUserDesignation}
+                    onChange={(e) => setEditUserDesignation(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                </div>
+              </div>
+
+              {/* Email & Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Email Address <span className="text-red-500">*</span></label>
+                  <input
+                    type="email"
+                    required
+                    value={editUserEmail}
+                    onChange={(e) => setEditUserEmail(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Mobile Number</label>
+                  <input
+                    type="tel"
+                    placeholder="+1 234 567 8900"
+                    value={editUserPhone}
+                    onChange={(e) => setEditUserPhone(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                </div>
+              </div>
+
+              {/* New Password (optional) */}
+              <div className="space-y-1">
+                <label className="text-slate-600 dark:text-slate-400">New Password <span className="text-slate-400 font-normal">(leave blank to keep current)</span></label>
+                <div className="relative">
+                  <input
+                    type={editShowPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    value={editUserPassword}
+                    onChange={(e) => setEditUserPassword(e.target.value)}
+                    className="w-full px-2.5 py-1.5 pr-9 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditShowPassword(p => !p)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  >
+                    {editShowPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Department & Gender */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Department</label>
+                  <select
+                    value={editUserDept}
+                    onChange={(e) => setEditUserDept(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  >
+                    <option value="IT">IT</option>
+                    <option value="HR">HR</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Executive">Executive</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Sales">Sales</option>
+                    <option value="Operations">Operations</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-slate-600 dark:text-slate-400">Gender</label>
+                  <div className="flex gap-2 pt-0.5">
+                    {["male", "female", "other"].map((g) => (
+                      <label
+                        key={g}
+                        className={`flex-1 flex items-center justify-center py-1.5 rounded-lg border cursor-pointer text-[11px] font-semibold capitalize transition-all ${
+                          editUserGender === g
+                            ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/20 dark:border-blue-800 dark:text-blue-400"
+                            : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-800"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="edit-gender"
+                          value={g}
+                          checked={editUserGender === g}
+                          onChange={() => setEditUserGender(g)}
+                          className="hidden"
+                        />
+                        {g}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={editUserLoading}
+                className="w-full mt-2 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold transition-colors shadow-md shadow-blue-500/10"
+              >
+                {editUserLoading ? "Saving Changes..." : "Save Changes"}
               </button>
             </form>
           </div>
