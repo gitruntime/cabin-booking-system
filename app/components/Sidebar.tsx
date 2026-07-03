@@ -8,12 +8,12 @@ import {
   Calendar,
   CalendarRange,
   ChartColumnDecreasing,
+  History,
   LayoutDashboard,
   LogOut,
   Map,
   Menu,
   Moon,
-  History,
   Sun,
   User,
   Users,
@@ -24,7 +24,7 @@ import { useBooking } from "../context/BookingContext";
 import { logoutUser } from "../http";
 
 export default function Sidebar() {
-  const { currentTab, setCurrentTab, theme, setTheme, logout, notifications, currentUser } = useBooking();
+  const { currentTab, setCurrentTab, theme, setTheme, notifications, currentUser } = useBooking();
   const [isOpen, setIsOpen] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [loadingSignOut, setLoadingSignOut] = useState(false);
@@ -59,7 +59,6 @@ export default function Sidebar() {
       const response = await logoutUser();
       if (response.status === 200) {
         setLogoutConfirm(false);
-        logout();
       }
     } catch (error) {
       console.error("Error during logout:", error);

@@ -59,8 +59,6 @@ interface BookingContextType {
   setCurrentUser: (u: any) => void;
 
   // Actions
-  login: (emailOrEmpId: string) => boolean;
-  logout: () => void;
   addBooking: (booking: Omit<Booking, "id" | "userName" | "createdTime" | "status">) => { success: boolean; error?: string };
   cancelBooking: (id: string) => void;
   checkInBooking: (id: string) => void;
@@ -340,37 +338,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .slice(0, 3); // Top 3 recommendations
   };
 
-  // Auth Operations
-  const login = (emailOrEmpId: string): boolean => {
-
-    if (currentUser && currentUser.email === emailOrEmpId) {
-      setCurrentUser(currentUser);
-      setIsAuthenticated(true);
-      localStorage.setItem("is_auth", "true");
-      localStorage.setItem("current_user", JSON.stringify(currentUser));
-      // Notify
-      const newNotif: NotificationItem = {
-        id: "n_" + Date.now(),
-        type: "info",
-        title: "Logged In",
-        message: `Welcome back, ${currentUser.name}! Access role: ${currentUser.role.toUpperCase()}.`,
-        time: "Just now",
-        timestamp: new Date(),
-        read: false
-      };
-      setNotifications(prev => [newNotif, ...prev]);
-      return true;
-    }
-    return false;
-  };
-
-  const logout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem("is_auth");
-    localStorage.removeItem("current_user");
-    setCurrentTab("dashboard");
-  };
-
   // Booking Actions
   const addBooking = (bookingData: Omit<Booking, "id" | "userName" | "createdTime" | "status">) => {
     const conflicts = detectConflicts(bookingData.cabinId, bookingData.date, bookingData.startTime, bookingData.endTime);
@@ -610,8 +577,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setSelectedFloor,
         setCurrentUser,
 
-        login,
-        logout,
         addBooking,
         cancelBooking,
         checkInBooking,
