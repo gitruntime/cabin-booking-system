@@ -17,7 +17,6 @@ import { CabinType } from "@/app/Types/Cabin";
 
 export default function CabinatesHandle() {
   const { cabinList, setCabinList } = useBooking();
-  const [cabins, setCabins] = useState<CabinType[]>([]);
   const [loadingCabins, setLoadingCabins] = useState(true);
 
   // Maintenance Confirmation
@@ -30,7 +29,7 @@ export default function CabinatesHandle() {
     try {
       const res = await toggleMaintainanceApi(cabinToToggle._id);
       const newStatus = cabinToToggle.status === "maintenance" ? "available" : "maintenance";
-      setCabins(prev => prev.map(c => c._id === cabinToToggle._id ? { ...c, status: newStatus } : c));
+      setCabinList(prev => prev.map(c => c._id === cabinToToggle._id ? { ...c, status: newStatus } : c));
       toast.success(res?.data?.message || `Cabin marked as ${newStatus}.`);
       setCabinToToggle(null);
     } catch (err: any) {
@@ -49,7 +48,7 @@ export default function CabinatesHandle() {
     setDeleting(true);
     try {
       const res = await deleteCabinApi(cabinToDelete._id);
-      setCabins(prev => prev.filter(c => c._id !== cabinToDelete._id));
+      setCabinList(prev => prev.filter(c => c._id !== cabinToDelete._id));
       toast.success(res?.data?.message || "Cabin deleted successfully!");
       setCabinToDelete(null);
     } catch (err: any) {
@@ -142,7 +141,7 @@ export default function CabinatesHandle() {
     try {
       if (editingCabin) {
         const res = await updateCabin(editingCabin._id, cabinData);
-        setCabins(prev => prev.map(c => c._id === editingCabin._id ? { ...c, ...cabinData } : c));
+        setCabinList(prev => prev.map(c => c._id === editingCabin._id ? { ...c, ...cabinData } : c));
         toast.success(res?.data?.message || "Cabin updated successfully!");
       } else {
         const res = await createCabin(cabinData);
@@ -158,10 +157,14 @@ export default function CabinatesHandle() {
 
   useEffect(() => {
     const fetchCabins = async () => {
-      setLoadingCabins(true);
+      if (cabinList.length === 0) {
+        setLoadingCabins(true);
+      } else {
+        setLoadingCabins(false);
+      }
       try {
         const res = await getCabins();
-        setCabins(res?.data || []);
+        setCabinList(res?.data || []);
         setLoadingCabins(false);
       } catch (err) {
         console.error("Failed to fetch cabins:", err);
@@ -207,7 +210,7 @@ export default function CabinatesHandle() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {cabins.map((cabin, i) => (
+                {cabinList.map((cabin, i) => (
                   <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
                     <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{cabin.name}</td>
                     <td className="p-3 capitalize">{cabin.type}</td>

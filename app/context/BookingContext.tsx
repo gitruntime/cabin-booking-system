@@ -34,7 +34,7 @@ interface BookingContextType {
   userList: UserList;
   setUserList: (list: UserList) => void;
   cabinList: CabinType[];
-  setCabinList: (list: CabinType[]) => void;
+  setCabinList: React.Dispatch<React.SetStateAction<CabinType[]>>;
 
 
   cabins: CabinType[];
