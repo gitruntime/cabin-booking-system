@@ -19,11 +19,7 @@ import { deleteUser, listOfUsers, register, updateUser } from "../../http";
 
 export default function UsersList() {
   const {
-    cabins,
-    bookings,
-    addCabin,
     currentUser,
-    editCabin,
   } = useBooking();
   const [usersList, setUsersList] = useState<any>([]);
   const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
@@ -45,7 +41,6 @@ export default function UsersList() {
   }, [showAddUserModal, showEditUserModal]);
 
 
-  const [activeSubTab, setActiveSubTab] = useState<"cabins" | "reports" | "users">("users");
 
   // Add User Modal
   const [addUserLoading, setAddUserLoading] = useState(false);
@@ -196,47 +191,7 @@ export default function UsersList() {
   const [showCabinModal, setShowCabinModal] = useState(false);
   const [editingCabin, setEditingCabin] = useState<Cabin | null>(null);
 
-  // Cabin Form Inputs
-  const [cabinName, setCabinName] = useState("");
-  const [cabinType, setCabinType] = useState<Cabin["type"]>("cabin");
-  const [building, setBuilding] = useState<Cabin["building"]>("Main HQ");
-  const [floor, setFloor] = useState<Cabin["floor"]>("1st Floor");
-  const [capacity, setCapacity] = useState(4);
-  const [facilities, setFacilities] = useState<Cabin["facilities"]>(["TV", "Whiteboard"]);
-  const [dept, setDept] = useState<Cabin["department"]>("None");
-  const [mapX, setMapX] = useState(25);
-  const [mapY, setMapY] = useState(25);
-  const [mapW, setMapW] = useState(15);
-  const [mapH, setMapH] = useState(15);
 
-
-
-  const handleCabinFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cabinName.trim()) return;
-
-    const cabinData = {
-      name: cabinName,
-      type: cabinType,
-      building,
-      floor,
-      capacity,
-      facilities,
-      status: (editingCabin ? editingCabin.status : "available") as Cabin["status"],
-      department: dept,
-      x: Number(mapX),
-      y: Number(mapY),
-      w: Number(mapW),
-      h: Number(mapH)
-    };
-
-    if (editingCabin) {
-      editCabin({ ...cabinData, id: editingCabin.id });
-    } else {
-      addCabin(cabinData);
-    }
-    setShowCabinModal(false);
-  };
 
 
   return (
@@ -732,139 +687,6 @@ export default function UsersList() {
         </div>
       )}
 
-      {/* Cabin Edit/Add Modal Dialog */}
-      {showCabinModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 space-y-4 max-h-[90vh] overflow-y-auto animate-enter">
-
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-white">
-                {editingCabin ? `Edit Cabin: ${editingCabin.name}` : "Add New System Cabin"}
-              </h3>
-              <button
-                onClick={() => setShowCabinModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCabinFormSubmit} className="space-y-4 text-xs font-semibold">
-
-              {/* Name & Type */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1">
-                  <label className="text-slate-600 dark:text-slate-400">Cabin / Room Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="E.g., Board Room C"
-                    value={cabinName}
-                    onChange={(e) => setCabinName(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-slate-600 dark:text-slate-400">Room Type</label>
-                  <select
-                    value={cabinType}
-                    onChange={(e) => setCabinType(e.target.value as any)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                  >
-                    <option value="cabin">Individual Cabin</option>
-                    <option value="conference">Conference Hall</option>
-                    <option value="meeting">Standard Meeting Room</option>
-                    <option value="boardroom">Board Room</option>
-                    <option value="pod">Acoustic Pod</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Building & Floor & Capacity */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <div className="space-y-1">
-                  <label className="text-slate-600 dark:text-slate-400">Building</label>
-                  <select
-                    value={building}
-                    onChange={(e) => setBuilding(e.target.value as any)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                  >
-                    <option value="Main HQ">Main HQ</option>
-                    <option value="West Wing">West Wing</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-slate-600 dark:text-slate-400">Floor</label>
-                  <select
-                    value={floor}
-                    onChange={(e) => setFloor(e.target.value as any)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                  >
-                    <option value="Ground Floor">Ground Floor</option>
-                    <option value="1st Floor">1st Floor</option>
-                    <option value="2nd Floor">2nd Floor</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-slate-600 dark:text-slate-400">Max Capacity</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={capacity}
-                    onChange={(e) => setCapacity(parseInt(e.target.value) || 1)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                  />
-                </div>
-              </div>
-
-              {/* Department Assignment */}
-              <div className="space-y-1">
-                <label className="text-slate-600 dark:text-slate-400">Assigned Department (Dedicated Rooms)</label>
-                <select
-                  value={dept}
-                  onChange={(e) => setDept(e.target.value as any)}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                >
-                  <option value="None">None (Shared Space)</option>
-                  <option value="IT">IT</option>
-                  <option value="HR">HR</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Executive">Executive</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Sales">Sales</option>
-                </select>
-              </div>
-
-              {/* Interactive Floor map positions percentages */}
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-850 space-y-2 border border-slate-100 dark:border-slate-800/80">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Interactive Floor Map Coordinates (%)</p>
-                <div className="grid grid-cols-4 gap-2.5 font-normal text-xs">
-                  <div className="space-y-0.5">
-                    <label className="text-[10px] font-semibold text-slate-500">X Position</label>
-                    <input type="number" min="0" max="100" value={mapX} onChange={(e) => setMapX(Number(e.target.value))} className="w-full p-1.5 border border-slate-250 bg-white rounded dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <label className="text-[10px] font-semibold text-slate-500">Y Position</label>
-                    <input type="number" min="0" max="100" value={mapY} onChange={(e) => setMapY(Number(e.target.value))} className="w-full p-1.5 border border-slate-250 bg-white rounded dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <label className="text-[10px] font-semibold text-slate-500">Width</label>
-                    <input type="number" min="5" max="50" value={mapW} onChange={(e) => setMapW(Number(e.target.value))} className="w-full p-1.5 border border-slate-250 bg-white rounded dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <label className="text-[10px] font-semibold text-slate-500">Height</label>
-                    <input type="number" min="5" max="50" value={mapH} onChange={(e) => setMapH(Number(e.target.value))} className="w-full p-1.5 border border-slate-250 bg-white rounded dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" />
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
