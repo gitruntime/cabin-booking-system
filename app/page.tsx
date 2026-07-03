@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminView from "./components/AdminView";
+import AdminView from "./components/Admin/AdminView";
 import BookingView from "./components/BookingView";
 import CalendarView from "./components/CalendarView";
 import DashboardView from "./components/DashboardView";
@@ -15,6 +15,7 @@ import Sidebar from "./components/Sidebar";
 import SplashScreen from "./components/SplashScreen";
 import { BookingProvider, useBooking } from "./context/BookingContext";
 import { profile } from "./http";
+import UsersList from "./components/Admin/UsersList";
 
 function MainAppShell() {
   const { isAuthenticated, currentTab, setIsAuthenticated, setCurrentUser } = useBooking();
@@ -63,6 +64,8 @@ function MainAppShell() {
         return <ProfileView />;
       case "admin-panel":
         return <AdminView />;
+      case "users":
+        return <UsersList />;
       default:
         return <DashboardView />;
     }

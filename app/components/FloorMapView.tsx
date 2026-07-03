@@ -182,10 +182,10 @@ export default function FloorMapView() {
       </div>
 
       {/* SVG Interactive Map Area */}
-      <div className="p-4 md:p-6 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs flex justify-center items-center relative overflow-x-auto min-h-[450px]">
+      <div className="p-4 md:p-6 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs flex justify-center items-center relative overflow-x-auto min-h-112.5">
         
         {/* SVG Container */}
-        <div className="w-full max-w-[800px] aspect-[800/500] relative bg-slate-50 border border-slate-100 rounded-xl dark:bg-slate-950/40 dark:border-slate-800/50">
+        <div className="w-full max-w-200 aspect-800/500 relative bg-slate-50 border border-slate-100 rounded-xl dark:bg-slate-950/40 dark:border-slate-800/50">
           <svg viewBox="0 0 800 500" className="w-full h-full select-none">
             {/* Background Hallways / Grid outline */}
             <path d="M 0,250 L 800,250" stroke="#cbd5e1" strokeWidth="20" strokeLinecap="square" className="dark:stroke-slate-900" opacity="0.3" />

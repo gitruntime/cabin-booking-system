@@ -31,18 +31,20 @@ export default function Header() {
       const elapsed = Date.now() - startTime;
       const currentSimulated = new Date(baseTime + elapsed);
 
-      const timeFormatter = new Intl.DateTimeFormat("en-US", {
+      const timeFormatter = new Intl.DateTimeFormat("en-IN", {
         hour: "numeric",
         minute: "2-digit",
         second: "2-digit",
-        hour12: true
+        hour12: true,
+        timeZone: "Asia/Kolkata"
       });
 
-      const dateFormatter = new Intl.DateTimeFormat("en-US", {
+      const dateFormatter = new Intl.DateTimeFormat("en-IN", {
         weekday: "short",
         month: "short",
         day: "numeric",
-        year: "numeric"
+        year: "numeric",
+        timeZone: "Asia/Kolkata"
       });
 
       setTimeStr(timeFormatter.format(currentSimulated));

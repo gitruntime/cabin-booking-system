@@ -15,6 +15,7 @@ import {
   Settings,
   Sun,
   User,
+  Users,
   X
 } from "lucide-react";
 import { useState } from "react";
@@ -40,7 +41,10 @@ export default function Sidebar() {
   ];
 
   // Show Admin view only to admin
-  const adminItem = { id: "admin-panel", label: "Admin Panel", icon: Settings };
+  const adminItems = [
+    { id: "admin-panel", label: "Admin Panel", icon: Settings },
+    { id: "users", label: "Users", icon: Users },
+  ];
 
   const handleNav = (tabId: string) => {
     setCurrentTab(tabId);
@@ -147,21 +151,24 @@ export default function Sidebar() {
           {currentUser && currentUser?.role === "admin" && (
             <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
               <p className="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Management</p>
-              <button
-                onClick={() => handleNav(adminItem.id)}
-                className={`
-                  flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group
-                  ${currentTab === adminItem.id
-                    ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 font-semibold"
-                    : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50"}
+              {adminItems.map((adminItem: any, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => handleNav(adminItem.id)}
+                  className={`
+                    flex w-full items-center mt-1 gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative group
+                    ${currentTab === adminItem.id
+                      ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 font-semibold"
+                      : "text-slate-600 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50"}
                 `}
-              >
-                <adminItem.icon size={18} className={currentTab === adminItem.id ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500"} />
-                <span>{adminItem.label}</span>
-                {currentTab === adminItem.id && (
-                  <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-md bg-blue-600 dark:bg-blue-400" />
-                )}
-              </button>
+                >
+                  <adminItem.icon size={18} className={currentTab === adminItem.id ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500"} />
+                  <span>{adminItem.label}</span>
+                  {currentTab === adminItem.id && (
+                    <div className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-md bg-blue-600 dark:bg-blue-400" />
+                  )}
+                </button>
+              ))}
             </div>
           )}
         </nav>
