@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useBooking } from "../../context/BookingContext";
-import { cabinFacilities, departments } from "@/app/Data";
+import { buildings, cabinFacilities, departments } from "@/app/Data";
 import { createCabin, getCabins, updateCabin, deleteCabin as deleteCabinApi, toggleMaintainance as toggleMaintainanceApi } from "../../http";
 import toast from "react-hot-toast";
 import { CabinType } from "@/app/Types/Cabin";
@@ -401,8 +401,11 @@ export default function CabinatesHandle() {
                     onChange={(e) => setBuilding(e.target.value as any)}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <option value="Main HQ">Main HQ</option>
-                    <option value="West Wing">West Wing</option>
+                    {
+                      buildings.map((bld, i) => (
+                        <option key={i} value={bld}>{bld}</option>
+                      ))
+                    }
                   </select>
                 </div>
 

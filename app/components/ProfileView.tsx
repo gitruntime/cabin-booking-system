@@ -2,19 +2,20 @@
 
 import React, { useState } from "react";
 import { useBooking } from "../context/BookingContext";
-import { 
-  User, 
-  Mail, 
-  Shield, 
-  MapPin, 
-  Layers, 
-  Hourglass, 
-  Video, 
+import {
+  User,
+  Mail,
+  Shield,
+  MapPin,
+  Layers,
+  Hourglass,
+  Video,
   SlidersHorizontal,
   Save,
   CheckCircle2,
   CalendarDays
 } from "lucide-react";
+import { buildings } from "../Data";
 
 export default function ProfileView() {
   const { currentUser, bookings, selectedBuilding, setSelectedBuilding, selectedFloor, setSelectedFloor } = useBooking();
@@ -23,7 +24,7 @@ export default function ProfileView() {
   // Compute profile statistics
   const userBookings = bookings.filter(b => b.userId === currentUser?.id && b.status !== "cancelled");
   const totalMeetings = userBookings.length;
-  
+
   const totalHours = userBookings.reduce((sum, b) => {
     return sum + (b.duration / 60);
   }, 0);
@@ -43,17 +44,17 @@ export default function ProfileView() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* Left Column: Personal details */}
         <div className="md:col-span-1 p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs flex flex-col items-center text-center space-y-4">
-          {currentUser && currentUser?.avatar ? <img 
-            src={currentUser?.avatar} 
-            alt={currentUser?.name} 
-            className="w-24 h-24 rounded-full border-2 border-blue-500/20 shadow-md object-cover mt-2" 
+          {currentUser && currentUser?.avatar ? <img
+            src={currentUser?.avatar}
+            alt={currentUser?.name}
+            className="w-24 h-24 rounded-full border-2 border-blue-500/20 shadow-md object-cover mt-2"
           /> : <User size={96} className="text-slate-400 dark:text-slate-500 mt-2" />}
-          
+
           <div>
             <h3 className="text-base font-bold text-slate-800 dark:text-white leading-tight">{currentUser?.name}</h3>
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 inline-block">
@@ -90,10 +91,10 @@ export default function ProfileView() {
 
         {/* Right Columns: Metrics & Preferences settings */}
         <div className="md:col-span-2 space-y-6">
-          
+
           {/* Metrics Row */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            
+
             <div className="p-4 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
                 <CalendarDays size={18} />
@@ -133,7 +134,7 @@ export default function ProfileView() {
             </div>
 
             <form onSubmit={handleSavePreferences} className="space-y-4 text-xs font-semibold">
-              
+
               {successMsg && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 text-xs">
                   <CheckCircle2 size={16} className="shrink-0" />
@@ -153,8 +154,11 @@ export default function ProfileView() {
                     onChange={(e) => setSelectedBuilding(e.target.value as any)}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-205 bg-slate-50 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <option value="Main HQ">Main HQ Building</option>
-                    <option value="West Wing">West Wing Wing</option>
+                    {
+                      buildings.map((bld, i) => (
+                        <option key={i} value={bld}>{bld}</option>
+                      ))
+                    }
                   </select>
                 </div>
 

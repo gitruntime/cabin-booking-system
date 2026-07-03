@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { useBooking } from "../context/BookingContext";
-import { departments } from "../Data";
+import { buildings, departments } from "../Data";
 import { CabinType } from "../Types/Cabin";
 
 export default function FloorMapView() {
@@ -134,8 +134,11 @@ export default function FloorMapView() {
               onChange={(e) => setSelectedBuilding(e.target.value as any)}
               className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs font-semibold outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
             >
-              <option value="Main HQ">Main HQ Building</option>
-              <option value="West Wing">West Wing Wing</option>
+              {
+                buildings.map((bld, i) => (
+                  <option key={i} value={bld}>{bld}</option>
+                ))
+              }
             </select>
           </div>
 
@@ -346,7 +349,7 @@ export default function FloorMapView() {
             <div className="space-y-1 border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="text-[9px] font-bold text-slate-400 uppercase">Facilities</span>
               <div className="flex flex-wrap gap-1 mt-0.5">
-                {hoveredCabin.facilities.map((fac:any, idx:number) => (
+                {hoveredCabin.facilities.map((fac: any, idx: number) => (
                   <div key={idx} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[8px] font-semibold">
                     {getFacilityIcon(fac)}
                     <span>{fac}</span>
