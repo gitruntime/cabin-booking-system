@@ -231,11 +231,11 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userList, setUserList] = useState<UserList>({ users: [], count: 0 });
   const [cabinList, setCabinList] = useState<CabinType[]>([]);
-
-
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [theme, setThemeState] = useState<"light" | "dark">("light");
+
+
   const [selectedBuilding, setSelectedBuilding] = useState<"Main HQ" | "West Wing">("Main HQ");
   const [selectedFloor, setSelectedFloor] = useState<"Ground Floor" | "1st Floor" | "2nd Floor">("1st Floor");
 

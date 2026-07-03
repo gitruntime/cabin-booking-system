@@ -4,6 +4,6 @@ export const cabinFacilities = ['Projector', 'TV', 'Whiteboard', 'Video Conferen
 
 export const cabinStatuses = ['available', 'occupied', 'reserved', 'maintenance'];
 
-export const cabinBuildings = ['Main HQ'];
+export const buildings = ['Main HQ'];
 export const cabinFloors = ['Ground Floor', '1st Floor', '2nd Floor'];
 export const roomTypes = ['Individual Cabin', 'Conference Room', 'Standard Meeting Room', 'Board Room', 'Acoustic Room', 'Presidential Suite'];
