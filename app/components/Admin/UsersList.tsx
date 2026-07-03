@@ -3,9 +3,9 @@
 import { AlertCircle, Camera, Edit3, Eye, EyeOff, Trash2, UserCircle, UserPlus, Users, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { Cabin, useBooking } from "../../context/BookingContext";
-import { deleteUser, listOfUsers, register, updateUser } from "../../http";
+import { useBooking } from "../../context/BookingContext";
 import { departments } from "../../Data";
+import { deleteUser, listOfUsers, register, updateUser } from "../../http";
 
 export default function UsersList() {
   const {
