@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { UserList } from "../Types/User";
 
 // Types
 export interface Cabin {
@@ -13,7 +14,7 @@ export interface Cabin {
   facilities: any[];
   status: any;
   department?: string
-  x: number; 
+  x: number;
   y: number;
   w: number;
   h: number;
@@ -46,6 +47,11 @@ export interface NotificationItem {
 }
 
 interface BookingContextType {
+  userList: UserList;
+  setUserList: (list: UserList) => void;
+
+
+
   cabins: Cabin[];
   bookings: Booking[];
   currentUser: any;
@@ -53,6 +59,11 @@ interface BookingContextType {
   setIsAuthenticated: (auth: boolean) => void;
   currentTab: string;
   theme: "light" | "dark";
+
+
+
+
+
   notifications: NotificationItem[];
   selectedBuilding: "Main HQ" | "West Wing";
   selectedFloor: "Ground Floor" | "1st Floor" | "2nd Floor";
@@ -61,7 +72,7 @@ interface BookingContextType {
   setSelectedBuilding: (b: "Main HQ" | "West Wing") => void;
   setSelectedFloor: (f: "Ground Floor" | "1st Floor" | "2nd Floor") => void;
   setCurrentUser: (u: any) => void;
-  
+
   // Actions
   login: (emailOrEmpId: string) => boolean;
   logout: () => void;
@@ -69,13 +80,13 @@ interface BookingContextType {
   cancelBooking: (id: string) => void;
   checkInBooking: (id: string) => void;
   editBooking: (id: string, updated: Partial<Booking>) => { success: boolean; error?: string };
-  
+
   // Admin Operations
   addCabin: (cabin: Omit<Cabin, "id">) => void;
   editCabin: (cabin: Cabin) => void;
   deleteCabin: (id: string) => void;
   toggleCabinMaintenance: (id: string) => void;
-  
+
   // Helpers
   checkAvailability: (cabinId: string, date: string, start: string, end: string) => "available" | "occupied" | "reserved" | "maintenance";
   detectConflicts: (cabinId: string, date: string, start: string, end: string, ignoreBookingId?: string) => Booking[];
@@ -92,7 +103,7 @@ const initialCabins: Cabin[] = [
   { id: "c2", name: "Executive Board Room", type: "boardroom", building: "Main HQ", floor: "Ground Floor", capacity: 20, facilities: ["Projector", "TV", "Whiteboard", "Video Conference", "Audio System"], status: "occupied", department: "Executive", x: 36, y: 12, w: 32, h: 20 },
   { id: "c3", name: "Finance Cabin 1", type: "cabin", building: "Main HQ", floor: "Ground Floor", capacity: 4, facilities: ["TV", "Whiteboard"], status: "available", department: "Finance", x: 72, y: 12, w: 20, h: 20 },
   { id: "c4", name: "Finance Cabin 2", type: "cabin", building: "Main HQ", floor: "Ground Floor", capacity: 4, facilities: ["TV", "Whiteboard"], status: "available", department: "Finance", x: 72, y: 38, w: 20, h: 16 },
-  
+
   // 1st Floor
   { id: "c5", name: "HR Interview Room A", type: "meeting", building: "Main HQ", floor: "1st Floor", capacity: 6, facilities: ["TV", "Whiteboard"], status: "available", department: "HR", x: 8, y: 12, w: 22, h: 18 },
   { id: "c6", name: "HR Interview Room B", type: "meeting", building: "Main HQ", floor: "1st Floor", capacity: 6, facilities: ["TV", "Whiteboard"], status: "reserved", department: "HR", x: 8, y: 35, w: 22, h: 18 },
@@ -240,17 +251,18 @@ const initialNotifications: NotificationItem[] = [
 
 export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userList, setUserList] = useState<UserList>({ users: [], count: 0 });
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [theme, setThemeState] = useState<"light" | "dark">("light");
   const [selectedBuilding, setSelectedBuilding] = useState<"Main HQ" | "West Wing">("Main HQ");
   const [selectedFloor, setSelectedFloor] = useState<"Ground Floor" | "1st Floor" | "2nd Floor">("1st Floor");
-  
+
   // Databases states
   const [cabins, setCabins] = useState<Cabin[]>(initialCabins);
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
-  
+
   // Fetch system theme or handle mounting
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
@@ -261,7 +273,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setThemeState("dark");
       document.documentElement.classList.add("dark");
     }
-    
+
     const loggedIn = localStorage.getItem("is_auth");
     if (loggedIn === "true") {
       setIsAuthenticated(true);
@@ -294,7 +306,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const activeOverlap = conflicts.some(c => c.status === "checked-in");
       return activeOverlap ? "occupied" : "reserved";
     }
-    
+
     return "available";
   };
 
@@ -321,11 +333,11 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .filter(cabin => {
         // Exclude cabins under maintenance
         if (cabin.status === "maintenance") return false;
-        
+
         // Exclude if already booked during this time
         const hasConflict = detectConflicts(cabin.id, date, start, end).length > 0;
         if (hasConflict) return false;
-        
+
         // Filter by capacity: Cabin should have at least the requested capacity
         return cabin.capacity >= capacity;
       })
@@ -333,7 +345,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Calculate score based on facility matches (higher is better) and capacity proximity (closer to target is better)
         const matchedFacilities = cabin.facilities.filter(f => facilities.includes(f as any)).length;
         const capacityOverhead = cabin.capacity - capacity; // lower difference is better (avoids putting 2 people in a 30-seat room)
-        
+
         // Final score: facilities matched * 10 - capacity excess
         const score = (matchedFacilities * 10) - (capacityOverhead * 0.5);
         return { cabin, score };
@@ -345,7 +357,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Auth Operations
   const login = (emailOrEmpId: string): boolean => {
-    
+
     if (currentUser && currentUser.email === emailOrEmpId) {
       setCurrentUser(currentUser);
       setIsAuthenticated(true);
@@ -378,9 +390,9 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const addBooking = (bookingData: Omit<Booking, "id" | "userName" | "createdTime" | "status">) => {
     const conflicts = detectConflicts(bookingData.cabinId, bookingData.date, bookingData.startTime, bookingData.endTime);
     if (conflicts.length > 0) {
-      return { 
-        success: false, 
-        error: `Conflict detected! This cabin is already booked for: ${conflicts[0].purpose} (${conflicts[0].startTime} - ${conflicts[0].endTime}).` 
+      return {
+        success: false,
+        error: `Conflict detected! This cabin is already booked for: ${conflicts[0].purpose} (${conflicts[0].startTime} - ${conflicts[0].endTime}).`
       };
     }
 
@@ -469,9 +481,9 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const conflicts = detectConflicts(targetCabinId, targetDate, targetStart, targetEnd, id);
     if (conflicts.length > 0) {
-      return { 
-        success: false, 
-        error: `Rescheduling conflict! Room is already booked for: ${conflicts[0].purpose} (${conflicts[0].startTime} - ${conflicts[0].endTime}).` 
+      return {
+        success: false,
+        error: `Rescheduling conflict! Room is already booked for: ${conflicts[0].purpose} (${conflicts[0].startTime} - ${conflicts[0].endTime}).`
       };
     }
 
@@ -532,7 +544,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const deleteCabin = (id: string) => {
     const cabin = cabins.find(c => c.id === id);
     setCabins(prev => prev.filter(c => c.id !== id));
-    
+
     // Also cancel bookings for deleted cabin
     setBookings(prev =>
       prev.map(b => (b.cabinId === id ? { ...b, status: "cancelled" as const } : b))
@@ -555,7 +567,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!cabin) return;
 
     const newStatus = cabin.status === "maintenance" ? "available" : "maintenance";
-    
+
     setCabins(prev =>
       prev.map(c => (c.id === id ? { ...c, status: newStatus as any } : c))
     );
@@ -598,7 +610,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const mins = String(now.getMinutes()).padStart(2, "0");
       const currentTime = `${hrs}:${mins}`;
       const currentDate = now.toISOString().split("T")[0]; // YYYY-MM-DD (let's match 2026-07-01 for testing or actual day)
-      
+
       setCabins(prevCabins => {
         return prevCabins.map(cabin => {
           // If admin hardcoded it to maintenance, keep it
@@ -647,6 +659,10 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   return (
     <BookingContext.Provider
       value={{
+        userList,
+        setUserList,
+
+
         cabins,
         bookings,
         currentUser,
@@ -662,19 +678,19 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setSelectedBuilding,
         setSelectedFloor,
         setCurrentUser,
-        
+
         login,
         logout,
         addBooking,
         cancelBooking,
         checkInBooking,
         editBooking,
-        
+
         addCabin,
         editCabin,
         deleteCabin,
         toggleCabinMaintenance,
-        
+
         checkAvailability,
         detectConflicts,
         getAIRecommendations,

@@ -10,17 +10,22 @@ import { departments } from "../../Data";
 export default function UsersList() {
   const {
     currentUser,
+    userList, 
+    setUserList
   } = useBooking();
-  const [usersList, setUsersList] = useState<any>([]);
+  
   const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
 
   useEffect(() => {
+    if(userList?.users?.length !== 0) {
+      setLoadingUsers(false);
+    }
     const fetchUsers = async () => {
       try {
         const response = await listOfUsers();
-        setUsersList(response.data);
+        setUserList(response.data);
         setLoadingUsers(false);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -83,7 +88,7 @@ export default function UsersList() {
       setDeletingUser(null);
       // Refresh users list
       const res = await listOfUsers();
-      setUsersList(res.data);
+      setUserList(res.data);
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to delete user.");
     } finally {
@@ -177,12 +182,6 @@ export default function UsersList() {
       setAddUserLoading(false);
     }
   };
-  // Cabin Form Dialog
-  const [showCabinModal, setShowCabinModal] = useState(false);
-  const [editingCabin, setEditingCabin] = useState<Cabin | null>(null);
-
-
-
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -206,7 +205,7 @@ export default function UsersList() {
             <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
               <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                 <Users size={18} className="text-slate-400" />
-                <h3 className="font-bold text-slate-800 dark:text-slate-200">List of Users {usersList.count > 0 && `(${usersList.count})`}</h3>
+                <h3 className="font-bold text-slate-800 dark:text-slate-200">List of Users {userList.count > 0 && `(${userList.count})`}</h3>
               </div>
 
               <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
@@ -221,8 +220,8 @@ export default function UsersList() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {usersList?.users?.length > 0 ?
-                      usersList.users.map((user: any, index: number) => {
+                    {userList?.users?.length > 0 ?
+                      userList.users.map((user: any, index: number) => {
                         return <tr key={index}>
                           <td className="p-3 flex items-center gap-2.5">
                             {user.avatar ? <img src={user.avatar} alt={user.name} className="w-7 h-7 rounded-full object-cover" /> : <UserCircle size={28} className="text-slate-400 dark:text-slate-500" />}
