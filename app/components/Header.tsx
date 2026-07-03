@@ -183,16 +183,16 @@ export default function Header() {
           <button
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/80"
           >
-            {currentUser.avatar ? <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
+            {currentUser && currentUser?.avatar ? <img
+              src={currentUser?.avatar}
+              alt={currentUser?.name}
               className="w-7 h-7 rounded-full object-cover"
             /> :
               <UserCircle size={28} className="text-slate-400 dark:text-slate-500" />
             }
             <div className="hidden sm:block text-left">
-              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-none">{currentUser.name}</p>
-              <span className="text-[9px] text-slate-400 dark:text-slate-500 capitalize">{currentUser.role}</span>
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-none">{currentUser?.name}</p>
+              <span className="text-[9px] text-slate-400 dark:text-slate-500 capitalize">{currentUser?.role}</span>
             </div>
           </button>
         </div>

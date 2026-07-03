@@ -21,7 +21,7 @@ export default function ProfileView() {
   const [successMsg, setSuccessMsg] = useState(false);
 
   // Compute profile statistics
-  const userBookings = bookings.filter(b => b.userId === currentUser.id && b.status !== "cancelled");
+  const userBookings = bookings.filter(b => b.userId === currentUser?.id && b.status !== "cancelled");
   const totalMeetings = userBookings.length;
   
   const totalHours = userBookings.reduce((sum, b) => {
@@ -48,16 +48,16 @@ export default function ProfileView() {
         
         {/* Left Column: Personal details */}
         <div className="md:col-span-1 p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs flex flex-col items-center text-center space-y-4">
-          <img 
-            src={currentUser.avatar} 
-            alt={currentUser.name} 
+          {currentUser && currentUser?.avatar ? <img 
+            src={currentUser?.avatar} 
+            alt={currentUser?.name} 
             className="w-24 h-24 rounded-full border-2 border-blue-500/20 shadow-md object-cover mt-2" 
-          />
+          /> : <User size={96} className="text-slate-400 dark:text-slate-500 mt-2" />}
           
           <div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-white leading-tight">{currentUser.name}</h3>
+            <h3 className="text-base font-bold text-slate-800 dark:text-white leading-tight">{currentUser?.name}</h3>
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1 inline-block">
-              {currentUser.department} Department
+              {currentUser?.department} Department
             </span>
           </div>
 
@@ -66,7 +66,7 @@ export default function ProfileView() {
               <Mail size={15} className="text-slate-400 shrink-0" />
               <div className="overflow-hidden">
                 <p className="text-[9px] text-slate-400 font-bold uppercase leading-none">Email Address</p>
-                <p className="font-normal mt-0.5 truncate">{currentUser.email}</p>
+                <p className="font-normal mt-0.5 truncate">{currentUser?.email}</p>
               </div>
             </div>
 
@@ -74,7 +74,7 @@ export default function ProfileView() {
               <User size={15} className="text-slate-400 shrink-0" />
               <div>
                 <p className="text-[9px] text-slate-400 font-bold uppercase leading-none">Employee ID</p>
-                <p className="font-normal mt-0.5">{currentUser.empId}</p>
+                <p className="font-normal mt-0.5">{currentUser?.empId}</p>
               </div>
             </div>
 
@@ -82,7 +82,7 @@ export default function ProfileView() {
               <Shield size={15} className="text-slate-400 shrink-0" />
               <div>
                 <p className="text-[9px] text-slate-400 font-bold uppercase leading-none">System Privilege</p>
-                <span className="font-bold text-blue-600 dark:text-blue-400 capitalize mt-0.5 inline-block">{currentUser.role}</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400 capitalize mt-0.5 inline-block">{currentUser?.role}</span>
               </div>
             </div>
           </div>

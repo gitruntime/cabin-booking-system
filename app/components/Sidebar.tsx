@@ -144,7 +144,7 @@ export default function Sidebar() {
           })}
 
           {/* Admin Section Divider */}
-          {currentUser.role === "admin" && (
+          {currentUser && currentUser?.role === "admin" && (
             <div className="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800">
               <p className="px-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Management</p>
               <button

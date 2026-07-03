@@ -65,9 +65,9 @@ export default function DashboardView() {
       {/* Welcome Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-500/10">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold">Welcome back, {currentUser.name}!</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Welcome back, {currentUser?.name}!</h1>
           <p className="text-xs text-blue-100 mt-1 opacity-90">
-            You are logged in as <span className="font-semibold">{currentUser.role === 'admin' ? 'Administrator' : 'Standard User'}</span>. Manage your bookings and find cabins instantly.
+            You are logged in as <span className="font-semibold">{currentUser?.role === 'admin' ? 'Administrator' : 'Standard User'}</span>. Manage your bookings and find cabins instantly.
           </p>
         </div>
         <div className="flex gap-2">

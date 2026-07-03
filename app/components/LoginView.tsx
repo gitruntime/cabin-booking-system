@@ -46,7 +46,7 @@ export default function LoginView() {
 
           {/* Logo */}
           <div className="flex items-center gap-3 justify-center lg:justify-start">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-md shadow-blue-500/20">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-linear-to-tr from-blue-600 to-blue-400 text-white shadow-md shadow-blue-500/20">
               <Building size={24} />
             </div>
             <div>
@@ -135,7 +135,7 @@ export default function LoginView() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-semibold text-sm hover:from-blue-700 hover:to-blue-800 active:scale-[0.99] transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full py-2.5 px-4 rounded-xl bg-linear-to-r from-blue-600 to-blue-700 text-white font-semibold text-sm hover:from-blue-700 hover:to-blue-800 active:scale-[0.99] transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
             >
               <span>{loading ? "Verifying..." : "Sign In"}</span>
               {!loading && <ArrowRight size={16} />}
@@ -145,14 +145,14 @@ export default function LoginView() {
       </div>
 
       {/* Right side: Modern Office Vector Illustration with Soft Gradients */}
-      <div className="hidden lg:flex flex-1 relative bg-gradient-to-tr from-slate-900 via-blue-950 to-slate-900 overflow-hidden items-center justify-center">
+      <div className="hidden lg:flex flex-1 relative bg-linear-to-tr from-slate-900 via-blue-950 to-slate-900 overflow-hidden items-center justify-center">
 
         {/* Soft Background Gradients Glowing Blobs */}
-        <div className="absolute top-1/4 left-1/4 w-[400px] h-[400px] bg-blue-600/10 rounded-full filter blur-[100px] animate-pulse-subtle" />
-        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-cyan-500/10 rounded-full filter blur-[80px]" />
+        <div className="absolute top-1/4 left-1/4 w-100 h-100 bg-blue-600/10 rounded-full filter blur-[100px] animate-pulse-subtle" />
+        <div className="absolute bottom-1/4 right-1/4 w-75 h-75 bg-cyan-500/10 rounded-full filter blur-[80px]" />
 
         {/* Vector SVG Office Illustration */}
-        <div className="w-[500px] h-[500px] relative animate-float">
+        <div className="w-125 h-125 relative animate-float">
           <svg viewBox="0 0 500 500" fill="none" className="w-full h-full drop-shadow-2xl">
             {/* Grid layout */}
             <path d="M 50,400 L 450,400" stroke="#1e293b" strokeWidth="2" strokeDasharray="5 5" />

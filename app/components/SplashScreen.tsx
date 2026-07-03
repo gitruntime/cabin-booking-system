@@ -1,35 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 
-export default function SplashScreen() {
-  const [progress, setProgress] = useState(0);
-  const [fadeOut, setFadeOut] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prev + 2;
-      });
-    }, 40);
-
-    const fadeTimer = setTimeout(() => setFadeOut(true), 2400);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(fadeTimer);
-    };
-  }, []);
+export default function SplashScreen({ fadeOut = false }: { fadeOut: boolean }) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-500 ${
-        fadeOut ? "opacity-0 pointer-events-none" : "opacity-100"
-      }`}
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-500 ${fadeOut ? "opacity-0 pointer-events-none" : "opacity-100"
+        }`}
       style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 60%, #3b82f6 100%)" }}
     >
       {/* Background decorative circles */}

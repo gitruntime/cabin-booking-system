@@ -38,7 +38,7 @@ function MainAppShell() {
   }, []);
 
   if (spalshVisible) {
-    return <SplashScreen />;
+    return <SplashScreen fadeOut={!spalshVisible} />;
   }
 
   if (!isAuthenticated) {
