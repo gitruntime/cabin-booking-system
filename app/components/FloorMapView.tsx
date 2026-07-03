@@ -1,35 +1,34 @@
 "use client";
 
-import React, { useState } from "react";
-import { useBooking, Cabin } from "../context/BookingContext";
-import { 
-  Building, 
-  Layers, 
-  Info, 
-  Tv, 
-  Video, 
-  Projector, 
-  FileText, 
-  Volume2, 
-  HelpCircle,
+import {
   AlertTriangle,
-  X,
-  Plus
+  Building,
+  FileText,
+  HelpCircle,
+  Layers,
+  Projector,
+  Tv,
+  Video,
+  Volume2,
+  X
 } from "lucide-react";
+import React, { useState } from "react";
+import { Cabin, useBooking } from "../context/BookingContext";
+import { departments } from "../Data";
 
 export default function FloorMapView() {
-  const { 
-    cabins, 
-    addBooking, 
-    selectedBuilding, 
-    setSelectedBuilding, 
-    selectedFloor, 
-    setSelectedFloor 
+  const {
+    cabins,
+    addBooking,
+    selectedBuilding,
+    setSelectedBuilding,
+    selectedFloor,
+    setSelectedFloor
   } = useBooking();
 
   const [hoveredCabin, setHoveredCabin] = useState<Cabin | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
-  
+
   // Quick Book modal
   const [bookingCabin, setBookingCabin] = useState<Cabin | null>(null);
   const [purpose, setPurpose] = useState("");
@@ -122,7 +121,7 @@ export default function FloorMapView() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      
+
       {/* Floor Filter Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs">
         <div className="flex flex-wrap gap-4 items-center">
@@ -183,7 +182,7 @@ export default function FloorMapView() {
 
       {/* SVG Interactive Map Area */}
       <div className="p-4 md:p-6 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs flex justify-center items-center relative overflow-x-auto min-h-112.5">
-        
+
         {/* SVG Container */}
         <div className="w-full max-w-200 aspect-800/500 relative bg-slate-50 border border-slate-100 rounded-xl dark:bg-slate-950/40 dark:border-slate-800/50">
           <svg viewBox="0 0 800 500" className="w-full h-full select-none">
@@ -197,7 +196,7 @@ export default function FloorMapView() {
                 {/* Reception */}
                 <rect x="340" y="210" width="120" height="80" rx="10" fill="#3b82f6" fillOpacity="0.08" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="3 3" />
                 <text x="400" y="255" textAnchor="middle" className="fill-blue-500 dark:fill-blue-400 text-[11px] font-bold uppercase tracking-wider">Reception Desk</text>
-                
+
                 {/* Workstations Area */}
                 <rect x="50" y="290" width="260" height="150" rx="10" fill="#475569" fillOpacity="0.05" stroke="#94a3b8" strokeWidth="1" />
                 <text x="180" y="375" textAnchor="middle" className="fill-slate-400 dark:fill-slate-500 text-[10px] font-bold uppercase tracking-wider">Workstations (A1 - A16)</text>
@@ -209,7 +208,7 @@ export default function FloorMapView() {
                 {/* Cafeteria */}
                 <rect x="620" y="290" width="130" height="160" rx="10" fill="#10b981" fillOpacity="0.04" stroke="#10b981" strokeWidth="1" strokeOpacity="0.3" />
                 <text x="685" y="375" textAnchor="middle" className="fill-emerald-600 dark:fill-emerald-500 text-[10px] font-bold uppercase tracking-wider">Cafeteria Bay</text>
-                
+
                 {/* Emergency exit */}
                 <path d="M 780,240 L 780,260" stroke="#ef4444" strokeWidth="4" />
                 <text x="770" y="235" textAnchor="end" className="fill-rose-500 text-[8px] font-bold uppercase">Exit</text>
@@ -225,7 +224,7 @@ export default function FloorMapView() {
                 {/* Washrooms */}
                 <rect x="650" y="380" width="100" height="70" rx="6" fill="#475569" fillOpacity="0.05" stroke="#94a3b8" strokeWidth="1" />
                 <text x="700" y="420" textAnchor="middle" className="fill-slate-400 dark:fill-slate-500 text-[9px] font-bold uppercase">Washrooms</text>
-                
+
                 {/* Exit */}
                 <path d="M 780,240 L 780,260" stroke="#ef4444" strokeWidth="4" />
               </>
@@ -270,7 +269,7 @@ export default function FloorMapView() {
               const isMaintenance = cabin.status === "maintenance";
 
               return (
-                <g 
+                <g
                   key={cabin.id}
                   className={isMaintenance ? "cursor-not-allowed" : "cursor-pointer"}
                   onClick={() => handleCabinClick(cabin)}
@@ -279,24 +278,24 @@ export default function FloorMapView() {
                   onMouseMove={handleMouseMove}
                 >
                   {/* Room base block */}
-                  <rect 
-                    x={cx} 
-                    y={cy} 
-                    width={cw} 
-                    height={ch} 
-                    rx="8" 
+                  <rect
+                    x={cx}
+                    y={cy}
+                    width={cw}
+                    height={ch}
+                    rx="8"
                     className={`${styleClass} transition-colors duration-200 stroke-2`}
                   />
 
                   {/* Room Name label */}
-                  <text 
-                    x={cx + cw / 2} 
-                    y={cy + ch / 2 + 3} 
-                    textAnchor="middle" 
+                  <text
+                    x={cx + cw / 2}
+                    y={cy + ch / 2 + 3}
+                    textAnchor="middle"
                     className="fill-slate-800 dark:fill-slate-200 text-[10px] font-bold pointer-events-none truncate max-w-[90%]"
                   >
                     {cabin.name.split(" ").slice(-1)[0] === "Suite" || cabin.name.split(" ").slice(-1)[0] === "Room" || cabin.name.split(" ").slice(-1)[0] === "Hall"
-                      ? cabin.name.split(" ").slice(-2).join(" ") 
+                      ? cabin.name.split(" ").slice(-2).join(" ")
                       : cabin.name.split(" ").slice(0, 3).join(" ")}
                   </text>
 
@@ -317,11 +316,11 @@ export default function FloorMapView() {
 
         {/* Dynamic Hover Card */}
         {hoveredCabin && (
-          <div 
+          <div
             className="fixed z-50 p-4 rounded-xl bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-900 shadow-xl space-y-2.5 max-w-xs pointer-events-none animate-enter"
-            style={{ 
-              left: `${hoverPos.x}px`, 
-              top: `${hoverPos.y}px` 
+            style={{
+              left: `${hoverPos.x}px`,
+              top: `${hoverPos.y}px`
             }}
           >
             <div>
@@ -362,13 +361,13 @@ export default function FloorMapView() {
       {bookingCabin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 space-y-4 animate-enter">
-            
+
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <div>
                 <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wide">{bookingCabin.building} • {bookingCabin.floor}</span>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-white">Quick Book: {bookingCabin.name}</h3>
               </div>
-              <button 
+              <button
                 onClick={() => setBookingCabin(null)}
                 className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
@@ -377,7 +376,7 @@ export default function FloorMapView() {
             </div>
 
             <form onSubmit={handleQuickBookSubmit} className="space-y-4 text-xs">
-              
+
               {modalError && (
                 <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-[10px]">
                   <AlertTriangle size={14} className="shrink-0" />
@@ -427,12 +426,11 @@ export default function FloorMapView() {
                     onChange={(e) => setDept(e.target.value as any)}
                     className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <option value="IT">IT</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Executive">Executive</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Sales">Sales</option>
+                    {
+                      departments.map((dept, i) => (
+                        <option key={i} value={dept}>{dept}</option>
+                      ))
+                    }
                   </select>
                 </div>
               </div>

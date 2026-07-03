@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import AdminView from "./components/Admin/AdminView";
+import AdminView from "./components/Admin/History";
 import BookingView from "./components/BookingView";
 import CalendarView from "./components/CalendarView";
 import DashboardView from "./components/DashboardView";
@@ -16,6 +16,8 @@ import SplashScreen from "./components/SplashScreen";
 import { BookingProvider, useBooking } from "./context/BookingContext";
 import { profile } from "./http";
 import UsersList from "./components/Admin/UsersList";
+import CabinatesHandle from "./components/Admin/CabinatesHandle";
+import History from "./components/Admin/History";
 
 function MainAppShell() {
   const { isAuthenticated, currentTab, setIsAuthenticated, setCurrentUser } = useBooking();
@@ -66,6 +68,10 @@ function MainAppShell() {
         return <AdminView />;
       case "users":
         return <UsersList />;
+      case "cabins":
+        return <CabinatesHandle />;
+      case "report":
+        return <History />;
       default:
         return <DashboardView />;
     }

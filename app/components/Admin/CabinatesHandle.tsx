@@ -2,50 +2,24 @@
 
 import {
   Edit3,
-  FileSpreadsheet,
-  FileText,
   Plus,
   Settings,
   Trash2,
   Wrench,
   X
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Cabin, useBooking } from "../../context/BookingContext";
-import { listOfUsers } from "../../http";
 import { departments } from "@/app/Data";
 
-export default function AdminView() {
+export default function CabinatesHandle() {
   const {
     cabins,
-    bookings,
     addCabin,
-    currentUser,
     editCabin,
     deleteCabin,
     toggleCabinMaintenance
   } = useBooking();
-  const [usersList, setUsersList] = useState<any>([]);
-  const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
-  const [showAddUserModal, setShowAddUserModal] = useState(false);
-  const [showEditUserModal, setShowEditUserModal] = useState(false);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await listOfUsers();
-        setUsersList(response.data);
-        setLoadingUsers(false);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        setLoadingUsers(false);
-      }
-    };
-    fetchUsers();
-  }, [showAddUserModal, showEditUserModal]);
-
-
-  const [activeSubTab, setActiveSubTab] = useState<"cabins" | "reports" | "users">("cabins");
 
   // Cabin Form Dialog
   const [showCabinModal, setShowCabinModal] = useState(false);
@@ -64,13 +38,7 @@ export default function AdminView() {
   const [mapW, setMapW] = useState(15);
   const [mapH, setMapH] = useState(15);
 
-  const availableFacilities: Cabin["facilities"] = [
-    "Projector",
-    "TV",
-    "Whiteboard",
-    "Video Conference",
-    "Audio System"
-  ];
+  const availableFacilities: Cabin["facilities"] = ["Projector", "TV", "Whiteboard", "Video Conference", "Audio System"];
 
   const handleFacilityChange = (fac: Cabin["facilities"][number]) => {
     if (facilities.includes(fac)) {
@@ -139,205 +107,94 @@ export default function AdminView() {
     setShowCabinModal(false);
   };
 
-  // CSV Exporter Simulation
-  const handleExportCSV = (type: "excel" | "pdf") => {
-    // Generate simple CSV content of bookings
-    const headers = "Booking ID,Room,User,Date,Start,End,Attendees,Purpose,Department,Status\n";
-    const rows = bookings.map(b => {
-      const cabin = cabins.find(c => c.id === b.cabinId);
-      return `"${b.id}","${cabin?.name || 'Deleted'}","${b.userName}","${b.date}","${b.startTime}","${b.endTime}",${b.attendees},"${b.purpose}","${b.department}","${b.status}"`;
-    }).join("\n");
-
-    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(headers + rows);
-    const link = document.createElement("a");
-    link.setAttribute("href", csvContent);
-    link.setAttribute("download", `cospace_booking_report_${Date.now()}.${type === "excel" ? "csv" : "txt"}`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const tabs = [
-    { id: "cabins", label: "Manage Cabins" },
-    { id: "reports", label: "Reports & History" },
-  ]
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-
-      {/* Admin sub navigation tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-px text-xs font-semibold uppercase tracking-wider">
-        {
-          tabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveSubTab(tab.id as any)}
-              className={`px-4 py-2 border-b-2 transition-all ${activeSubTab === tab.id ? "border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400 font-bold" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"}`}
-            >
-              {tab.label}
-            </button>
-          ))
-        }
-      </div>
-
-      {/* SUB TAB: CABINS VIEW */}
-      {activeSubTab === "cabins" && (
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Settings size={18} className="text-slate-400" />
-              <h3 className="font-bold text-slate-800 dark:text-slate-200">System Cabins Setup</h3>
-            </div>
-            <button
-              onClick={handleOpenAdd}
-              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-xs"
-            >
-              <Plus size={14} />
-              <span>Add Cabin</span>
-            </button>
+      <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Settings size={18} className="text-slate-400" />
+            <h3 className="font-bold text-slate-800 dark:text-slate-200">System Cabins Setup</h3>
           </div>
-
-          <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
-            <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
-                  <th className="p-3">Room Name</th>
-                  <th className="p-3">Type</th>
-                  <th className="p-3">Location</th>
-                  <th className="p-3">Capacity</th>
-                  <th className="p-3">Facilities</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {cabins.map((cabin) => (
-                  <tr key={cabin.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
-                    <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{cabin.name}</td>
-                    <td className="p-3 capitalize">{cabin.type}</td>
-                    <td className="p-3 font-semibold">{cabin.building} • Floor {cabin.floor.split(" ")[0]}</td>
-                    <td className="p-3 font-bold">{cabin.capacity} seats</td>
-                    <td className="p-3">
-                      <div className="flex flex-wrap gap-1 max-w-50">
-                        {cabin.facilities.map((f, i) => (
-                          <span key={i} className="px-1.5 py-0.5 text-[9px] bg-slate-100 text-slate-500 rounded dark:bg-slate-800 dark:text-slate-400 font-medium">
-                            {f}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${cabin.status === 'available' ? 'bg-emerald-105 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
-                        cabin.status === 'maintenance' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
-                          cabin.status === 'reserved' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' :
-                            'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300'
-                        }`}>
-                        {cabin.status}
-                      </span>
-                    </td>
-                    <td className="p-3 text-right space-x-1.5 shrink-0">
-                      <button
-                        onClick={() => toggleCabinMaintenance(cabin.id)}
-                        className={`p-1.5 rounded-lg border transition-colors ${cabin.status === "maintenance"
-                          ? "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
-                          : "hover:bg-slate-100 border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
-                          }`}
-                        title={cabin.status === "maintenance" ? "Put back online" : "Block for maintenance"}
-                      >
-                        <Wrench size={12} />
-                      </button>
-                      <button
-                        onClick={() => handleOpenEdit(cabin)}
-                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
-                        title="Edit cabin details"
-                      >
-                        <Edit3 size={12} />
-                      </button>
-                      <button
-                        onClick={() => deleteCabin(cabin.id)}
-                        className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
-                        title="Delete cabin"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <button
+            onClick={handleOpenAdd}
+            className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-colors shadow-xs"
+          >
+            <Plus size={14} />
+            <span>Add Cabin</span>
+          </button>
         </div>
-      )}
 
-      {/* SUB TAB: REPORTS & HISTORY VIEW */}
-      {activeSubTab === "reports" && (
-        <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2">
-            <div>
-              <h3 className="font-bold text-slate-800 dark:text-slate-200">System Utilization Reports</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Booking logs and statistics logs</p>
-            </div>
-
-            {/* Export buttons */}
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleExportCSV("excel")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-650 text-xs font-semibold dark:border-slate-800 dark:hover:bg-slate-800 dark:text-slate-350 transition-colors"
-              >
-                <FileSpreadsheet size={14} className="text-emerald-500" />
-                <span>Export CSV Excel</span>
-              </button>
-              <button
-                onClick={() => handleExportCSV("pdf")}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-650 text-xs font-semibold dark:border-slate-800 dark:hover:bg-slate-800 dark:text-slate-350 transition-colors"
-              >
-                <FileText size={14} className="text-blue-500" />
-                <span>Export PDF Log</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Booking History Logs Table */}
-          <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
-            <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
-                  <th className="p-3">Room</th>
-                  <th className="p-3">Purpose</th>
-                  <th className="p-3">Host</th>
-                  <th className="p-3">Date</th>
-                  <th className="p-3">Time</th>
-                  <th className="p-3">Dept</th>
-                  <th className="p-3 text-right">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {bookings.map((b) => {
-                  const cabin = cabins.find(c => c.id === b.cabinId);
-                  return (
-                    <tr key={b.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-855/20 transition-colors">
-                      <td className="p-3 font-semibold text-slate-850 dark:text-slate-200">{cabin?.name || "Deleted Cabin"}</td>
-                      <td className="p-3 font-bold">{b.purpose}</td>
-                      <td className="p-3">{b.userName}</td>
-                      <td className="p-3 font-mono">{b.date}</td>
-                      <td className="p-3 font-semibold">{b.startTime} - {b.endTime}</td>
-                      <td className="p-3 uppercase">{b.department}</td>
-                      <td className="p-3 text-right">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${b.status === 'checked-in' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
-                          b.status === 'confirmed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-300' :
-                            'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                          }`}>
-                          {b.status}
+        <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
+          <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                <th className="p-3">Room Name</th>
+                <th className="p-3">Type</th>
+                <th className="p-3">Location</th>
+                <th className="p-3">Capacity</th>
+                <th className="p-3">Facilities</th>
+                <th className="p-3">Status</th>
+                <th className="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {cabins.map((cabin) => (
+                <tr key={cabin.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                  <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{cabin.name}</td>
+                  <td className="p-3 capitalize">{cabin.type}</td>
+                  <td className="p-3 font-semibold">{cabin.building} • Floor {cabin.floor.split(" ")[0]}</td>
+                  <td className="p-3 font-bold">{cabin.capacity} seats</td>
+                  <td className="p-3">
+                    <div className="flex flex-wrap gap-1 max-w-50">
+                      {cabin.facilities.map((f, i) => (
+                        <span key={i} className="px-1.5 py-0.5 text-[9px] bg-slate-100 text-slate-500 rounded dark:bg-slate-800 dark:text-slate-400 font-medium">
+                          {f}
                         </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${cabin.status === 'available' ? 'bg-emerald-105 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
+                      cabin.status === 'maintenance' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
+                        cabin.status === 'reserved' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' :
+                          'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300'
+                      }`}>
+                      {cabin.status}
+                    </span>
+                  </td>
+                  <td className="p-3 text-right space-x-1.5 shrink-0">
+                    <button
+                      onClick={() => toggleCabinMaintenance(cabin.id)}
+                      className={`p-1.5 rounded-lg border transition-colors ${cabin.status === "maintenance"
+                        ? "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
+                        : "hover:bg-slate-100 border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                        }`}
+                      title={cabin.status === "maintenance" ? "Put back online" : "Block for maintenance"}
+                    >
+                      <Wrench size={12} />
+                    </button>
+                    <button
+                      onClick={() => handleOpenEdit(cabin)}
+                      className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                      title="Edit cabin details"
+                    >
+                      <Edit3 size={12} />
+                    </button>
+                    <button
+                      onClick={() => deleteCabin(cabin.id)}
+                      className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
+                      title="Delete cabin"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
 
       {/* Cabin Edit/Add Modal Dialog */}
       {showCabinModal && (

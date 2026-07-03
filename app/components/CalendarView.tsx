@@ -2,26 +2,27 @@
 
 import React, { useState } from "react";
 import { useBooking, Booking } from "../context/BookingContext";
-import { 
-  Calendar as CalendarIcon, 
-  ChevronLeft, 
-  ChevronRight, 
-  Filter, 
-  Layers, 
-  Building, 
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Layers,
+  Building,
   SlidersHorizontal,
   Info
 } from "lucide-react";
+import { departments } from "../Data";
 
 export default function CalendarView() {
   const { bookings, cabins } = useBooking();
-  
+
   // View mode
   const [viewMode, setViewMode] = useState<"month" | "week" | "day">("month");
-  
+
   // Navigation states
   const [currentDate, setCurrentDate] = useState(new Date("2026-07-01")); // Base seed date
-  
+
   // Filter states
   const [filterBuilding, setFilterBuilding] = useState("All");
   const [filterFloor, setFilterFloor] = useState("All");
@@ -98,7 +99,7 @@ export default function CalendarView() {
 
     // Empty spaces before start of month
     for (let i = 0; i < startDay; i++) {
-      days.push(<div key={`empty-${i}`} className="min-h-[85px] border border-slate-100 bg-slate-50/30 dark:border-slate-800/40 dark:bg-slate-900/10" />);
+      days.push(<div key={`empty-${i}`} className="min-h-21.25 border border-slate-100 bg-slate-50/30 dark:border-slate-800/40 dark:bg-slate-900/10" />);
     }
 
     // Days grid
@@ -106,35 +107,33 @@ export default function CalendarView() {
       const year = currentDate.getFullYear();
       const month = String(currentDate.getMonth() + 1).padStart(2, "0");
       const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
-      
+
       const dayBookings = activeBookings.filter(b => b.date === dateStr);
       const isToday = dateStr === "2026-07-01"; // seeded current date
 
       days.push(
-        <div 
-          key={day} 
-          className={`min-h-[85px] border border-slate-100 p-2 hover:bg-slate-50 dark:border-slate-800/40 dark:hover:bg-slate-800/20 flex flex-col justify-between transition-colors ${
-            isToday ? "bg-blue-50/20 dark:bg-blue-950/10 border-blue-300/40" : ""
-          }`}
+        <div
+          key={day}
+          className={`min-h-21.25 border border-slate-100 p-2 hover:bg-slate-50 dark:border-slate-800/40 dark:hover:bg-slate-800/20 flex flex-col justify-between transition-colors ${isToday ? "bg-blue-50/20 dark:bg-blue-950/10 border-blue-300/40" : ""
+            }`}
         >
           <div className="flex justify-between items-center">
-            <span className={`text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center ${
-              isToday 
-                ? "bg-blue-600 text-white" 
+            <span className={`text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center ${isToday
+                ? "bg-blue-600 text-white"
                 : "text-slate-700 dark:text-slate-400"
-            }`}>
+              }`}>
               {day}
             </span>
           </div>
 
           {/* Bookings inside the day box */}
-          <div className="space-y-1 mt-1 overflow-y-auto max-h-[60px]">
+          <div className="space-y-1 mt-1 overflow-y-auto max-h-15">
             {dayBookings.slice(0, 3).map((b) => {
               const cabin = cabins.find(c => c.id === b.cabinId);
               const colorClass = deptBgColors[b.department as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
               return (
-                <div 
-                  key={b.id} 
+                <div
+                  key={b.id}
                   title={`${b.purpose} (${b.startTime}-${b.endTime}) - ${cabin?.name}`}
                   className={`px-1.5 py-0.5 rounded text-[8px] font-bold border truncate ${colorClass}`}
                 >
@@ -167,7 +166,7 @@ export default function CalendarView() {
     // Generate dates in current week
     const startOfWeek = new Date(currentDate);
     startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
-    
+
     const weekDays: Date[] = [];
     for (let i = 0; i < 7; i++) {
       const dayDate = new Date(startOfWeek);
@@ -186,16 +185,14 @@ export default function CalendarView() {
             const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
             const isToday = dateStr === "2026-07-01";
             return (
-              <div 
-                key={idx} 
-                className={`py-2 text-center border-r border-slate-100 dark:border-slate-800 last:border-r-0 ${
-                  isToday ? "bg-blue-50/20 dark:bg-blue-950/25" : ""
-                }`}
+              <div
+                key={idx}
+                className={`py-2 text-center border-r border-slate-100 dark:border-slate-800 last:border-r-0 ${isToday ? "bg-blue-50/20 dark:bg-blue-950/25" : ""
+                  }`}
               >
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{day.toLocaleDateString("en-US", { weekday: "short" })}</p>
-                <p className={`text-xs font-bold mt-0.5 inline-block px-1.5 py-0.5 rounded-full ${
-                  isToday ? "bg-blue-600 text-white" : "text-slate-800 dark:text-slate-300"
-                }`}>
+                <p className={`text-xs font-bold mt-0.5 inline-block px-1.5 py-0.5 rounded-full ${isToday ? "bg-blue-600 text-white" : "text-slate-800 dark:text-slate-300"
+                  }`}>
                   {day.getDate()}
                 </p>
               </div>
@@ -204,22 +201,22 @@ export default function CalendarView() {
         </div>
 
         {/* Hour Rows */}
-        <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[400px] overflow-y-auto">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-100 overflow-y-auto">
           {["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"].map((hour) => (
-            <div key={hour} className="grid grid-cols-8 min-h-[50px]">
+            <div key={hour} className="grid grid-cols-8 min-h-12.5">
               {/* Hour cell */}
               <div className="p-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-850/50 border-r border-slate-100 dark:border-slate-800/60 flex items-center justify-center">
                 {hour}
               </div>
-              
+
               {/* Day slots */}
               {weekDays.map((day, idx) => {
                 const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
-                
+
                 // Bookings that match date and overlap this hour block
                 const nextHourVal = parseInt(hour.split(":")[0]) + 1;
                 const nextHour = `${String(nextHourVal).padStart(2, "0")}:00`;
-                
+
                 const slotBookings = activeBookings.filter(b => {
                   return b.date === dateStr && b.startTime < nextHour && b.endTime > hour;
                 });
@@ -230,7 +227,7 @@ export default function CalendarView() {
                       const cabin = cabins.find(c => c.id === b.cabinId);
                       const colorClass = deptBgColors[b.department as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
                       return (
-                        <div 
+                        <div
                           key={b.id}
                           className={`p-1.5 rounded text-[8px] font-bold border ${colorClass} truncate mb-1 shadow-xs`}
                           title={`${b.purpose} - ${cabin?.name}`}
@@ -257,7 +254,7 @@ export default function CalendarView() {
 
     return (
       <div className="border border-slate-200/80 rounded-xl overflow-hidden bg-white dark:border-slate-800 dark:bg-slate-900/50">
-        
+
         {/* Day Header */}
         <div className="p-3 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
           <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
@@ -269,19 +266,19 @@ export default function CalendarView() {
         </div>
 
         {/* Hourly Breakdown list */}
-        <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-[400px] overflow-y-auto p-4 space-y-3">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-100 overflow-y-auto p-4 space-y-3">
           {dayBookings.length > 0 ? (
             dayBookings.map((b) => {
               const cabin = cabins.find(c => c.id === b.cabinId);
               const colorClass = deptBgColors[b.department as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
-              
+
               return (
-                <div 
-                  key={b.id} 
+                <div
+                  key={b.id}
                   className={`p-4 rounded-xl border flex items-center justify-between shadow-xs transition-transform hover:translate-x-1 ${colorClass}`}
                 >
                   <div className="flex gap-4">
-                    <div className="flex flex-col justify-center items-center px-3 py-2 rounded-lg bg-white/70 dark:bg-slate-900/70 border border-white/50 dark:border-slate-800/40 min-w-[80px]">
+                    <div className="flex flex-col justify-center items-center px-3 py-2 rounded-lg bg-white/70 dark:bg-slate-900/70 border border-white/50 dark:border-slate-800/40 min-w-20">
                       <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase">Time</span>
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{b.startTime} - {b.endTime}</span>
                     </div>
@@ -320,31 +317,31 @@ export default function CalendarView() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      
+
       {/* Calendar Controls & Filters */}
       <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-5">
-        
+
         {/* Navigation & View Toggles */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          
+
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
               <CalendarIcon size={18} />
             </div>
-            
+
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={handlePrev}
                 className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
               >
                 <ChevronLeft size={16} />
               </button>
-              <h3 className="text-base font-bold text-slate-800 dark:text-white min-w-[140px] text-center">
+              <h3 className="text-base font-bold text-slate-800 dark:text-white min-w-35 text-center">
                 {viewMode === "month" && currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                 {viewMode === "week" && `Week of ${currentDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
                 {viewMode === "day" && currentDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
               </h3>
-              <button 
+              <button
                 onClick={handleNext}
                 className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
               >
@@ -361,8 +358,8 @@ export default function CalendarView() {
                 onClick={() => setViewMode(mode as any)}
                 className={`
                   px-4 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all
-                  ${viewMode === mode 
-                    ? "bg-white text-blue-600 shadow-xs dark:bg-slate-700 dark:text-blue-400" 
+                  ${viewMode === mode
+                    ? "bg-white text-blue-600 shadow-xs dark:bg-slate-700 dark:text-blue-400"
                     : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"}
                 `}
               >
@@ -380,7 +377,7 @@ export default function CalendarView() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 text-xs font-medium">
-            
+
             {/* Building filter */}
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-400 uppercase">Building</label>
@@ -433,13 +430,11 @@ export default function CalendarView() {
                 onChange={(e) => setFilterDept(e.target.value)}
                 className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
               >
-                <option value="All">All Departments</option>
-                <option value="IT">IT</option>
-                <option value="HR">HR</option>
-                <option value="Finance">Finance</option>
-                <option value="Executive">Executive</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Sales">Sales</option>
+                {
+                  departments.map((dept, i) => (
+                    <option key={i} value={dept}>{dept}</option>
+                  ))
+                }
               </select>
             </div>
           </div>

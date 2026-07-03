@@ -1,21 +1,11 @@
 "use client";
 
-import {
-  AlertCircle,
-  Camera,
-  Edit3,
-  Eye,
-  EyeOff,
-  Trash2,
-  UserCircle,
-  UserPlus,
-  Users,
-  X
-} from "lucide-react";
+import { AlertCircle, Camera, Edit3, Eye, EyeOff, Trash2, UserCircle, UserPlus, Users, X } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { Cabin, useBooking } from "../../context/BookingContext";
 import { deleteUser, listOfUsers, register, updateUser } from "../../http";
+import { departments } from "../../Data";
 
 export default function UsersList() {
   const {
@@ -457,13 +447,11 @@ export default function UsersList() {
                     onChange={(e) => setNewUserDept(e.target.value)}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <option value="IT">IT</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Executive">Executive</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Sales">Sales</option>
-                    <option value="Operations">Operations</option>
+                    {
+                      departments.map((dept, i) => (
+                        <option key={i} value={dept}>{dept}</option>
+                      ))
+                    }
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -639,13 +627,11 @@ export default function UsersList() {
                     onChange={(e) => setEditUserDept(e.target.value)}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <option value="IT">IT</option>
-                    <option value="HR">HR</option>
-                    <option value="Finance">Finance</option>
-                    <option value="Executive">Executive</option>
-                    <option value="Marketing">Marketing</option>
-                    <option value="Sales">Sales</option>
-                    <option value="Operations">Operations</option>
+                    {
+                      departments.map((dept, i) => (
+                        <option key={i} value={dept}>{dept}</option>
+                      ))
+                    }
                   </select>
                 </div>
                 <div className="space-y-1">
@@ -655,8 +641,8 @@ export default function UsersList() {
                       <label
                         key={g}
                         className={`flex-1 flex items-center justify-center py-1.5 rounded-lg border cursor-pointer text-[11px] font-semibold capitalize transition-all ${editUserGender === g
-                            ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/20 dark:border-blue-800 dark:text-blue-400"
-                            : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-800"
+                          ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950/20 dark:border-blue-800 dark:text-blue-400"
+                          : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100 dark:bg-slate-900 dark:border-slate-800"
                           }`}
                       >
                         <input

@@ -63,7 +63,7 @@ export default function DashboardView() {
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
       
       {/* Welcome Banner */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 rounded-2xl bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-500/10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-6 rounded-2xl bg-linear-to-r from-blue-700 via-blue-600 to-indigo-700 text-white shadow-lg shadow-blue-500/10">
         <div>
           <h1 className="text-xl md:text-2xl font-bold">Welcome back, {currentUser?.name}!</h1>
           <p className="text-xs text-blue-100 mt-1 opacity-90">
@@ -152,7 +152,7 @@ export default function DashboardView() {
               </span>
             </div>
 
-            <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-87.5 overflow-y-auto pr-1">
               {todaysBookings.length > 0 ? (
                 todaysBookings.map((b) => {
                   const cabin = cabins.find(c => c.id === b.cabinId);
@@ -170,7 +170,7 @@ export default function DashboardView() {
                     >
                       <div className="flex gap-3">
                         {/* Time block badge */}
-                        <div className="flex flex-col justify-center items-center px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-w-[70px]">
+                        <div className="flex flex-col justify-center items-center px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-w-17.5">
                           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase leading-none">Time</span>
                           <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{b.startTime}</span>
                         </div>

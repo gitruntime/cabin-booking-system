@@ -16,16 +16,17 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { Cabin, useBooking } from "../context/BookingContext";
+import { departments } from "../Data";
 
 export default function BookingView() {
-  const { 
-    cabins, 
-    addBooking, 
-    checkAvailability, 
-    getAIRecommendations, 
-    selectedBuilding, 
-    setSelectedBuilding, 
-    selectedFloor, 
+  const {
+    cabins,
+    addBooking,
+    checkAvailability,
+    getAIRecommendations,
+    selectedBuilding,
+    setSelectedBuilding,
+    selectedFloor,
     setSelectedFloor,
     setCurrentTab
   } = useBooking();
@@ -65,7 +66,7 @@ export default function BookingView() {
   // Run validation & recommendations check when parameters change
   useEffect(() => {
     if (!cabinId || !date || !startTime || !endTime) return;
-    
+
     // 1. Check availability
     const status = checkAvailability(cabinId, date, startTime, endTime);
     setAvailability(status);
@@ -132,9 +133,9 @@ export default function BookingView() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      
+
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        
+
         {/* Booking Form Card (2/3 width) */}
         <div className="xl:col-span-2 p-5 md:p-6 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-6">
           <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -142,7 +143,7 @@ export default function BookingView() {
           </div>
 
           <form onSubmit={handleBook} className="space-y-5">
-            
+
             {submitError && (
               <div className="flex items-center gap-2.5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-xs">
                 <AlertTriangle size={16} className="shrink-0" />
@@ -152,7 +153,7 @@ export default function BookingView() {
 
             {/* Location details */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              
+
               {/* Building */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
@@ -218,7 +219,7 @@ export default function BookingView() {
 
             {/* Date & Time selection */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              
+
               {/* Date */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
@@ -264,7 +265,7 @@ export default function BookingView() {
 
             {/* Attendance & Purpose */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              
+
               {/* Attendees count */}
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
@@ -292,35 +293,32 @@ export default function BookingView() {
                   onChange={(e) => setDepartment(e.target.value as any)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 >
-                  <option value="IT">IT Department</option>
-                  <option value="HR">HR Department</option>
-                  <option value="Finance">Finance Department</option>
-                  <option value="Executive">Executive Team</option>
-                  <option value="Marketing">Marketing Division</option>
-                  <option value="Sales">Sales Division</option>
+                  {
+                    departments.map((dept, i) => (
+                      <option key={i} value={dept}>{dept}</option>
+                    ))
+                  }
                 </select>
               </div>
 
               {/* Booking status visualizer */}
               <div className="space-y-1.5 flex flex-col justify-end">
-                <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-semibold ${
-                  availability === "available" 
+                <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-semibold ${availability === "available"
                     ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
-                    : availability === "reserved" 
-                    ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
-                    : availability === "maintenance"
-                    ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
-                    : "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
-                }`}>
-                  <span className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse ${
-                    availability === "available" ? "bg-emerald-500" :
-                    availability === "reserved" ? "bg-amber-500" :
-                    availability === "maintenance" ? "bg-slate-400" : "bg-red-500"
-                  }`} />
+                    : availability === "reserved"
+                      ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
+                      : availability === "maintenance"
+                        ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
+                        : "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
+                  }`}>
+                  <span className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse ${availability === "available" ? "bg-emerald-500" :
+                      availability === "reserved" ? "bg-amber-500" :
+                        availability === "maintenance" ? "bg-slate-400" : "bg-red-500"
+                    }`} />
                   <span>
                     {availability === "available" ? "🟢 Available Instantly" :
-                     availability === "reserved" ? "🟡 Reserved Soon" :
-                     availability === "maintenance" ? "⚫ Under Maintenance" : "🔴 Already Booked"}
+                      availability === "reserved" ? "🟡 Reserved Soon" :
+                        availability === "maintenance" ? "⚫ Under Maintenance" : "🔴 Already Booked"}
                   </span>
                 </div>
               </div>
@@ -345,7 +343,7 @@ export default function BookingView() {
             <button
               type="submit"
               disabled={availability !== "available" && availability !== "reserved"}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-sm transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
+              className="w-full py-2.5 rounded-xl bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-sm transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
             >
               <ShieldCheck size={16} />
               <span>Book Space Now</span>
@@ -355,12 +353,12 @@ export default function BookingView() {
 
         {/* Info Column (1/3 width): Selected Cabin details & Smart AI recommendations */}
         <div className="space-y-6">
-          
+
           {/* Cabin Detail Card */}
           {activeCabinObj ? (
             <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
               <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2">Space Details</h3>
-              
+
               <div>
                 <span className="text-[9px] font-bold text-blue-500 uppercase">{activeCabinObj.building} • {activeCabinObj.floor}</span>
                 <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">{activeCabinObj.name}</h4>
@@ -372,7 +370,7 @@ export default function BookingView() {
                   <span>Max Capacity</span>
                   <span className="font-bold text-slate-800 dark:text-white">{activeCabinObj.capacity} seats</span>
                 </div>
-                
+
                 {activeCabinObj.department && activeCabinObj.department !== "None" && (
                   <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
                     <span>Assigned Department</span>
@@ -401,7 +399,7 @@ export default function BookingView() {
           )}
 
           {/* AI recommendations panel */}
-          <div className="p-5 rounded-2xl bg-gradient-to-tr from-slate-50 to-blue-50/50 border border-slate-200/60 dark:from-slate-900 dark:to-blue-950/20 dark:border-slate-800/80 shadow-xs space-y-4">
+          <div className="p-5 rounded-2xl bg-linear-to-tr from-slate-50 to-blue-50/50 border border-slate-200/60 dark:from-slate-900 dark:to-blue-950/20 dark:border-slate-800/80 shadow-xs space-y-4">
             <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400 border-b border-blue-100/50 dark:border-slate-800 pb-2">
               <Sparkles size={16} className="animate-pulse" />
               <h3 className="font-bold text-sm">Smart Room Suggest</h3>
@@ -410,8 +408,8 @@ export default function BookingView() {
             <div className="space-y-3">
               {recommendations.length > 0 ? (
                 recommendations.map((rec) => (
-                  <div 
-                    key={rec.id} 
+                  <div
+                    key={rec.id}
                     className="p-3 rounded-xl border border-white bg-white/60 dark:border-slate-800/50 dark:bg-slate-950/40 hover:bg-white dark:hover:bg-slate-950 transition-all flex flex-col justify-between"
                   >
                     <div>
@@ -450,7 +448,7 @@ export default function BookingView() {
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
               <CheckCircle2 size={32} />
             </div>
-            
+
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white">Booking Confirmed!</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">

@@ -7,12 +7,13 @@ import {
   Building,
   Calendar,
   CalendarRange,
+  ChartColumnDecreasing,
   LayoutDashboard,
   LogOut,
   Map,
   Menu,
   Moon,
-  Settings,
+  History,
   Sun,
   User,
   Users,
@@ -31,7 +32,7 @@ export default function Sidebar() {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const menuItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "dashboard", label: "Dashboard", icon: ChartColumnDecreasing },
     { id: "book-cabin", label: "Book Cabin", icon: CalendarRange },
     { id: "office-map", label: "Office Map", icon: Map },
     { id: "calendar", label: "Calendar", icon: Calendar },
@@ -42,8 +43,9 @@ export default function Sidebar() {
 
   // Show Admin view only to admin
   const adminItems = [
-    { id: "admin-panel", label: "Admin Panel", icon: Settings },
     { id: "users", label: "Users", icon: Users },
+    { id: "cabins", label: "Cabins", icon: LayoutDashboard },
+    { id: "report", label: "Reports & History", icon: History },
   ];
 
   const handleNav = (tabId: string) => {
