@@ -2,15 +2,15 @@
 
 import React, { useState } from "react";
 import { useBooking, Booking } from "../context/BookingContext";
-import { 
-  Bookmark, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  Trash2, 
-  Edit3, 
-  UserCheck, 
-  AlertTriangle, 
+import {
+  Bookmark,
+  Calendar,
+  Clock,
+  MapPin,
+  Trash2,
+  Edit3,
+  UserCheck,
+  AlertTriangle,
   X,
   History,
   CheckCircle2,
@@ -19,7 +19,7 @@ import {
 
 export default function MyBookingsView() {
   const { bookings, cabins, cancelBooking, checkInBooking, editBooking, currentUser } = useBooking();
-  
+
   // Reschedule Modal
   const [rescheduleItem, setRescheduleItem] = useState<Booking | null>(null);
   const [newDate, setNewDate] = useState("");
@@ -90,7 +90,7 @@ export default function MyBookingsView() {
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
-      
+
       {/* Active Bookings Section */}
       <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
         <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -101,15 +101,15 @@ export default function MyBookingsView() {
         {activeBookings.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {activeBookings.map((b) => {
-              const cabin = cabins.find(c => c.id === b.cabinId);
-              
+              const cabin = cabins.find(c => c._id === b.cabinId);
+
               // Enable check in button only for today's bookings starting soon/active, and not yet checked-in
               const isToday = b.date === "2026-07-01";
               const showCheckIn = isToday && b.status === "confirmed";
 
               return (
-                <div 
-                  key={b.id} 
+                <div
+                  key={b.id}
                   className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100/30 transition-all dark:border-slate-800/60 dark:bg-slate-800/20 dark:hover:bg-slate-800/40 flex flex-col justify-between"
                 >
                   <div className="space-y-3">
@@ -138,7 +138,7 @@ export default function MyBookingsView() {
 
                   {/* Actions buttons */}
                   <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 justify-end">
-                    
+
                     {showCheckIn && (
                       <button
                         onClick={() => checkInBooking(b.id)}
@@ -185,11 +185,11 @@ export default function MyBookingsView() {
 
         {pastBookings.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {pastBookings.map((b) => {
-              const cabin = cabins.find(c => c.id === b.cabinId);
+            {pastBookings.map((b, i) => {
+              const cabin = cabins.find(c => c._id === b.cabinId);
               return (
-                <div 
-                  key={b.id} 
+                <div
+                  key={i}
                   className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/20 dark:border-slate-800/40 dark:bg-slate-900/10 flex items-center justify-between opacity-60"
                 >
                   <div className="overflow-hidden">
@@ -213,10 +213,10 @@ export default function MyBookingsView() {
       {rescheduleItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 space-y-4 animate-enter">
-            
+
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <h3 className="text-sm font-bold text-slate-800 dark:text-white">Reschedule: {rescheduleItem.purpose}</h3>
-              <button 
+              <button
                 onClick={() => setRescheduleItem(null)}
                 className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
@@ -225,7 +225,7 @@ export default function MyBookingsView() {
             </div>
 
             <form onSubmit={handleRescheduleSubmit} className="space-y-4 text-xs">
-              
+
               {editError && (
                 <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-[10px]">
                   <AlertCircle size={14} className="shrink-0" />

@@ -15,8 +15,9 @@ import {
   Users
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { Cabin, useBooking } from "../context/BookingContext";
+import { useBooking } from "../context/BookingContext";
 import { departments } from "../Data";
+import { CabinType } from "../Types/Cabin";
 
 export default function BookingView() {
   const {
@@ -42,7 +43,7 @@ export default function BookingView() {
 
   // Availability & Recommendation state
   const [availability, setAvailability] = useState<"available" | "occupied" | "reserved" | "maintenance">("available");
-  const [recommendations, setRecommendations] = useState<Cabin[]>([]);
+  const [recommendations, setRecommendations] = useState<CabinType[]>([]);
   const [submitError, setSubmitError] = useState("");
   const [successModal, setSuccessModal] = useState(false);
 
@@ -54,9 +55,9 @@ export default function BookingView() {
   useEffect(() => {
     if (filteredCabins.length > 0) {
       // Keep selected cabin if it exists on new floor, otherwise reset
-      const exists = filteredCabins.some(c => c.id === cabinId);
+      const exists = filteredCabins.some(c => c._id === cabinId);
       if (!exists) {
-        setCabinId(filteredCabins[0].id);
+        setCabinId(filteredCabins[0]._id);
       }
     } else {
       setCabinId("");
@@ -72,11 +73,11 @@ export default function BookingView() {
     setAvailability(status);
 
     // 2. Fetch AI Recommendations based on requirements (needed facilities can be mapped, let's pass empty/all for general matching)
-    const activeCabin = cabins.find(c => c.id === cabinId);
+    const activeCabin = cabins.find(c => c._id === cabinId);
     const neededFacilities = activeCabin ? activeCabin.facilities : [];
     const recs = getAIRecommendations(attendees, neededFacilities, date, startTime, endTime);
     // Filter out the currently selected cabin from recommendations
-    setRecommendations(recs.filter(r => r.id !== cabinId));
+    setRecommendations(recs.filter(r => r._id !== cabinId));
   }, [cabinId, date, startTime, endTime, attendees, cabins]);
 
   // Handle Form Submission
@@ -123,13 +124,13 @@ export default function BookingView() {
     return (eH * 60 + eM) - (sH * 60 + sM);
   };
 
-  const handleApplyRecommendation = (recCabin: Cabin) => {
+  const handleApplyRecommendation = (recCabin: CabinType) => {
     setSelectedBuilding(recCabin.building);
     setSelectedFloor(recCabin.floor);
-    setCabinId(recCabin.id);
+    setCabinId(recCabin._id);
   };
 
-  const activeCabinObj = cabins.find(c => c.id === cabinId);
+  const activeCabinObj = cabins.find(c => c._id === cabinId);
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -205,8 +206,8 @@ export default function BookingView() {
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 >
                   {filteredCabins.length > 0 ? (
-                    filteredCabins.map((c) => (
-                      <option key={c.id} value={c.id}>
+                    filteredCabins.map((c, i) => (
+                      <option key={i} value={c._id}>
                         {c.name} (Cap: {c.capacity})
                       </option>
                     ))
@@ -409,7 +410,7 @@ export default function BookingView() {
               {recommendations.length > 0 ? (
                 recommendations.map((rec) => (
                   <div
-                    key={rec.id}
+                    key={rec._id}
                     className="p-3 rounded-xl border border-white bg-white/60 dark:border-slate-800/50 dark:bg-slate-950/40 hover:bg-white dark:hover:bg-slate-950 transition-all flex flex-col justify-between"
                   >
                     <div>

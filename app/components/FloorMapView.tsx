@@ -13,8 +13,9 @@ import {
   X
 } from "lucide-react";
 import React, { useState } from "react";
-import { Cabin, useBooking } from "../context/BookingContext";
+import { useBooking } from "../context/BookingContext";
 import { departments } from "../Data";
+import { CabinType } from "../Types/Cabin";
 
 export default function FloorMapView() {
   const {
@@ -26,11 +27,11 @@ export default function FloorMapView() {
     setSelectedFloor
   } = useBooking();
 
-  const [hoveredCabin, setHoveredCabin] = useState<Cabin | null>(null);
+  const [hoveredCabin, setHoveredCabin] = useState<CabinType | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
 
   // Quick Book modal
-  const [bookingCabin, setBookingCabin] = useState<Cabin | null>(null);
+  const [bookingCabin, setBookingCabin] = useState<CabinType | null>(null);
   const [purpose, setPurpose] = useState("");
   const [startTime, setStartTime] = useState("14:00");
   const [endTime, setEndTime] = useState("15:00");
@@ -50,7 +51,7 @@ export default function FloorMapView() {
     maintenance: "fill-slate-500/20 stroke-slate-400 hover:fill-slate-500/30",
   };
 
-  const getStatusText = (status: Cabin["status"]) => {
+  const getStatusText = (status: CabinType["status"]) => {
     switch (status) {
       case "available": return "🟢 Available";
       case "occupied": return "🔴 Occupied (Active)";
@@ -67,7 +68,7 @@ export default function FloorMapView() {
     });
   };
 
-  const handleCabinClick = (cabin: Cabin) => {
+  const handleCabinClick = (cabin: CabinType) => {
     if (cabin.status === "maintenance") return;
     setBookingCabin(cabin);
     setAttendees(Math.min(4, cabin.capacity));
@@ -89,7 +90,7 @@ export default function FloorMapView() {
     }
 
     const res = addBooking({
-      cabinId: bookingCabin.id,
+      cabinId: bookingCabin._id,
       userId: "u1",
       date: "2026-07-01", // Default today's date
       startTime,
@@ -270,7 +271,7 @@ export default function FloorMapView() {
 
               return (
                 <g
-                  key={cabin.id}
+                  key={cabin._id}
                   className={isMaintenance ? "cursor-not-allowed" : "cursor-pointer"}
                   onClick={() => handleCabinClick(cabin)}
                   onMouseEnter={(e) => setHoveredCabin(cabin)}
@@ -345,7 +346,7 @@ export default function FloorMapView() {
             <div className="space-y-1 border-t border-slate-100 dark:border-slate-800 pt-2">
               <span className="text-[9px] font-bold text-slate-400 uppercase">Facilities</span>
               <div className="flex flex-wrap gap-1 mt-0.5">
-                {hoveredCabin.facilities.map((fac, idx) => (
+                {hoveredCabin.facilities.map((fac:any, idx:number) => (
                   <div key={idx} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[8px] font-semibold">
                     {getFacilityIcon(fac)}
                     <span>{fac}</span>

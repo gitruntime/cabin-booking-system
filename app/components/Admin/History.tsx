@@ -21,7 +21,7 @@ export default function History() {
     // Generate simple CSV content of bookings
     const headers = "Booking ID,Room,User,Date,Start,End,Attendees,Purpose,Department,Status\n";
     const rows = bookings.map(b => {
-      const cabin = cabins.find(c => c.id === b.cabinId);
+      const cabin = cabins.find(c => c._id === b.cabinId);
       return `"${b.id}","${cabin?.name || 'Deleted'}","${b.userName}","${b.date}","${b.startTime}","${b.endTime}",${b.attendees},"${b.purpose}","${b.department}","${b.status}"`;
     }).join("\n");
 
@@ -78,7 +78,7 @@ export default function History() {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {bookings.map((b) => {
-                const cabin = cabins.find(c => c.id === b.cabinId);
+                const cabin = cabins.find(c => c._id === b.cabinId);
                 return (
                   <tr key={b.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-855/20 transition-colors">
                     <td className="p-3 font-semibold text-slate-850 dark:text-slate-200">{cabin?.name || "Deleted Cabin"}</td>

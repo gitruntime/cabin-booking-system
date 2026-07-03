@@ -52,7 +52,7 @@ export default function CalendarView() {
   const getFilteredBookings = () => {
     return bookings.filter(b => {
       if (b.status === "cancelled") return false;
-      const cabin = cabins.find(c => c.id === b.cabinId);
+      const cabin = cabins.find(c => c._id === b.cabinId);
       if (!cabin) return false;
 
       if (filterBuilding !== "All" && cabin.building !== filterBuilding) return false;
@@ -129,7 +129,7 @@ export default function CalendarView() {
           {/* Bookings inside the day box */}
           <div className="space-y-1 mt-1 overflow-y-auto max-h-15">
             {dayBookings.slice(0, 3).map((b) => {
-              const cabin = cabins.find(c => c.id === b.cabinId);
+              const cabin = cabins.find(c => c._id === b.cabinId);
               const colorClass = deptBgColors[b.department as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
               return (
                 <div
@@ -224,7 +224,7 @@ export default function CalendarView() {
                 return (
                   <div key={idx} className="p-1.5 border-r border-slate-100 dark:border-slate-800 last:border-r-0 relative hover:bg-slate-50/40 dark:hover:bg-slate-850/10 transition-colors">
                     {slotBookings.map((b) => {
-                      const cabin = cabins.find(c => c.id === b.cabinId);
+                      const cabin = cabins.find(c => c._id === b.cabinId);
                       const colorClass = deptBgColors[b.department as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
                       return (
                         <div
@@ -269,7 +269,7 @@ export default function CalendarView() {
         <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-100 overflow-y-auto p-4 space-y-3">
           {dayBookings.length > 0 ? (
             dayBookings.map((b) => {
-              const cabin = cabins.find(c => c.id === b.cabinId);
+              const cabin = cabins.find(c => c._id === b.cabinId);
               const colorClass = deptBgColors[b.department as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
 
               return (
@@ -416,8 +416,8 @@ export default function CalendarView() {
                 className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
               >
                 <option value="All">All Rooms</option>
-                {cabins.map((c) => (
-                  <option key={c.id} value={c.name}>{c.name}</option>
+                {cabins.map((c, i) => (
+                  <option key={i} value={c._id}>{c.name}</option>
                 ))}
               </select>
             </div>

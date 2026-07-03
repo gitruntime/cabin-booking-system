@@ -1,5 +1,5 @@
 export interface CabinType {
-  id: string;
+  _id: string;
   name: string;
   type: string;
   building: any;

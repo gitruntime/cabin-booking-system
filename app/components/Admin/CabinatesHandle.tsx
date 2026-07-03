@@ -9,13 +9,15 @@ import {
   X
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { Cabin, useBooking } from "../../context/BookingContext";
+import { useBooking } from "../../context/BookingContext";
 import { cabinFacilities, departments } from "@/app/Data";
 import { createCabin, getCabins, updateCabin, deleteCabin as deleteCabinApi, toggleMaintainance as toggleMaintainanceApi } from "../../http";
 import toast from "react-hot-toast";
+import { CabinType } from "@/app/Types/Cabin";
 
 export default function CabinatesHandle() {
-  const [cabins, setCabins] = useState<any[]>([]);
+  const { cabinList, setCabinList } = useBooking();
+  const [cabins, setCabins] = useState<CabinType[]>([]);
   const [loadingCabins, setLoadingCabins] = useState(true);
 
   // Maintenance Confirmation
@@ -65,18 +67,18 @@ export default function CabinatesHandle() {
 
   // Cabin Form Inputs
   const [cabinName, setCabinName] = useState("");
-  const [cabinType, setCabinType] = useState<Cabin["type"]>("cabin");
-  const [building, setBuilding] = useState<Cabin["building"]>("Main HQ");
-  const [floor, setFloor] = useState<Cabin["floor"]>("1st Floor");
+  const [cabinType, setCabinType] = useState<CabinType["type"]>("cabin");
+  const [building, setBuilding] = useState<CabinType["building"]>("Main HQ");
+  const [floor, setFloor] = useState<CabinType["floor"]>("1st Floor");
   const [capacity, setCapacity] = useState(4);
-  const [facilities, setFacilities] = useState<Cabin["facilities"]>([]);
-  const [dept, setDept] = useState<Cabin["department"]>("None");
+  const [facilities, setFacilities] = useState<CabinType["facilities"]>([]);
+  const [dept, setDept] = useState<CabinType["department"]>("None");
   const [mapX, setMapX] = useState(25);
   const [mapY, setMapY] = useState(25);
   const [mapW, setMapW] = useState(15);
   const [mapH, setMapH] = useState(15);
 
-  const handleFacilityChange = (fac: Cabin["facilities"][number]) => {
+  const handleFacilityChange = (fac: CabinType["facilities"][number]) => {
     if (facilities.includes(fac)) {
       setFacilities(facilities.filter(f => f !== fac));
     } else {

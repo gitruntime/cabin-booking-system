@@ -155,7 +155,7 @@ export default function DashboardView() {
             <div className="space-y-3 max-h-87.5 overflow-y-auto pr-1">
               {todaysBookings.length > 0 ? (
                 todaysBookings.map((b) => {
-                  const cabin = cabins.find(c => c.id === b.cabinId);
+                  const cabin = cabins.find(c => c._id === b.cabinId);
                   const isCheckedIn = b.status === "checked-in";
                   
                   return (
@@ -219,9 +219,9 @@ export default function DashboardView() {
             <h3 className="font-bold text-slate-800 dark:text-slate-200">Available Cabins Today</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {cabins.filter(c => c.status === "available").slice(0, 4).map((c) => (
+              {cabins.filter(c => c.status === "available").slice(0, 4).map((c, i) => (
                 <div 
-                  key={c.id} 
+                  key={i} 
                   className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100/30 transition-all flex flex-col justify-between dark:border-slate-800/60 dark:bg-slate-800/20 dark:hover:bg-slate-800/40"
                 >
                   <div>
