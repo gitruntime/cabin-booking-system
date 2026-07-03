@@ -67,9 +67,6 @@ interface BookingContextType {
   editBooking: (id: string, updated: Partial<Booking>) => { success: boolean; error?: string };
 
   // Admin Operations
-  addCabin: (cabin: Omit<CabinType, "_id">) => void;
-  editCabin: (cabin: CabinType) => void;
-  deleteCabin: (id: string) => void;
   toggleCabinMaintenance: (id: string) => void;
 
   // Helpers
@@ -494,62 +491,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return { success: true };
   };
 
-  // Admin Operations
-  const addCabin = (cabinData: Omit<CabinType, "_id">) => {
-    const newCabin: CabinType = {
-      ...cabinData,
-      _id: "c_" + Date.now()
-    };
-    setCabins(prev => [...prev, newCabin]);
-
-    const newNotif: NotificationItem = {
-      id: "n_" + Date.now(),
-      type: "info",
-      title: "Cabin Added",
-      message: `Admin added a new cabin: ${newCabin.name} (${newCabin.building}, Floor ${newCabin.floor}).`,
-      time: "Just now",
-      timestamp: new Date(),
-      read: false
-    };
-    setNotifications(prev => [newNotif, ...prev]);
-  };
-
-  const editCabin = (updatedCabin: CabinType) => {
-    setCabins(prev => prev.map(c => (c._id === updatedCabin._id ? updatedCabin : c)));
-
-    const newNotif: NotificationItem = {
-      id: "n_" + Date.now(),
-      type: "info",
-      title: "Cabin Updated",
-      message: `Admin updated details for ${updatedCabin.name}.`,
-      time: "Just now",
-      timestamp: new Date(),
-      read: false
-    };
-    setNotifications(prev => [newNotif, ...prev]);
-  };
-
-  const deleteCabin = (id: string) => {
-    const cabin = cabins.find(c => c._id === id);
-    setCabins(prev => prev.filter(c => c._id !== id));
-
-    // Also cancel bookings for deleted cabin
-    setBookings(prev =>
-      prev.map(b => (b.cabinId === id ? { ...b, status: "cancelled" as const } : b))
-    );
-
-    const newNotif: NotificationItem = {
-      id: "n_" + Date.now(),
-      type: "warning",
-      title: "Cabin Deleted",
-      message: `Admin deleted ${cabin?.name || "a cabin"}. Linked bookings cancelled automatically.`,
-      time: "Just now",
-      timestamp: new Date(),
-      read: false
-    };
-    setNotifications(prev => [newNotif, ...prev]);
-  };
-
   const toggleCabinMaintenance = (id: string) => {
     const cabin = cabins.find(c => c._id === id);
     if (!cabin) return;
@@ -676,9 +617,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         checkInBooking,
         editBooking,
 
-        addCabin,
-        editCabin,
-        deleteCabin,
         toggleCabinMaintenance,
 
         checkAvailability,
