@@ -16,22 +16,22 @@ import {
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
-import { departments } from "../Data";
+import { buildings, departments } from "../Data";
 import { CabinType } from "../Types/Cabin";
 
 export default function BookingView() {
   const {
     cabins,
+    cabinList,
     addBooking,
     checkAvailability,
     getAIRecommendations,
-    selectedBuilding,
-    setSelectedBuilding,
     selectedFloor,
     setSelectedFloor,
     setCurrentTab
   } = useBooking();
-
+  console.log("🚀 ~ BookingView ~ cabinList:", cabinList)
+  const [selectedBuilding, setSelectedBuilding] = useState("");
   // Form states
   const [cabinId, setCabinId] = useState("");
   const [date, setDate] = useState("2026-07-01");
@@ -166,8 +166,11 @@ export default function BookingView() {
                   onChange={(e) => setSelectedBuilding(e.target.value as any)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 >
-                  <option value="Main HQ">Main HQ</option>
-                  <option value="West Wing">West Wing</option>
+                  {
+                    buildings.map((bld, i) => (
+                      <option key={i} value={bld}>{bld}</option>
+                    ))
+                  }
                 </select>
               </div>
 
@@ -305,16 +308,16 @@ export default function BookingView() {
               {/* Booking status visualizer */}
               <div className="space-y-1.5 flex flex-col justify-end">
                 <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-semibold ${availability === "available"
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
-                    : availability === "reserved"
-                      ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
-                      : availability === "maintenance"
-                        ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
-                        : "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
+                  : availability === "reserved"
+                    ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
+                    : availability === "maintenance"
+                      ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
+                      : "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
                   }`}>
                   <span className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse ${availability === "available" ? "bg-emerald-500" :
-                      availability === "reserved" ? "bg-amber-500" :
-                        availability === "maintenance" ? "bg-slate-400" : "bg-red-500"
+                    availability === "reserved" ? "bg-amber-500" :
+                      availability === "maintenance" ? "bg-slate-400" : "bg-red-500"
                     }`} />
                   <span>
                     {availability === "available" ? "🟢 Available Instantly" :

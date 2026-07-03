@@ -12,7 +12,7 @@ import {
   SlidersHorizontal,
   Info
 } from "lucide-react";
-import { departments } from "../Data";
+import { buildings, departments } from "../Data";
 
 export default function CalendarView() {
   const { bookings, cabins } = useBooking();
@@ -119,8 +119,8 @@ export default function CalendarView() {
         >
           <div className="flex justify-between items-center">
             <span className={`text-[10px] font-bold h-5 w-5 rounded-full flex items-center justify-center ${isToday
-                ? "bg-blue-600 text-white"
-                : "text-slate-700 dark:text-slate-400"
+              ? "bg-blue-600 text-white"
+              : "text-slate-700 dark:text-slate-400"
               }`}>
               {day}
             </span>
@@ -387,8 +387,11 @@ export default function CalendarView() {
                 className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
               >
                 <option value="All">All Buildings</option>
-                <option value="Main HQ">Main HQ</option>
-                <option value="West Wing">West Wing</option>
+                {
+                  buildings.map((bld, i) => (
+                    <option key={i} value={bld}>{bld}</option>
+                  ))
+                }
               </select>
             </div>
 
