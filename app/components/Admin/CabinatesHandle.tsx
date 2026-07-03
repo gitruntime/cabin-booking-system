@@ -8,22 +8,60 @@ import {
   Wrench,
   X
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Cabin, useBooking } from "../../context/BookingContext";
-import { departments } from "@/app/Data";
+import { cabinFacilities, departments } from "@/app/Data";
+import { createCabin, getCabins, updateCabin, deleteCabin as deleteCabinApi, toggleMaintainance as toggleMaintainanceApi } from "../../http";
+import toast from "react-hot-toast";
 
 export default function CabinatesHandle() {
-  const {
-    cabins,
-    addCabin,
-    editCabin,
-    deleteCabin,
-    toggleCabinMaintenance
-  } = useBooking();
+  const [cabins, setCabins] = useState<any[]>([]);
+  const [loadingCabins, setLoadingCabins] = useState(true);
+
+  // Maintenance Confirmation
+  const [cabinToToggle, setCabinToToggle] = useState<any>(null);
+  const [toggling, setToggling] = useState(false);
+
+  const handleMaintenanceConfirm = async () => {
+    if (!cabinToToggle) return;
+    setToggling(true);
+    try {
+      const res = await toggleMaintainanceApi(cabinToToggle._id);
+      const newStatus = cabinToToggle.status === "maintenance" ? "available" : "maintenance";
+      setCabins(prev => prev.map(c => c._id === cabinToToggle._id ? { ...c, status: newStatus } : c));
+      toast.success(res?.data?.message || `Cabin marked as ${newStatus}.`);
+      setCabinToToggle(null);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Failed to update maintenance status.");
+    } finally {
+      setToggling(false);
+    }
+  };
+
+  // Delete Confirmation
+  const [cabinToDelete, setCabinToDelete] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteConfirm = async () => {
+    if (!cabinToDelete) return;
+    setDeleting(true);
+    try {
+      const res = await deleteCabinApi(cabinToDelete._id);
+      setCabins(prev => prev.filter(c => c._id !== cabinToDelete._id));
+      toast.success(res?.data?.message || "Cabin deleted successfully!");
+      setCabinToDelete(null);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Failed to delete cabin.");
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   // Cabin Form Dialog
   const [showCabinModal, setShowCabinModal] = useState(false);
-  const [editingCabin, setEditingCabin] = useState<Cabin | null>(null);
+  const [editingCabin, setEditingCabin] = useState<any>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Cabin Form Inputs
   const [cabinName, setCabinName] = useState("");
@@ -31,14 +69,12 @@ export default function CabinatesHandle() {
   const [building, setBuilding] = useState<Cabin["building"]>("Main HQ");
   const [floor, setFloor] = useState<Cabin["floor"]>("1st Floor");
   const [capacity, setCapacity] = useState(4);
-  const [facilities, setFacilities] = useState<Cabin["facilities"]>(["TV", "Whiteboard"]);
+  const [facilities, setFacilities] = useState<Cabin["facilities"]>([]);
   const [dept, setDept] = useState<Cabin["department"]>("None");
   const [mapX, setMapX] = useState(25);
   const [mapY, setMapY] = useState(25);
   const [mapW, setMapW] = useState(15);
   const [mapH, setMapH] = useState(15);
-
-  const availableFacilities: Cabin["facilities"] = ["Projector", "TV", "Whiteboard", "Video Conference", "Audio System"];
 
   const handleFacilityChange = (fac: Cabin["facilities"][number]) => {
     if (facilities.includes(fac)) {
@@ -55,7 +91,7 @@ export default function CabinatesHandle() {
     setBuilding("Main HQ");
     setFloor("1st Floor");
     setCapacity(4);
-    setFacilities(["TV", "Whiteboard"]);
+    setFacilities([]);
     setDept("None");
     setMapX(40);
     setMapY(40);
@@ -64,7 +100,7 @@ export default function CabinatesHandle() {
     setShowCabinModal(true);
   };
 
-  const handleOpenEdit = (cabin: Cabin) => {
+  const handleOpenEdit = (cabin: any) => {
     setEditingCabin(cabin);
     setCabinName(cabin.name);
     setCabinType(cabin.type);
@@ -73,14 +109,14 @@ export default function CabinatesHandle() {
     setCapacity(cabin.capacity);
     setFacilities(cabin.facilities);
     setDept(cabin.department || "None");
-    setMapX(cabin.x);
-    setMapY(cabin.y);
-    setMapW(cabin.w);
-    setMapH(cabin.h);
+    setMapX(cabin.xAxis);
+    setMapY(cabin.yAxis);
+    setMapW(cabin.width);
+    setMapH(cabin.height);
     setShowCabinModal(true);
   };
 
-  const handleCabinFormSubmit = (e: React.FormEvent) => {
+  const handleCabinFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cabinName.trim()) return;
 
@@ -91,22 +127,48 @@ export default function CabinatesHandle() {
       floor,
       capacity,
       facilities,
-      status: (editingCabin ? editingCabin.status : "available") as Cabin["status"],
+      status: (editingCabin ? editingCabin.status : "available"),
       department: dept,
-      x: Number(mapX),
-      y: Number(mapY),
-      w: Number(mapW),
-      h: Number(mapH)
+      xAxis: Number(mapX),
+      yAxis: Number(mapY),
+      width: Number(mapW),
+      height: Number(mapH)
     };
 
-    if (editingCabin) {
-      editCabin({ ...cabinData, id: editingCabin.id });
-    } else {
-      addCabin(cabinData);
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      if (editingCabin) {
+        const res = await updateCabin(editingCabin._id, cabinData);
+        setCabins(prev => prev.map(c => c._id === editingCabin._id ? { ...c, ...cabinData } : c));
+        toast.success(res?.data?.message || "Cabin updated successfully!");
+      } else {
+        const res = await createCabin(cabinData);
+        toast.success(res?.data?.message || "Cabin created successfully!");
+      }
+      setShowCabinModal(false);
+    } catch (err: any) {
+      setSubmitError(err?.response?.data?.message ?? "Failed to create cabin. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
-    setShowCabinModal(false);
   };
 
+  useEffect(() => {
+    const fetchCabins = async () => {
+      setLoadingCabins(true);
+      try {
+        const res = await getCabins();
+        setCabins(res?.data || []);
+        setLoadingCabins(false);
+      } catch (err) {
+        console.error("Failed to fetch cabins:", err);
+        setLoadingCabins(false);
+      }
+    };
+
+    fetchCabins();
+  }, [showCabinModal]);
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -126,75 +188,155 @@ export default function CabinatesHandle() {
         </div>
 
         <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
-          <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
-                <th className="p-3">Room Name</th>
-                <th className="p-3">Type</th>
-                <th className="p-3">Location</th>
-                <th className="p-3">Capacity</th>
-                <th className="p-3">Facilities</th>
-                <th className="p-3">Status</th>
-                <th className="p-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {cabins.map((cabin) => (
-                <tr key={cabin.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
-                  <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{cabin.name}</td>
-                  <td className="p-3 capitalize">{cabin.type}</td>
-                  <td className="p-3 font-semibold">{cabin.building} • Floor {cabin.floor.split(" ")[0]}</td>
-                  <td className="p-3 font-bold">{cabin.capacity} seats</td>
-                  <td className="p-3">
-                    <div className="flex flex-wrap gap-1 max-w-50">
-                      {cabin.facilities.map((f, i) => (
-                        <span key={i} className="px-1.5 py-0.5 text-[9px] bg-slate-100 text-slate-500 rounded dark:bg-slate-800 dark:text-slate-400 font-medium">
-                          {f}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${cabin.status === 'available' ? 'bg-emerald-105 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
-                      cabin.status === 'maintenance' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
-                        cabin.status === 'reserved' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' :
-                          'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300'
-                      }`}>
-                      {cabin.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-right space-x-1.5 shrink-0">
-                    <button
-                      onClick={() => toggleCabinMaintenance(cabin.id)}
-                      className={`p-1.5 rounded-lg border transition-colors ${cabin.status === "maintenance"
-                        ? "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
-                        : "hover:bg-slate-100 border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
-                        }`}
-                      title={cabin.status === "maintenance" ? "Put back online" : "Block for maintenance"}
-                    >
-                      <Wrench size={12} />
-                    </button>
-                    <button
-                      onClick={() => handleOpenEdit(cabin)}
-                      className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
-                      title="Edit cabin details"
-                    >
-                      <Edit3 size={12} />
-                    </button>
-                    <button
-                      onClick={() => deleteCabin(cabin.id)}
-                      className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
-                      title="Delete cabin"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                  </td>
+          {loadingCabins ? (
+            <div className="p-6 text-center text-xs text-slate-400 dark:text-slate-500">
+              Loading cabins...
+            </div>) :
+            <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                  <th className="p-3">Room Name</th>
+                  <th className="p-3">Type</th>
+                  <th className="p-3">Location</th>
+                  <th className="p-3">Capacity</th>
+                  <th className="p-3">Facilities</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3 text-right">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {cabins.map((cabin, i) => (
+                  <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                    <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{cabin.name}</td>
+                    <td className="p-3 capitalize">{cabin.type}</td>
+                    <td className="p-3 font-semibold">{cabin.building} • Floor {cabin.floor.split(" ")[0]}</td>
+                    <td className="p-3 font-bold">{cabin.capacity} seats</td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-1 max-w-50">
+                        {cabin?.facilities.map((f: any, i: number) => (
+                          <span key={i} className="px-1.5 py-0.5 text-[9px] bg-slate-100 text-slate-500 rounded dark:bg-slate-800 dark:text-slate-400 font-medium">
+                            {f}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${cabin.status === 'available' ? 'bg-emerald-105 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
+                        cabin.status === 'maintenance' ? 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400' :
+                          cabin.status === 'reserved' ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300' :
+                            'bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300'
+                        }`}>
+                        {cabin.status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right space-x-1.5 shrink-0">
+                      <button
+                        onClick={() => setCabinToToggle(cabin)}
+                        className={`p-1.5 rounded-lg border transition-colors ${cabin.status === "maintenance"
+                          ? "bg-amber-50 border-amber-200 text-amber-600 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
+                          : "hover:bg-slate-100 border-slate-200 text-slate-500 dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                          }`}
+                        title={cabin.status === "maintenance" ? "Put back online" : "Block for maintenance"}
+                      >
+                        <Wrench size={12} />
+                      </button>
+                      <button
+                        onClick={() => handleOpenEdit(cabin)}
+                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                        title="Edit cabin details"
+                      >
+                        <Edit3 size={12} />
+                      </button>
+                      <button
+                        onClick={() => setCabinToDelete(cabin)}
+                        className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
+                        title="Delete cabin"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>}
         </div>
       </div>
+
+      {/* Maintenance Toggle Confirmation Popup */}
+      {cabinToToggle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-6 space-y-4 animate-enter">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-950/40">
+                <Wrench size={18} className="text-amber-600 dark:text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white">
+                  {cabinToToggle.status === "maintenance" ? "Restore Cabin" : "Flag for Maintenance"}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">This will update the cabin's availability.</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              {cabinToToggle.status === "maintenance"
+                ? <>Mark <span className="font-bold text-slate-800 dark:text-white">{cabinToToggle.name}</span> as <span className="font-bold text-emerald-600">available</span> again?</>
+                : <>Block <span className="font-bold text-slate-800 dark:text-white">{cabinToToggle.name}</span> and set it to <span className="font-bold text-amber-600">maintenance</span>?</>}
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setCabinToToggle(null)}
+                disabled={toggling}
+                className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleMaintenanceConfirm}
+                disabled={toggling}
+                className="flex-1 py-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {toggling ? "Updating…" : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Popup */}
+      {cabinToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-6 space-y-4 animate-enter">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-950/40">
+                <Trash2 size={18} className="text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white">Delete Cabin</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              Are you sure you want to delete <span className="font-bold text-slate-800 dark:text-white">{cabinToDelete.name}</span>?
+            </p>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setCabinToDelete(null)}
+                disabled={deleting}
+                className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleting}
+                className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {deleting ? "Deleting…" : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cabin Edit/Add Modal Dialog */}
       {showCabinModal && (
@@ -307,19 +449,19 @@ export default function CabinatesHandle() {
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Interactive Floor Map Coordinates (%)</p>
                 <div className="grid grid-cols-4 gap-2.5 font-normal text-xs">
                   <div className="space-y-0.5">
-                    <label className="text-[10px] font-semibold text-slate-500">X Position</label>
+                    <label className="text-[10px] font-semibold text-slate-500">From left (%)</label>
                     <input type="number" min="0" max="100" value={mapX} onChange={(e) => setMapX(Number(e.target.value))} className="w-full p-1.5 border border-slate-250 bg-white rounded dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" />
                   </div>
                   <div className="space-y-0.5">
-                    <label className="text-[10px] font-semibold text-slate-500">Y Position</label>
+                    <label className="text-[10px] font-semibold text-slate-500">From top (%)</label>
                     <input type="number" min="0" max="100" value={mapY} onChange={(e) => setMapY(Number(e.target.value))} className="w-full p-1.5 border border-slate-250 bg-white rounded dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" />
                   </div>
                   <div className="space-y-0.5">
-                    <label className="text-[10px] font-semibold text-slate-500">Width</label>
+                    <label className="text-[10px] font-semibold text-slate-500">Width (%)</label>
                     <input type="number" min="5" max="50" value={mapW} onChange={(e) => setMapW(Number(e.target.value))} className="w-full p-1.5 border border-slate-250 bg-white rounded dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" />
                   </div>
                   <div className="space-y-0.5">
-                    <label className="text-[10px] font-semibold text-slate-500">Height</label>
+                    <label className="text-[10px] font-semibold text-slate-500">Height (%)</label>
                     <input type="number" min="5" max="50" value={mapH} onChange={(e) => setMapH(Number(e.target.value))} className="w-full p-1.5 border border-slate-250 bg-white rounded dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200" />
                   </div>
                 </div>
@@ -329,7 +471,7 @@ export default function CabinatesHandle() {
               <div className="space-y-1">
                 <label className="text-slate-600 dark:text-slate-400">Cabin Facilities</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 font-normal">
-                  {availableFacilities.map((fac) => {
+                  {cabinFacilities.map((fac) => {
                     const isChecked = facilities.includes(fac);
                     return (
                       <label
@@ -355,11 +497,15 @@ export default function CabinatesHandle() {
               </div>
 
               {/* Submit */}
+              {submitError && (
+                <p className="text-xs text-red-500 dark:text-red-400 font-medium">{submitError}</p>
+              )}
               <button
                 type="submit"
-                className="w-full mt-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors shadow-md shadow-blue-500/10"
+                disabled={submitting}
+                className="w-full mt-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold transition-colors shadow-md shadow-blue-500/10"
               >
-                {editingCabin ? "Save Updates" : "Create Cabin"}
+                {submitting ? "Saving…" : editingCabin ? "Save Updates" : "Create Cabin"}
               </button>
             </form>
           </div>

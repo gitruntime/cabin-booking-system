@@ -21,10 +21,14 @@ export const register = (data: any) => api.post("/auth/register", data);
 export const updateUser = (id: string, data: any) => api.put(`/users/updateUser/${id}`, data);
 export const deleteUser = (id: string) => api.delete(`/users/deleteUser/${id}`);
 
+export const deleteCabin = (id: string) => api.delete(`/cabins/delete/${id}`)
+export const createCabin = (data: any) => api.post("/cabins/create", data);
+export const getCabins = () => api.get("/cabins");
+export const updateCabin = (id: string, data: any) => api.put(`/cabins/update/${id}`, data);
+export const toggleMaintainance = (id: string) => api.put(`/cabins/toggle-maintenance/${id}`);
 
 
-// export const whoami = () => api.get("/auth/whoami");
-// export const register = (data: any) => api.post("/auth/register", data);
+
 
 
 
@@ -33,7 +37,6 @@ export const deleteUser = (id: string) => api.delete(`/users/deleteUser/${id}`);
 
 
 // // get website settings from server
-// export const getWebsiteSettings = (): Promise<IWebsiteSettings> => api.get("/settings").then((res) => res.data)
 
 // // get categorys
 // export const getCategories = (): Promise<IGetCategories> => api.get("/categories").then((res) => res.data)
@@ -53,7 +56,6 @@ export const deleteUser = (id: string) => api.delete(`/users/deleteUser/${id}`);
 
 // //get favorite
 // export const addFavorite = (id: string | any) => api.post("/favorite", id);
-// export const delFavorite = (id: string) => api.delete(`/favorite/${id}`)
 
 // // subscriptions endpoint
 // // export const getSubscriptions = (): Promise<IAllSubscription> => api.get(`/subscriptions`).then((res) => res.data)

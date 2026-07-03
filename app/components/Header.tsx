@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { Bell, Clock, UserCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useBooking } from "../context/BookingContext";
-import { Bell, Clock, ChevronDown, Check, UserCircle } from "lucide-react";
 
 export default function Header() {
   const {
@@ -183,6 +183,7 @@ export default function Header() {
         {/* Quick User-Switch Profile */}
         <div className="relative" ref={profileRef}>
           <button
+            onClick={() => setCurrentTab("profile")}
             className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-all dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/80"
           >
             {currentUser && currentUser?.avatar ? <img

@@ -6,14 +6,13 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 export interface Cabin {
   id: string;
   name: string;
-  type: "cabin" | "conference" | "meeting" | "boardroom" | "pod";
-  building: "Main HQ" | "West Wing";
-  floor: "Ground Floor" | "1st Floor" | "2nd Floor";
+  type: string;
+  building: any;
+  floor: any;
   capacity: number;
-  facilities: ("Projector" | "TV" | "Whiteboard" | "Video Conference" | "Audio System")[];
-  status: "available" | "occupied" | "reserved" | "maintenance";
-  department?: "HR" | "Finance" | "Executive" | "IT" | "Marketing" | "Sales" | "None";
-  // SVG map layout coordinates (percentages of container size)
+  facilities: any[];
+  status: any;
+  department?: string
   x: number; 
   y: number;
   w: number;

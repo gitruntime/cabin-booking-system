@@ -265,7 +265,7 @@ export default function FloorMapView() {
               const cw = (cabin.w / 100) * 800;
               const ch = (cabin.h / 100) * 500;
 
-              const styleClass = statusColors[cabin.status];
+              const styleClass = statusColors[cabin.status as keyof typeof statusColors];
               const isMaintenance = cabin.status === "maintenance";
 
               return (
