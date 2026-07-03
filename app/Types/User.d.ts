@@ -1,4 +1,4 @@
-export interface User {
+export interface UserType {
     department: String | null;
     avatar: String | null;
     gender: String | null;
@@ -13,5 +13,5 @@ export interface User {
 
 export interface UserList {
     count: number;
-    users: User[];
+    users: UserType[];
 }

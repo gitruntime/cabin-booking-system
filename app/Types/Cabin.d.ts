@@ -1,4 +1,4 @@
-export interface Cabin {
+export interface CabinType {
   id: string;
   name: string;
   type: string;
