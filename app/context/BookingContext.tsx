@@ -64,8 +64,6 @@ interface BookingContextType {
   checkInBooking: (id: string) => void;
   editBooking: (id: string, updated: Partial<Booking>) => { success: boolean; error?: string };
 
-  // Admin Operations
-  toggleCabinMaintenance: (id: string) => void;
 
   // Helpers
   checkAvailability: (cabinId: string, date: string, start: string, end: string) => "available" | "occupied" | "reserved" | "maintenance";
@@ -458,34 +456,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return { success: true };
   };
 
-  const toggleCabinMaintenance = (id: string) => {
-    const cabin = cabins.find(c => c._id === id);
-    if (!cabin) return;
-
-    const newStatus = cabin.status === "maintenance" ? "available" : "maintenance";
-
-    setCabins(prev =>
-      prev.map(c => (c._id === id ? { ...c, status: newStatus as any } : c))
-    );
-
-    // If marked maintenance, cancel upcoming bookings for that cabin
-    if (newStatus === "maintenance") {
-      setBookings(prev =>
-        prev.map(b => (b.cabinId === id && b.status !== "cancelled" ? { ...b, status: "cancelled" as const } : b))
-      );
-    }
-
-    const newNotif: NotificationItem = {
-      id: "n_" + Date.now(),
-      type: "warning",
-      title: newStatus === "maintenance" ? "Cabin Under Maintenance" : "Cabin Back Online",
-      message: `${cabin.name} is now ${newStatus === "maintenance" ? "blocked for maintenance" : "available for bookings"}.`,
-      time: "Just now",
-      timestamp: new Date(),
-      read: false
-    };
-    setNotifications(prev => [newNotif, ...prev]);
-  };
 
   const clearNotifications = () => {
     setNotifications([]);
@@ -581,8 +551,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         cancelBooking,
         checkInBooking,
         editBooking,
-
-        toggleCabinMaintenance,
 
         checkAvailability,
         detectConflicts,
