@@ -1,11 +1,11 @@
 "use client";
 
+import { AlertCircle, ArrowRight, Building, Lock, Mail } from "lucide-react";
 import React, { useState } from "react";
-import { Building, ShieldCheck, Mail, Lock, AlertCircle, ArrowRight } from "lucide-react";
-import { login } from "../http";
 import { useBooking } from "../context/BookingContext";
+import { login } from "../http";
 export default function LoginView() {
-  const { setIsAuthenticated } = useBooking();
+  const { setIsAuthenticated, setCurrentUser } = useBooking();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
@@ -29,6 +29,7 @@ export default function LoginView() {
         setError("Invalid credentials");
       }
       if (res?.status === 200) {
+        setCurrentUser(res.data?.user);
         setIsAuthenticated(true);
       }
     } catch (error: any) {
