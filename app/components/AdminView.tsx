@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { Cabin, useBooking } from "../context/BookingContext";
-import { listOfUsers, register, updateUser } from "../http";
+import { deleteUser, listOfUsers, register, updateUser } from "../http";
 import toast from "react-hot-toast";
 
 export default function AdminView() {
@@ -83,6 +83,34 @@ export default function AdminView() {
     if (!file) return;
     setNewUserAvatar(file);
     setAvatarPreview(URL.createObjectURL(file));
+  };
+
+  // Delete User Modal
+  const [showDeleteUserModal, setShowDeleteUserModal] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<any>(null);
+  const [deleteUserLoading, setDeleteUserLoading] = useState(false);
+
+  const handleOpenDeleteUser = (user: any) => {
+    setDeletingUser(user);
+    setShowDeleteUserModal(true);
+  };
+
+  const handleDeleteUserConfirm = async () => {
+    if (!deletingUser) return;
+    setDeleteUserLoading(true);
+    try {
+      const response = await deleteUser(deletingUser._id);
+      toast.success(response?.data?.message || "User deleted successfully!");
+      setShowDeleteUserModal(false);
+      setDeletingUser(null);
+      // Refresh users list
+      const res = await listOfUsers();
+      setUsersList(res.data);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to delete user.");
+    } finally {
+      setDeleteUserLoading(false);
+    }
   };
 
   // Edit User Modal
@@ -521,6 +549,7 @@ export default function AdminView() {
                                   <Edit3 size={12} />
                                 </button>
                                 <button
+                                  onClick={() => handleOpenDeleteUser(user)}
                                   className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
                                   title="Delete user"
                                 >
@@ -542,6 +571,52 @@ export default function AdminView() {
           }
         </>
       }
+
+      {/* Delete User Confirmation Modal */}
+      {showDeleteUserModal && deletingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <Trash2 size={16} className="text-red-500" />
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white">Delete User</h3>
+              </div>
+              <button
+                onClick={() => setShowDeleteUserModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex flex-col items-center gap-3 py-2 text-center">
+              {deletingUser.avatar
+                ? <img src={deletingUser.avatar} alt={deletingUser.name} className="w-14 h-14 rounded-full object-cover" />
+                : <UserCircle size={56} className="text-slate-300 dark:text-slate-600" />
+              }
+              <p className="text-sm text-slate-700 dark:text-slate-300">
+                Are you sure you want to delete <span className="font-bold">{deletingUser.name}</span>?
+              </p>
+              <p className="text-xs text-slate-400">This action cannot be undone.</p>
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setShowDeleteUserModal(false)}
+                disabled={deleteUserLoading}
+                className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteUserConfirm}
+                disabled={deleteUserLoading}
+                className="flex-1 py-2 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-60 text-white text-xs font-bold transition-colors"
+              >
+                {deleteUserLoading ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add New User Modal */}
       {showAddUserModal && (

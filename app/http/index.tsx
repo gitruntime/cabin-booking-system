@@ -19,6 +19,7 @@ export const logoutUser = () => api.post("/auth/logout");
 export const listOfUsers = () => api.get("/users/getAllUsers");
 export const register = (data: any) => api.post("/auth/register", data);
 export const updateUser = (id: string, data: any) => api.put(`/users/updateUser/${id}`, data);
+export const deleteUser = (id: string) => api.delete(`/users/deleteUser/${id}`);
 
 
 
