@@ -13,3 +13,7 @@ export interface CabinType {
   w: number;
   h: number;
 }
+
+export interface BuildingType {
+  
+}

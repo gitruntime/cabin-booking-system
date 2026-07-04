@@ -234,6 +234,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [theme, setThemeState] = useState<"light" | "dark">("light");
+  const [buildingList, setBuildingList] = useState([]);
+  const [floorList, setFloorList] = useState([]);
 
 
   const [selectedBuilding, setSelectedBuilding] = useState<"Main HQ" | "West Wing">("Main HQ");
@@ -275,8 +277,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     document.documentElement.classList.toggle("dark", newTheme === "dark");
   };
 
-  // Real-time Availability calculations (simulated client check)
-  // Check room status for a specific datetime
   const checkAvailability = (cabinId: string, date: string, start: string, end: string): "available" | "occupied" | "reserved" | "maintenance" => {
     // Check if cabin itself is marked under maintenance
     const cabin = cabins.find(c => c._id === cabinId);
@@ -308,7 +308,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
   };
 
-  // AI Recommendation Engine
   const getAIRecommendations = (capacity: number, facilities: string[], date: string, start: string, end: string): CabinType[] => {
     return cabins
       .filter(cabin => {
@@ -336,7 +335,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .slice(0, 3); // Top 3 recommendations
   };
 
-  // Booking Actions
   const addBooking = (bookingData: Omit<Booking, "id" | "userName" | "createdTime" | "status">) => {
     const conflicts = detectConflicts(bookingData.cabinId, bookingData.date, bookingData.startTime, bookingData.endTime);
     if (conflicts.length > 0) {
@@ -464,9 +462,6 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const markNotificationsAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
-
-  // Real-time status update simulator
-  // Runs every 15 seconds to sync cabins status dynamically based on current bookings
   useEffect(() => {
     const updateStatuses = () => {
       // Simulate real-time current clock (July 1, 2026, around 13:43 initially)

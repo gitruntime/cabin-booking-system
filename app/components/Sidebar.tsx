@@ -45,6 +45,7 @@ export default function Sidebar() {
   const adminItems = [
     { id: "users", label: "Users", icon: Users },
     { id: "cabins", label: "Cabins", icon: LayoutDashboard },
+    { id: "buildings", label: "Buildings & Floors", icon: Building },
     { id: "report", label: "Reports & History", icon: History },
   ];
 
