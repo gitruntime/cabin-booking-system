@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { UserList } from "../Types/User";
 import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
-import { getAllBuildings } from "../http";
+import { getAllBuildings, getCabins } from "../http";
 
 export interface Booking {
   id: string;
@@ -40,6 +40,8 @@ interface BookingContextType {
   setBuildingList: React.Dispatch<React.SetStateAction<BuildingType[]>>;
   loadingBuildings: boolean;
   fetchBuildings: () => void;
+  fetchCabins: () => void;
+  loadingCabins: boolean;
 
 
   cabins: CabinType[];
@@ -240,8 +242,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [theme, setThemeState] = useState<"light" | "dark">("light");
   const [buildingList, setBuildingList] = useState<BuildingType[]>([]);
-  const [floorList, setFloorList] = useState<FloorType[]>([]);
   const [loadingBuildings, setLoadingBuildings] = useState<boolean>(false);
+  const [loadingCabins, setLoadingCabins] = useState<boolean>(false);
 
 
   const [selectedBuilding, setSelectedBuilding] = useState<"Main HQ" | "West Wing">("Main HQ");
@@ -524,6 +526,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [bookings]);
 
 
+  // fetch buildings 
   const fetchBuildings = async () => {
     if (buildingList.length === 0) {
       setLoadingBuildings(true);
@@ -537,8 +540,25 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       setLoadingBuildings(false);
     }
   };
+  // fetch cabins 
+  const fetchCabins = async () => {
+    if (cabinList.length === 0) {
+      setLoadingCabins(true);
+    } else {
+      setLoadingCabins(false);
+    }
+    try {
+      const res = await getCabins();
+      setCabinList(res?.data || []);
+      setLoadingCabins(false);
+    } catch (err) {
+      console.error("Failed to fetch cabins:", err);
+      setLoadingCabins(false);
+    }
+  };
 
   useEffect(() => {
+    fetchCabins();
     fetchBuildings();
   }, []);
 
@@ -549,6 +569,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setUserList,
         cabinList,
         setCabinList,
+        fetchCabins,
+        loadingCabins,
         buildingList,
         setBuildingList,
         loadingBuildings,

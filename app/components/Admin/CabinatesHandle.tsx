@@ -1,5 +1,7 @@
 "use client";
 
+import { buildings, cabinFacilities, departments } from "@/app/Data";
+import { CabinType } from "@/app/Types/Cabin";
 import {
   Edit3,
   Plus,
@@ -9,15 +11,12 @@ import {
   X
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
-import { useBooking } from "../../context/BookingContext";
-import { buildings, cabinFacilities, departments } from "@/app/Data";
-import { createCabin, getCabins, updateCabin, deleteCabin as deleteCabinApi, toggleMaintainance as toggleMaintainanceApi } from "../../http";
 import toast from "react-hot-toast";
-import { CabinType } from "@/app/Types/Cabin";
+import { useBooking } from "../../context/BookingContext";
+import { createCabin, deleteCabin as deleteCabinApi, toggleMaintainance as toggleMaintainanceApi, updateCabin } from "../../http";
 
 export default function CabinatesHandle() {
-  const { cabinList, setCabinList } = useBooking();
-  const [loadingCabins, setLoadingCabins] = useState(true);
+  const { cabinList, setCabinList, fetchCabins, loadingCabins } = useBooking();
 
   // Maintenance Confirmation
   const [cabinToToggle, setCabinToToggle] = useState<any>(null);
@@ -148,6 +147,7 @@ export default function CabinatesHandle() {
         toast.success(res?.data?.message || "Cabin created successfully!");
       }
       setShowCabinModal(false);
+      fetchCabins();
     } catch (err: any) {
       setSubmitError(err?.response?.data?.message ?? "Failed to create cabin. Please try again.");
     } finally {
@@ -156,24 +156,8 @@ export default function CabinatesHandle() {
   };
 
   useEffect(() => {
-    const fetchCabins = async () => {
-      if (cabinList.length === 0) {
-        setLoadingCabins(true);
-      } else {
-        setLoadingCabins(false);
-      }
-      try {
-        const res = await getCabins();
-        setCabinList(res?.data || []);
-        setLoadingCabins(false);
-      } catch (err) {
-        console.error("Failed to fetch cabins:", err);
-        setLoadingCabins(false);
-      }
-    };
-
     fetchCabins();
-  }, [showCabinModal]);
+  }, []);
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">

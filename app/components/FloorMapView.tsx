@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  AlertTriangle,
-  Building,
-  FileText,
-  HelpCircle,
-  Layers,
-  Projector,
-  Tv,
-  Video,
-  Volume2,
-  X
-} from "lucide-react";
+import { AlertTriangle, Building, FileText, HelpCircle, Layers, Projector, Tv, Video, Volume2, X } from "lucide-react";
 import React, { useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { buildings, departments } from "../Data";
