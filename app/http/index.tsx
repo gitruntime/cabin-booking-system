@@ -13,6 +13,9 @@ const api = axios.create({
 export const login = (data: any) => api.post("/auth/login", data);
 export const profile = () => api.get("/auth/me");
 export const logoutUser = () => api.post("/auth/logout");
+export const getCabins = () => api.get("/cabins");
+export const getAllBuildings = () => api.get("/cabins/getBuildings");
+
 
 
 // Admin endpoints
@@ -23,23 +26,12 @@ export const deleteUser = (id: string) => api.delete(`/users/deleteUser/${id}`);
 
 export const deleteCabin = (id: string) => api.delete(`/cabins/delete/${id}`)
 export const createCabin = (data: any) => api.post("/cabins/create", data);
-export const getCabins = () => api.get("/cabins");
 export const updateCabin = (id: string, data: any) => api.put(`/cabins/update/${id}`, data);
 export const toggleMaintainance = (id: string) => api.put(`/cabins/toggle-maintenance/${id}`);
+export const createBuilding = (data: any) => api.post("/cabins/createBuilding", data);
 
-
-
-
-
-
-
-
-
-
-// // get website settings from server
 
 // // get categorys
-// export const getCategories = (): Promise<IGetCategories> => api.get("/categories").then((res) => res.data)
 
 // // get categorys
 // export const getCategoryBySlug = (slug: string | undefined): Promise<any> => api.get(`/beta-section?category=${slug}`).then((res) => res.data)

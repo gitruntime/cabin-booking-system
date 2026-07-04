@@ -15,5 +15,14 @@ export interface CabinType {
 }
 
 export interface BuildingType {
-  
+  id: string;
+  name: string;
+  floors: FloorType[];
+}
+
+export interface FloorType {
+  id: string;
+  buildingId: string;
+  name: string;
+  level: number;
 }

@@ -202,7 +202,6 @@ export default function CabinatesHandle() {
                 <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                   <th className="p-3">Room Name</th>
                   <th className="p-3">Type</th>
-                  <th className="p-3">Location</th>
                   <th className="p-3">Capacity</th>
                   <th className="p-3">Facilities</th>
                   <th className="p-3">Status</th>
@@ -212,10 +211,9 @@ export default function CabinatesHandle() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {cabinList.map((cabin, i) => (
                   <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
-                    <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{cabin.name}</td>
-                    <td className="p-3 capitalize">{cabin.type}</td>
-                    <td className="p-3 font-semibold">{cabin.building} • Floor {cabin.floor.split(" ")[0]}</td>
-                    <td className="p-3 font-bold">{cabin.capacity} seats</td>
+                    <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{cabin?.name}</td>
+                    <td className="p-3 capitalize">{cabin?.type}</td>
+                    <td className="p-3 font-bold">{cabin?.capacity} seats</td>
                     <td className="p-3">
                       <div className="flex flex-wrap gap-1 max-w-50">
                         {cabin?.facilities.map((f: any, i: number) => (
