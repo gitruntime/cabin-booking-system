@@ -30,5 +30,10 @@ export const createCabin = (data: any) => api.post("/cabins/create", data);
 export const updateCabin = (id: string, data: any) => api.put(`/cabins/update/${id}`, data);
 export const toggleMaintainance = (id: string) => api.put(`/cabins/toggle-maintenance/${id}`);
 export const createBuilding = (data: any) => api.post("/cabins/createBuilding", data);
+export const updateBuilding = (id: string, data: any) => api.post(`/cabins/updateBuilding/${id}`, data);
+export const deleteBuilding = (id: string) => api.delete(`/cabins/deleteBuilding/${id}`);
+export const createFloor = (buildingId: string, data: any) => api.post(`/cabins/createFloor/${buildingId}`, data);
+export const updateFloor = (id: string, data: any) => api.post(`/cabins/updateFloor/${id}`, data);
+export const deleteFloor = (id: string) => api.delete(`/cabins/deleteFloor/${id}`);
 
 export default api;

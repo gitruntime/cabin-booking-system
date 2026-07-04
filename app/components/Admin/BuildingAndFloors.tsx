@@ -1,11 +1,11 @@
 "use client";
 
+import { BuildingType, FloorType } from "@/app/Types/Cabin";
+import { useBooking } from "@/app/context/BookingContext";
 import { Building2, ChevronRight, Edit3, Layers, Plus, Trash2, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { getAllBuildings, createBuilding } from "../../http";
-import { BuildingType, FloorType } from "@/app/Types/Cabin";
-import { useBooking } from "@/app/context/BookingContext";
+import { createBuilding, createFloor, deleteBuilding, deleteFloor, updateBuilding, updateFloor } from "../../http";
 
 
 export default function BuildingAndFloors() {
@@ -31,23 +31,27 @@ export default function BuildingAndFloors() {
     setShowBuildingModal(true);
   };
 
+  useEffect(() => {
+    fetchBuildings()
+  }, []);
+
+
   const handleBuildingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!buildingName.trim()) return;
     setBuildingSubmitting(true);
     try {
       if (editingBuilding) {
-        // edit is local-only until an update endpoint is available
-        const updated = { ...editingBuilding, name: buildingName };
-        setBuildingList(prev => prev.map(b => b.id === editingBuilding.id ? updated : b));
-        if (selectedBuilding?.id === editingBuilding.id) setSelectedBuilding(updated);
-        toast.success("Building updated!");
+        const res = await updateBuilding(editingBuilding._id, { name: buildingName });
+        const updated = { ...editingBuilding, name: res?.data?.building?.name ?? buildingName };
+        setBuildingList(prev => prev.map(b => b._id === editingBuilding._id ? updated : b));
+        if (selectedBuilding?._id === editingBuilding._id) setSelectedBuilding(updated);
+        toast.success(res?.data?.message ?? "Building updated!");
       } else {
         const res = await createBuilding({ name: buildingName });
-        console.log("🚀 ~ handleBuildingSubmit ~ res:", res)
         const created = res?.data?.building ?? res?.data;
         const newB: BuildingType = {
-          id: created?._id ?? created?.id ?? `b${Date.now()}`,
+          _id: created?._id ?? created?.id ?? `b${Date.now()}`,
           name: created?.name ?? buildingName,
           floors: created?.floors ?? [],
         };
@@ -70,9 +74,9 @@ export default function BuildingAndFloors() {
   const [floorLevel, setFloorLevel] = useState(0);
   const [floorSubmitting, setFloorSubmitting] = useState(false);
 
-  const filteredFloors = floors
-    .filter(f => f.buildingId === selectedBuilding?.id)
-    .sort((a, b) => a.level - b.level);
+  const filteredFloors = [...floors].sort(
+    (a, b) => a.order - b.order
+  );
 
   const handleOpenAddFloor = () => {
     if (!selectedBuilding) return;
@@ -85,45 +89,87 @@ export default function BuildingAndFloors() {
   const handleOpenEditFloor = (f: FloorType) => {
     setEditingFloor(f);
     setFloorName(f.name);
-    setFloorLevel(f.level);
+    setFloorLevel(f.order);
     setShowFloorModal(true);
   };
 
-  const handleFloorSubmit = (e: React.FormEvent) => {
+
+  useEffect(() => {
+    if (selectedBuilding) {
+      const building = buildingList.find(
+        b => b._id === selectedBuilding._id
+      );
+
+      setFloors(
+        (building?.floors ?? []).map(f => ({
+          ...f,
+          buildingId: building!._id,
+          order: f.order,
+        }))
+      );
+    }
+  }, [buildingList, selectedBuilding]);
+
+  const handleFloorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!floorName.trim() || !selectedBuilding) return;
     setFloorSubmitting(true);
-    setTimeout(() => {
+    try {
       if (editingFloor) {
-        setFloors(prev => prev.map(f => f.id === editingFloor.id ? { ...f, name: floorName, level: floorLevel } : f));
-        toast.success("Floor updated!");
+        const res = await updateFloor(editingFloor._id, { name: floorName, order: floorLevel });
+        const updated = res?.data?.floor ?? { name: floorName, order: floorLevel };
+        setFloors(prev => prev.map(f => f._id === editingFloor._id ? { ...f, name: updated.name ?? floorName, order: updated.order ?? floorLevel } : f));
+        toast.success(res?.data?.message ?? "Floor updated!");
       } else {
-        const newF: FloorType = { id: `f${Date.now()}`, buildingId: selectedBuilding.id, name: floorName, level: floorLevel };
+        const res = await createFloor(selectedBuilding._id, { name: floorName, order: floorLevel });
+        const created = res?.data?.floor ?? res?.data;
+        const newF: FloorType = {
+          _id: created?._id ?? created?.id ?? `f${Date.now()}`,
+          buildingId: selectedBuilding._id,
+          name: created?.name ?? floorName,
+          order: created?.order ?? floorLevel,
+        };
         setFloors(prev => [...prev, newF]);
-        toast.success("Floor created!");
+        toast.success(res?.data?.message ?? "Floor created!");
       }
       setShowFloorModal(false);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Failed to save floor.");
+    } finally {
       setFloorSubmitting(false);
-    }, 400);
+    }
   };
 
   // ── Delete confirmations ────────────────────────────────────────────────────
   const [buildingToDelete, setBuildingToDelete] = useState<BuildingType | null>(null);
   const [floorToDelete, setFloorToDelete] = useState<FloorType | null>(null);
 
-  const handleDeleteBuildingConfirm = () => {
+  const handleDeleteBuildingConfirm = async () => {
     if (!buildingToDelete) return;
-    setBuildingList(prev => prev.filter(b => b.id !== buildingToDelete.id));
-    setFloors(prev => prev.filter(f => f.buildingId !== buildingToDelete.id));
-    if (selectedBuilding?.id === buildingToDelete.id) setSelectedBuilding(null);
-    toast.success("Building deleted!");
-    setBuildingToDelete(null);
+    try {
+      const res = await deleteBuilding(buildingToDelete._id);
+      setBuildingList(prev => prev.filter(b => b._id !== buildingToDelete._id));
+      setFloors(prev => prev.filter(f => f.buildingId !== buildingToDelete._id));
+      if (selectedBuilding?._id === buildingToDelete._id) setSelectedBuilding(null);
+      toast.success(res?.data?.message ?? "Building deleted!");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Failed to delete building.");
+    } finally {
+      setBuildingToDelete(null);
+    }
   };
 
-  const handleDeleteFloorConfirm = () => {
+  const handleDeleteFloorConfirm = async () => {
     if (!floorToDelete) return;
-    setFloors(prev => prev.filter(f => f.id !== floorToDelete.id));
-    toast.success("Floor deleted!");
+    try {
+      const res = await deleteFloor(floorToDelete._id);
+      setFloors(prev => prev.filter(f => f._id !== floorToDelete._id));
+      toast.success(res?.data?.message ?? "Floor deleted!");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Failed to delete floor.");
+    } finally {
+      setFloorToDelete(null);
+    }
     setFloorToDelete(null);
   };
 
@@ -159,21 +205,21 @@ export default function BuildingAndFloors() {
                 <Building2 size={28} className="text-slate-200 dark:text-slate-700" />
                 <p className="text-xs text-slate-400 dark:text-slate-500">No buildingList yet. Add one to get started.</p>
               </div>
-            ) : buildingList.map((b) => (
+            ) : buildingList.map((b, i) => (
               <div
-                key={b.id}
+                key={i}
                 onClick={() => setSelectedBuilding(b)}
-                className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${selectedBuilding?.id === b.id
+                className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${selectedBuilding?._id === b._id
                   ? "border-blue-300 bg-blue-50 dark:border-blue-700/60 dark:bg-blue-950/20"
                   : "border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${selectedBuilding?.id === b.id
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${selectedBuilding?._id === b._id
                     ? "bg-blue-100 dark:bg-blue-900/40"
                     : "bg-slate-100 dark:bg-slate-800"
                     }`}>
-                    <Building2 size={14} className={selectedBuilding?.id === b.id ? "text-blue-600 dark:text-blue-400" : "text-slate-400"} />
+                    <Building2 size={14} className={selectedBuilding?._id === b._id ? "text-blue-600 dark:text-blue-400" : "text-slate-400"} />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{b.name}</p>
@@ -182,7 +228,7 @@ export default function BuildingAndFloors() {
 
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mr-1">
-                    {floors.filter(f => f.buildingId === b.id).length} floors
+                    {b.floors?.length ?? 0} floors
                   </span>
                   <button
                     onClick={e => { e.stopPropagation(); handleOpenEditBuilding(b); }}
@@ -200,7 +246,7 @@ export default function BuildingAndFloors() {
                   </button>
                   <ChevronRight
                     size={13}
-                    className={`transition-colors ${selectedBuilding?.id === b.id ? "text-blue-500" : "text-slate-300 dark:text-slate-600"}`}
+                    className={`transition-colors ${selectedBuilding?._id === b._id ? "text-blue-500" : "text-slate-300 dark:text-slate-600"}`}
                   />
                 </div>
               </div>
@@ -254,11 +300,11 @@ export default function BuildingAndFloors() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredFloors.map(f => (
-                    <tr key={f.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                    <tr key={f._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
                       <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{f.name}</td>
                       <td className="p-3">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-                          Level {f.level}
+                          Level {f.order}
                         </span>
                       </td>
                       <td className="p-3 text-right space-x-1.5 shrink-0">
