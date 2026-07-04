@@ -1,81 +1,71 @@
 "use client";
 
 import { Building2, ChevronRight, Edit3, Layers, Plus, Trash2, X } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { getAllBuildings, createBuilding } from "../../http";
+import { BuildingType, FloorType } from "@/app/Types/Cabin";
+import { useBooking } from "@/app/context/BookingContext";
 
-interface Building {
-  id: string;
-  name: string;
-  location?: string;
-}
-
-interface Floor {
-  id: string;
-  buildingId: string;
-  name: string;
-  level: number;
-}
-
-const seedBuildings: Building[] = [
-  { id: "b1", name: "Main HQ", location: "Downtown" },
-];
-
-const seedFloors: Floor[] = [
-  { id: "f1", buildingId: "b1", name: "Ground Floor", level: 0 },
-  { id: "f2", buildingId: "b1", name: "1st Floor", level: 1 },
-  { id: "f3", buildingId: "b1", name: "2nd Floor", level: 2 },
-];
 
 export default function BuildingAndFloors() {
-  const [buildings, setBuildings] = useState<Building[]>(seedBuildings);
-  const [floors, setFloors] = useState<Floor[]>(seedFloors);
-  const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(seedBuildings[0]);
+  const { setBuildingList, loadingBuildings, fetchBuildings, buildingList } = useBooking();
+  const [floors, setFloors] = useState<FloorType[]>([]);
+  const [selectedBuilding, setSelectedBuilding] = useState<BuildingType | null>(null);
 
   // ── Building modal ──────────────────────────────────────────────────────────
   const [showBuildingModal, setShowBuildingModal] = useState(false);
-  const [editingBuilding, setEditingBuilding] = useState<Building | null>(null);
+  const [editingBuilding, setEditingBuilding] = useState<BuildingType | null>(null);
   const [buildingName, setBuildingName] = useState("");
-  const [buildingLocation, setBuildingLocation] = useState("");
   const [buildingSubmitting, setBuildingSubmitting] = useState(false);
 
   const handleOpenAddBuilding = () => {
     setEditingBuilding(null);
     setBuildingName("");
-    setBuildingLocation("");
     setShowBuildingModal(true);
   };
 
-  const handleOpenEditBuilding = (b: Building) => {
+  const handleOpenEditBuilding = (b: BuildingType) => {
     setEditingBuilding(b);
     setBuildingName(b.name);
-    setBuildingLocation(b.location ?? "");
     setShowBuildingModal(true);
   };
 
-  const handleBuildingSubmit = (e: React.FormEvent) => {
+  const handleBuildingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!buildingName.trim()) return;
     setBuildingSubmitting(true);
-    setTimeout(() => {
+    try {
       if (editingBuilding) {
-        const updated = { ...editingBuilding, name: buildingName, location: buildingLocation };
-        setBuildings(prev => prev.map(b => b.id === editingBuilding.id ? updated : b));
+        // edit is local-only until an update endpoint is available
+        const updated = { ...editingBuilding, name: buildingName };
+        setBuildingList(prev => prev.map(b => b.id === editingBuilding.id ? updated : b));
         if (selectedBuilding?.id === editingBuilding.id) setSelectedBuilding(updated);
         toast.success("Building updated!");
       } else {
-        const newB: Building = { id: `b${Date.now()}`, name: buildingName, location: buildingLocation };
-        setBuildings(prev => [...prev, newB]);
-        toast.success("Building created!");
+        const res = await createBuilding({ name: buildingName });
+        console.log("🚀 ~ handleBuildingSubmit ~ res:", res)
+        const created = res?.data?.building ?? res?.data;
+        const newB: BuildingType = {
+          id: created?._id ?? created?.id ?? `b${Date.now()}`,
+          name: created?.name ?? buildingName,
+          floors: created?.floors ?? [],
+        };
+        setBuildingList(prev => [...prev, newB]);
+        if (buildingList.length === 0) setSelectedBuilding(newB);
+        toast.success(res?.data?.message ?? "Building created!");
       }
       setShowBuildingModal(false);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message ?? "Failed to save building.");
+    } finally {
       setBuildingSubmitting(false);
-    }, 400);
+    }
   };
 
   // ── Floor modal ─────────────────────────────────────────────────────────────
   const [showFloorModal, setShowFloorModal] = useState(false);
-  const [editingFloor, setEditingFloor] = useState<Floor | null>(null);
+  const [editingFloor, setEditingFloor] = useState<FloorType | null>(null);
   const [floorName, setFloorName] = useState("");
   const [floorLevel, setFloorLevel] = useState(0);
   const [floorSubmitting, setFloorSubmitting] = useState(false);
@@ -92,7 +82,7 @@ export default function BuildingAndFloors() {
     setShowFloorModal(true);
   };
 
-  const handleOpenEditFloor = (f: Floor) => {
+  const handleOpenEditFloor = (f: FloorType) => {
     setEditingFloor(f);
     setFloorName(f.name);
     setFloorLevel(f.level);
@@ -108,7 +98,7 @@ export default function BuildingAndFloors() {
         setFloors(prev => prev.map(f => f.id === editingFloor.id ? { ...f, name: floorName, level: floorLevel } : f));
         toast.success("Floor updated!");
       } else {
-        const newF: Floor = { id: `f${Date.now()}`, buildingId: selectedBuilding.id, name: floorName, level: floorLevel };
+        const newF: FloorType = { id: `f${Date.now()}`, buildingId: selectedBuilding.id, name: floorName, level: floorLevel };
         setFloors(prev => [...prev, newF]);
         toast.success("Floor created!");
       }
@@ -118,12 +108,12 @@ export default function BuildingAndFloors() {
   };
 
   // ── Delete confirmations ────────────────────────────────────────────────────
-  const [buildingToDelete, setBuildingToDelete] = useState<Building | null>(null);
-  const [floorToDelete, setFloorToDelete] = useState<Floor | null>(null);
+  const [buildingToDelete, setBuildingToDelete] = useState<BuildingType | null>(null);
+  const [floorToDelete, setFloorToDelete] = useState<FloorType | null>(null);
 
   const handleDeleteBuildingConfirm = () => {
     if (!buildingToDelete) return;
-    setBuildings(prev => prev.filter(b => b.id !== buildingToDelete.id));
+    setBuildingList(prev => prev.filter(b => b.id !== buildingToDelete.id));
     setFloors(prev => prev.filter(f => f.buildingId !== buildingToDelete.id));
     if (selectedBuilding?.id === buildingToDelete.id) setSelectedBuilding(null);
     toast.success("Building deleted!");
@@ -149,7 +139,7 @@ export default function BuildingAndFloors() {
               <Building2 size={18} className="text-slate-400" />
               <h3 className="font-bold text-slate-800 dark:text-slate-200">Buildings</h3>
               <span className="text-xs font-semibold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
-                {buildings.length}
+                {buildingList.length}
               </span>
             </div>
             <button
@@ -162,30 +152,31 @@ export default function BuildingAndFloors() {
           </div>
 
           <div className="space-y-2">
-            {buildings.length === 0 ? (
+            {loadingBuildings ? (
+              <div className="p-6 text-center text-xs text-slate-400 dark:text-slate-500">Loading buildingList...</div>
+            ) : buildingList.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center gap-2">
                 <Building2 size={28} className="text-slate-200 dark:text-slate-700" />
-                <p className="text-xs text-slate-400 dark:text-slate-500">No buildings yet. Add one to get started.</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500">No buildingList yet. Add one to get started.</p>
               </div>
-            ) : buildings.map((b) => (
+            ) : buildingList.map((b) => (
               <div
                 key={b.id}
                 onClick={() => setSelectedBuilding(b)}
                 className={`flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition-all ${selectedBuilding?.id === b.id
-                    ? "border-blue-300 bg-blue-50 dark:border-blue-700/60 dark:bg-blue-950/20"
-                    : "border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  ? "border-blue-300 bg-blue-50 dark:border-blue-700/60 dark:bg-blue-950/20"
+                  : "border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   }`}
               >
                 <div className="flex items-center gap-3">
                   <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${selectedBuilding?.id === b.id
-                      ? "bg-blue-100 dark:bg-blue-900/40"
-                      : "bg-slate-100 dark:bg-slate-800"
+                    ? "bg-blue-100 dark:bg-blue-900/40"
+                    : "bg-slate-100 dark:bg-slate-800"
                     }`}>
                     <Building2 size={14} className={selectedBuilding?.id === b.id ? "text-blue-600 dark:text-blue-400" : "text-slate-400"} />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{b.name}</p>
-                    {b.location && <p className="text-[10px] text-slate-400 mt-0.5">{b.location}</p>}
                   </div>
                 </div>
 

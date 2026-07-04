@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { UserList } from "../Types/User";
-import { CabinType } from "../Types/Cabin";
+import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
+import { getAllBuildings } from "../http";
 
 export interface Booking {
   id: string;
@@ -35,6 +36,10 @@ interface BookingContextType {
   setUserList: (list: UserList) => void;
   cabinList: CabinType[];
   setCabinList: React.Dispatch<React.SetStateAction<CabinType[]>>;
+  buildingList: BuildingType[];
+  setBuildingList: React.Dispatch<React.SetStateAction<BuildingType[]>>;
+  loadingBuildings: boolean;
+  fetchBuildings: () => void;
 
 
   cabins: CabinType[];
@@ -234,8 +239,9 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentTab, setCurrentTab] = useState<string>("dashboard");
   const [theme, setThemeState] = useState<"light" | "dark">("light");
-  const [buildingList, setBuildingList] = useState([]);
-  const [floorList, setFloorList] = useState([]);
+  const [buildingList, setBuildingList] = useState<BuildingType[]>([]);
+  const [floorList, setFloorList] = useState<FloorType[]>([]);
+  const [loadingBuildings, setLoadingBuildings] = useState<boolean>(false);
 
 
   const [selectedBuilding, setSelectedBuilding] = useState<"Main HQ" | "West Wing">("Main HQ");
@@ -517,6 +523,23 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return () => clearInterval(interval);
   }, [bookings]);
 
+
+  const fetchBuildings = async () => {
+    setLoadingBuildings(true);
+    try {
+      const res = await getAllBuildings();
+      setBuildingList(res?.data?.buildings)
+    } catch (err) {
+      console.error("Failed to fetch buildings:", err);
+    } finally {
+      setLoadingBuildings(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBuildings();
+  }, []);
+
   return (
     <BookingContext.Provider
       value={{
@@ -524,6 +547,10 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setUserList,
         cabinList,
         setCabinList,
+        buildingList,
+        setBuildingList,
+        loadingBuildings,
+        fetchBuildings,
 
 
         cabins,

@@ -6,6 +6,7 @@ const api = axios.create({
     headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
     }
 });
 
@@ -29,82 +30,5 @@ export const createCabin = (data: any) => api.post("/cabins/create", data);
 export const updateCabin = (id: string, data: any) => api.put(`/cabins/update/${id}`, data);
 export const toggleMaintainance = (id: string) => api.put(`/cabins/toggle-maintenance/${id}`);
 export const createBuilding = (data: any) => api.post("/cabins/createBuilding", data);
-
-
-// // get categorys
-
-// // get categorys
-// export const getCategoryBySlug = (slug: string | undefined): Promise<any> => api.get(`/beta-section?category=${slug}`).then((res) => res.data)
-
-
-
-
-
-// // all sections data
-// export const getAllSections = (): Promise<IGetSections> => api.get("/beta-section").then((res) => res.data)
-
-// //get content by slug
-// export const getContentEndpoint = (queryString?: string) => api.get<IAllContentResponse>(`/content?slug=${queryString || ''}`);
-
-// //get favorite
-// export const addFavorite = (id: string | any) => api.post("/favorite", id);
-
-// // subscriptions endpoint
-// // export const getSubscriptions = (): Promise<IAllSubscription> => api.get(`/subscriptions`).then((res) => res.data)
-// export const getSubscriptions = (): Promise<IAllSubscription> => api.get(`/subscriptions`).then((res) => res.data)
-// export const checkIsPrimium = () => api.get("/subscription/check");
-
-// //Search endpoint
-// export const searching = (queryString?: string) => api.get<IAllContentResponse>(`/search?query=${queryString}`);
-
-// // watchtime endpoint
-// export const addWatchTime = (data: IwatchtimeCount, headers: any) => api.post(`/watchtime`, data, { headers });
-
-// export const countView = (data: any, headers: any) => api.post(`/views/count`, data, { headers });
-
-
-
-// // history endpoint
-// export interface IHistoryPayload {
-//     id: string;
-//     currentTime: number;
-//     current_season?: string;
-//     current_episode?: string;
-// }
-// export const addToHistoryEndpoint = (data: IHistoryPayload, headers: any) => api.post(`/history`, data, { headers });
-// export const updateHistoryEndpoint = (data: IHistoryPayload, headers: any) => api.put(`/history`, data, { headers });
-// export const getHistory = () => api.get(`/history`);
-
-// // contect endpoint
-// export const getContect = (query: string) => api.get(`/content?${query}`);
-// export const getContentSignCookieEndPoint = (id: string, query: "url" | "cookie") => api.get(`/content/stream/${id}?type=${query}`);
-
-// export const getSections = () => api.get(`/section`);
-
-
-// // payment endpoints
-// export const checkout = (data: any, headers: any) => api.post(`/payments/checkout`, data, { headers });
-
-// export const verifyPayment = (data: any, headers: any) => api.post(`/payments/verify`, data, { headers });
-
-
-// // content endpoints
-// export const getAllContentEndpoint = (queryString?: string) => api.get<IAllContentResponse>(`/content?${queryString || ''}`);
-// export const searchContentEndpoint = (queryString?: string) => api.get<IAllContentResponse>(`/search?query=${queryString}`);
-
-// // add headers to all requests using async/await
-// api.interceptors.request.use(async (config: any) => {
-//     const client = new ClientJS();
-//     const fingerprint = client.getFingerprint();
-//     const browser = client.getBrowser();
-//     const os = client.getOS();
-//     const ipaddress = await publicIpv4();
-
-//     config.headers["fingerprint"] = fingerprint;
-//     config.headers["browser"] = browser;
-//     config.headers["os"] = os;
-//     config.headers["ipaddress"] = ipaddress;
-//     return config;
-// });
 
 export default api;
