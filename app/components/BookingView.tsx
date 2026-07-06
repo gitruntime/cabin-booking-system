@@ -366,7 +366,7 @@ export default function BookingView() {
               <div>
                 <span className="text-[9px] font-bold text-blue-500 uppercase">{activeCabinObj.building} • {activeCabinObj.floor}</span>
                 <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">{activeCabinObj.name}</h4>
-                <p className="text-xs text-slate-400 capitalize mt-0.5">Type: {activeCabinObj.type}</p>
+                <p className="text-xs text-slate-400 capitalize mt-0.5">Type: {activeCabinObj.name}</p>
               </div>
 
               <div className="space-y-2 text-xs">

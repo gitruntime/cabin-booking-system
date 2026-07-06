@@ -3,7 +3,9 @@ export interface CabinType {
   name: string;
   typeId: string;
   buildingId: BuildingType['_id'];
+  building: any;
   floorId: FloorType['_id'];
+  floor: any;
   capacity: number;
   facilities: any[];
   status: any;

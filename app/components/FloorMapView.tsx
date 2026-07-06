@@ -416,7 +416,7 @@ export default function FloorMapView() {
                 {getBuildingName(hoveredCabin)} • {getFloorName(hoveredCabin)}
               </span>
               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 leading-tight">{hoveredCabin.name}</h4>
-              <p className="text-[10px] text-slate-400 capitalize mt-0.5">Type: {hoveredCabin.type}</p>
+              <p className="text-[10px] text-slate-400 capitalize mt-0.5">Type: {hoveredCabin.typeId}</p>
             </div>
 
             <div className="space-y-1.5 text-[10px]">
