@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  Bed,
   Bell,
   BookmarkCheck,
   Building,
@@ -48,6 +49,7 @@ export default function Sidebar() {
     { id: "cabins", label: "Cabins", icon: LayoutDashboard },
     { id: "buildings", label: "Buildings & Floors", icon: Building },
     { id: "departments", label: "Departments", icon: Table },
+    { id: 'type-facilities', label: 'Room Types & Facilities', icon: Bed },
     { id: "report", label: "Reports & History", icon: History },
   ];
 

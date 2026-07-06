@@ -20,6 +20,7 @@ import CabinatesHandle from "./components/Admin/CabinatesHandle";
 import History from "./components/Admin/History";
 import BuildingAndFloors from "./components/Admin/BuildingAndFloors";
 import Departments from "./components/Admin/Departments";
+import TypeAndFacilities from "./components/Admin/TypeAndFacilities";
 
 function MainAppShell() {
   const { isAuthenticated, currentTab, setIsAuthenticated, setCurrentUser } = useBooking();
@@ -78,6 +79,8 @@ function MainAppShell() {
         return <BuildingAndFloors />;
       case "departments":
         return <Departments />;
+      case "type-facilities":
+        return <TypeAndFacilities />;
       default:
         return <DashboardView />;
     }

@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { Briefcase, Edit3, Plus, Trash2, X } from "lucide-react";
-import toast from "react-hot-toast";
-import {
-    getDepartments,
-    createDepartment,
-    updateDepartment,
-    deleteDepartment,
-} from "../../http";
 import { DepartmentType } from "@/app/Types/Booking";
 import { useBooking } from "@/app/context/BookingContext";
+import { Briefcase, Edit3, Plus, Trash2, X } from "lucide-react";
+import React, { useState } from "react";
+import toast from "react-hot-toast";
+import {
+    createDepartment,
+    deleteDepartment,
+    updateDepartment
+} from "../../http";
 
 export default function Departments() {
     const { departments, loadingDepartments, fetchDepartments, setLoadingDepartments } = useBooking();

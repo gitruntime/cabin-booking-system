@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { UserList } from "../Types/User";
-import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
-import { getAllBuildings, getCabins, getDepartments } from "../http";
+import { BuildingType, CabinType, FloorType, ItemType } from "../Types/Cabin";
+import { getAllBuildings, getCabins, getDepartments, getRoomFacilities, getRoomTypes } from "../http";
 import { DepartmentType } from "../Types/Booking";
 
 export interface Booking {
@@ -48,6 +48,16 @@ interface BookingContextType {
   loadingDepartments: boolean;
   setLoadingDepartments: React.Dispatch<React.SetStateAction<boolean>>;
   fetchDepartments: () => void;
+  types: ItemType[];
+  setTypes: React.Dispatch<React.SetStateAction<ItemType[]>>;
+  facilities: ItemType[];
+  setFacilities: React.Dispatch<React.SetStateAction<ItemType[]>>;
+  loadingTypes: boolean;
+  setLoadingTypes: React.Dispatch<React.SetStateAction<boolean>>;
+  loadingFacilities: boolean;
+  setLoadingFacilities: React.Dispatch<React.SetStateAction<boolean>>;
+  fetchTypes: () => void;
+  fetchFacilities: () => void;
 
 
   cabins: CabinType[];
@@ -224,7 +234,10 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loadingCabins, setLoadingCabins] = useState<boolean>(false);
   const [departments, setDepartments] = useState<DepartmentType[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState<boolean>(false);
-
+  const [types, setTypes] = useState<ItemType[]>([]);
+  const [facilities, setFacilities] = useState<ItemType[]>([]);
+  const [loadingTypes, setLoadingTypes] = useState(false);
+  const [loadingFacilities, setLoadingFacilities] = useState(false);
 
   const [selectedBuilding, setSelectedBuilding] = useState<"Main HQ" | "West Wing">("Main HQ");
   const [selectedFloor, setSelectedFloor] = useState<"Ground Floor" | "1st Floor" | "2nd Floor">("1st Floor");
@@ -551,7 +564,37 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const fetchTypes = async () => {
+    if (types.length === 0) {
+      setLoadingTypes(true);
+    }
+    try {
+      const res = await getRoomTypes();
+      setTypes(res?.data?.types || []);
+    } catch (err) {
+      console.error("Failed to fetch room types:", err);
+    } finally {
+      setLoadingTypes(false);
+    }
+  };
+
+  const fetchFacilities = async () => {
+    if (facilities.length === 0) {
+      setLoadingFacilities(true);
+    }
+    try {
+      const res = await getRoomFacilities();
+      setFacilities(res?.data?.facilities || []);
+    } catch (err) {
+      console.error("Failed to fetch facilities:", err);
+    } finally {
+      setLoadingFacilities(false);
+    }
+  };
+
   useEffect(() => {
+    fetchTypes();
+    fetchFacilities();
     fetchCabins();
     fetchDepartments();
     fetchBuildings();
@@ -575,6 +618,16 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         loadingDepartments,
         setLoadingDepartments,
         fetchDepartments,
+        types,
+        setTypes,
+        facilities,
+        setFacilities,
+        loadingTypes,
+        setLoadingTypes,
+        loadingFacilities,
+        setLoadingFacilities,
+        fetchTypes,
+        fetchFacilities,
 
 
         cabins,

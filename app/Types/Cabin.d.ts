@@ -26,3 +26,9 @@ export interface FloorType {
   name: string;
   order: number;
 }
+
+export interface ItemType {
+  _id: string;
+  name: string;
+  order: number;
+}
