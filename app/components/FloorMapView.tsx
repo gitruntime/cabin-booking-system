@@ -1,10 +1,10 @@
 "use client";
 
 import { AlertTriangle, Building, FileText, HelpCircle, Layers, Projector, Tv, Video, Volume2, X } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { buildings, departments } from "../Data";
-import { CabinType } from "../Types/Cabin";
+import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
 
 export default function FloorMapView() {
   const {
@@ -13,8 +13,18 @@ export default function FloorMapView() {
     selectedBuilding,
     setSelectedBuilding,
     selectedFloor,
-    setSelectedFloor
+    cabinList,
+    buildingList
   } = useBooking();
+  const [openBuilding, setOpenBuilding] = useState(false);
+  const [openFloor, setOpenFloor] = useState(false);
+  const [buildingSelected, setBuildingSelected] = useState<BuildingType | null>(null);
+  const [floorList, setFloorList] = useState<BuildingType["floors"]>([]);
+  const [floorSelected, setFloorSelected] = useState<FloorType | null>(null);
+
+
+
+
 
   const [hoveredCabin, setHoveredCabin] = useState<CabinType | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
@@ -109,6 +119,13 @@ export default function FloorMapView() {
     }
   };
 
+  useEffect(() => {
+    if (buildingSelected) {
+      setFloorList(buildingSelected.floors || []);
+      setFloorSelected(buildingSelected.floors?.[0] || null);
+    }
+  }, [buildingSelected]);
+
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
@@ -118,37 +135,61 @@ export default function FloorMapView() {
           {/* Building Select */}
           <div className="flex items-center gap-2">
             <Building size={16} className="text-slate-400" />
-            <select
-              value={selectedBuilding}
-              onChange={(e) => setSelectedBuilding(e.target.value as any)}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs font-semibold outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
-            >
-              {
-                buildings.map((bld, i) => (
-                  <option key={i} value={bld}>{bld}</option>
-                ))
-              }
-            </select>
+
+            <div className="relative">
+              <div
+                onClick={() => setOpenBuilding(!openBuilding)}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs font-semibold outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200 cursor-pointer"
+              >
+                {selectedBuilding || "Select Building"}
+              </div>
+
+              {openBuilding && (
+                <div className="absolute top-full left-0 mt-1 rounded-lg border border-slate-200 bg-white dark:bg-slate-850 dark:border-slate-800 shadow-lg z-20">
+                  {buildingList.map((bld: BuildingType, i) => (
+                    <div
+                      key={i}
+                      onClick={() => {
+                        setSelectedBuilding(bld?.name || "Select Building");
+                        setBuildingSelected(bld || null);
+                        setOpenBuilding(false);
+                      }}
+                      className="px-2.5 py-1.5 text-xs font-semibold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap"
+                    >
+                      {bld?.name || "Select Building"}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Floor Select */}
           <div className="flex items-center gap-2">
             <Layers size={16} className="text-slate-400" />
-            <select
-              value={selectedFloor}
-              onChange={(e) => setSelectedFloor(e.target.value as any)}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs font-semibold outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
-            >
-              {selectedBuilding === "Main HQ" ? (
-                <>
-                  <option value="Ground Floor">Ground Floor (Exec Rooms)</option>
-                  <option value="1st Floor">1st Floor (IT & HR Rooms)</option>
-                  <option value="2nd Floor">2nd Floor (Marketing & Sales)</option>
-                </>
-              ) : (
-                <option value="1st Floor">1st Floor (Meeting Zone)</option>
+
+            <div className="relative">
+              <div
+                onClick={() => setOpenFloor(!openFloor)}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs font-semibold outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200 cursor-pointer"
+              >
+                {floorSelected?.name || "Select Floor"}
+              </div>
+
+              {openFloor && (
+                <div className="absolute top-full left-0 mt-1 rounded-lg border border-slate-200 bg-white dark:bg-slate-850 dark:border-slate-800 shadow-lg z-20">
+                  {floorList.map((floor: FloorType, i) => (
+                    <div
+                      key={i}
+                      onClick={() => { setFloorSelected(floor || null); setOpenFloor(false); }}
+                      className="px-2.5 py-1.5 text-xs font-semibold cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 whitespace-nowrap"
+                    >
+                      {floor?.name || "Select Floor"}
+                    </div>
+                  ))}
+                </div>
               )}
-            </select>
+            </div>
           </div>
         </div>
 
