@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { UserList } from "../Types/User";
 import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
-import { getAllBuildings, getCabins } from "../http";
+import { getAllBuildings, getCabins, getDepartments } from "../http";
+import { DepartmentType } from "../Types/Booking";
 
 export interface Booking {
   id: string;
@@ -42,6 +43,11 @@ interface BookingContextType {
   fetchBuildings: () => void;
   fetchCabins: () => void;
   loadingCabins: boolean;
+  departments: DepartmentType[];
+  setDepartments: React.Dispatch<React.SetStateAction<DepartmentType[]>>;
+  loadingDepartments: boolean;
+  setLoadingDepartments: React.Dispatch<React.SetStateAction<boolean>>;
+  fetchDepartments: () => void;
 
 
   cabins: CabinType[];
@@ -216,6 +222,8 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [buildingList, setBuildingList] = useState<BuildingType[]>([]);
   const [loadingBuildings, setLoadingBuildings] = useState<boolean>(false);
   const [loadingCabins, setLoadingCabins] = useState<boolean>(false);
+  const [departments, setDepartments] = useState<DepartmentType[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState<boolean>(false);
 
 
   const [selectedBuilding, setSelectedBuilding] = useState<"Main HQ" | "West Wing">("Main HQ");
@@ -529,8 +537,23 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
+  const fetchDepartments = async () => {
+    if (departments?.length === 0) {
+      setLoadingDepartments(true);
+    }
+    try {
+      const res = await getDepartments();
+      setDepartments(res?.data?.departments || []);
+    } catch (err) {
+      console.error("Failed to fetch departments:", err);
+    } finally {
+      setLoadingDepartments(false);
+    }
+  };
+
   useEffect(() => {
     fetchCabins();
+    fetchDepartments();
     fetchBuildings();
   }, []);
 
@@ -547,6 +570,11 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setBuildingList,
         loadingBuildings,
         fetchBuildings,
+        departments,
+        setDepartments,
+        loadingDepartments,
+        setLoadingDepartments,
+        fetchDepartments,
 
 
         cabins,

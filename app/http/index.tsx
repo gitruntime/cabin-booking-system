@@ -17,6 +17,7 @@ export const logoutUser = () => api.post("/auth/logout");
 export const getCabins = () => api.get("/cabins");
 export const getAllBuildings = () => api.get("/cabins/getBuildings");
 export const getCabinsByFloorId = (floorId: string) => api.get(`/cabins/getCabinsByFloorId/${floorId}`);
+export const getDepartments = () => api.get(`/cabins/getDepartments`);
 
 
 
@@ -36,5 +37,8 @@ export const deleteBuilding = (id: string) => api.delete(`/cabins/deleteBuilding
 export const createFloor = (buildingId: string, data: any) => api.post(`/cabins/createFloor/${buildingId}`, data);
 export const updateFloor = (id: string, data: any) => api.post(`/cabins/updateFloor/${id}`, data);
 export const deleteFloor = (id: string) => api.delete(`/cabins/deleteFloor/${id}`);
+export const createDepartment = (data: any) => api.post("/cabins/createDepartment", data);
+export const updateDepartment = (id: string, data: any) => api.put(`/cabins/updateDepartment/${id}`, data)
+export const deleteDepartment = (id: string) => api.delete(`/cabins/deleteDepartment/${id}`)
 
 export default api;

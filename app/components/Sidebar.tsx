@@ -15,6 +15,7 @@ import {
   Menu,
   Moon,
   Sun,
+  Table,
   User,
   Users,
   X
@@ -46,6 +47,7 @@ export default function Sidebar() {
     { id: "users", label: "Users", icon: Users },
     { id: "cabins", label: "Cabins", icon: LayoutDashboard },
     { id: "buildings", label: "Buildings & Floors", icon: Building },
+    { id: "departments", label: "Departments", icon: Table },
     { id: "report", label: "Reports & History", icon: History },
   ];
 
