@@ -1,7 +1,7 @@
 "use client";
 
 import { buildings, cabinFacilities, departments } from "@/app/Data";
-import { CabinType } from "@/app/Types/Cabin";
+import { BuildingType, CabinType, FloorType } from "@/app/Types/Cabin";
 import {
   Edit3,
   Plus,
@@ -16,11 +16,14 @@ import { useBooking } from "../../context/BookingContext";
 import { createCabin, deleteCabin as deleteCabinApi, toggleMaintainance as toggleMaintainanceApi, updateCabin } from "../../http";
 
 export default function CabinatesHandle() {
-  const { cabinList, setCabinList, fetchCabins, loadingCabins } = useBooking();
+  const { cabinList, setCabinList, fetchCabins, loadingCabins, buildingList } = useBooking();
 
   // Maintenance Confirmation
   const [cabinToToggle, setCabinToToggle] = useState<any>(null);
   const [toggling, setToggling] = useState(false);
+  const [selectedBuilding, setSelectedBuilding] = useState<BuildingType>();
+  console.log(selectedBuilding);
+  const [selectedFloor, setSelectedFloor] = useState<FloorType>();
 
   const handleMaintenanceConfirm = async () => {
     if (!cabinToToggle) return;
@@ -66,8 +69,8 @@ export default function CabinatesHandle() {
   // Cabin Form Inputs
   const [cabinName, setCabinName] = useState("");
   const [cabinType, setCabinType] = useState<CabinType["type"]>("cabin");
-  const [building, setBuilding] = useState<CabinType["building"]>("Main HQ");
-  const [floor, setFloor] = useState<CabinType["floor"]>("1st Floor");
+  const [building, setBuilding] = useState<CabinType["building"]>("");
+  const [floor, setFloor] = useState<CabinType["floor"]>("");
   const [capacity, setCapacity] = useState(4);
   const [facilities, setFacilities] = useState<CabinType["facilities"]>([]);
   const [dept, setDept] = useState<CabinType["department"]>("None");
@@ -88,8 +91,9 @@ export default function CabinatesHandle() {
     setEditingCabin(null);
     setCabinName("");
     setCabinType("cabin");
-    setBuilding("Main HQ");
-    setFloor("1st Floor");
+    const defaultBld = buildingList?.[0];
+    setBuilding(defaultBld ? defaultBld._id : "");
+    setFloor(defaultBld?.floors?.[0]?._id || "");
     setCapacity(4);
     setFacilities([]);
     setDept("None");
@@ -104,8 +108,10 @@ export default function CabinatesHandle() {
     setEditingCabin(cabin);
     setCabinName(cabin.name);
     setCabinType(cabin.type);
-    setBuilding(cabin.building);
-    setFloor(cabin.floor);
+    const bldId = cabin.buildingId?._id || cabin.buildingId || cabin.building?._id || cabin.building || "";
+    const flrId = cabin.floorId?._id || cabin.floorId || cabin.floor?._id || cabin.floor || "";
+    setBuilding(bldId);
+    setFloor(flrId);
     setCapacity(cabin.capacity);
     setFacilities(cabin.facilities);
     setDept(cabin.department || "None");
@@ -123,8 +129,8 @@ export default function CabinatesHandle() {
     const cabinData = {
       name: cabinName,
       type: cabinType,
-      building,
-      floor,
+      buildingId: building,
+      floorId: floor,
       capacity,
       facilities,
       status: (editingCabin ? editingCabin.status : "available"),
@@ -158,6 +164,15 @@ export default function CabinatesHandle() {
   useEffect(() => {
     fetchCabins();
   }, []);
+
+  useEffect(() => {
+    if (buildingList && building) {
+      const bldObj = buildingList.find((b: any) => b._id === building || b.name === building);
+      setSelectedBuilding(bldObj);
+    } else {
+      setSelectedBuilding(undefined);
+    }
+  }, [building, buildingList]);
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -380,12 +395,22 @@ export default function CabinatesHandle() {
                   <label className="text-slate-600 dark:text-slate-400">Building</label>
                   <select
                     value={building}
-                    onChange={(e) => setBuilding(e.target.value as any)}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      setBuilding(selectedId as any);
+                      const bldObj = buildingList.find((b: any) => b._id === selectedId);
+                      setSelectedBuilding(bldObj);
+                      if (bldObj && bldObj.floors && bldObj.floors.length > 0) {
+                        setFloor(bldObj.floors[0]._id);
+                      } else {
+                        setFloor("");
+                      }
+                    }}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
                     {
-                      buildings.map((bld, i) => (
-                        <option key={i} value={bld}>{bld}</option>
+                      buildingList.map((bld, i) => (
+                        <option key={i} value={bld._id}>{bld.name}</option>
                       ))
                     }
                   </select>
@@ -398,9 +423,13 @@ export default function CabinatesHandle() {
                     onChange={(e) => setFloor(e.target.value as any)}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <option value="Ground Floor">Ground Floor</option>
-                    <option value="1st Floor">1st Floor</option>
-                    <option value="2nd Floor">2nd Floor</option>
+                    {selectedBuilding?.floors && selectedBuilding.floors.length > 0 ? (
+                      selectedBuilding.floors.map((flr, i) => (
+                        <option key={i} value={flr._id}>{flr.name}</option>
+                      ))
+                    ) : (
+                      <option value="">No floors available</option>
+                    )}
                   </select>
                 </div>
 
