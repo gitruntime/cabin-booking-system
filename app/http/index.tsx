@@ -16,6 +16,7 @@ export const profile = () => api.get("/auth/me");
 export const logoutUser = () => api.post("/auth/logout");
 export const getCabins = () => api.get("/cabins");
 export const getAllBuildings = () => api.get("/cabins/getBuildings");
+export const getCabinsByFloorId = (floorId: string) => api.get(`/cabins/getCabinsByFloorId/${floorId}`);
 
 
 
