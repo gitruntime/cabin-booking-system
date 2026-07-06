@@ -108,9 +108,17 @@ export default function CabinatesHandle() {
     setEditingCabin(cabin);
     setCabinName(cabin.name);
     setCabinType(cabin.type);
-    const bldId = cabin.buildingId?._id || cabin.buildingId || cabin.building?._id || cabin.building || "";
-    const flrId = cabin.floorId?._id || cabin.floorId || cabin.floor?._id || cabin.floor || "";
+
+    // Resolve building ID (maps names like "Main HQ" to valid database ObjectIds if needed)
+    const rawBld = cabin.buildingId?._id || cabin.buildingId || cabin.building?._id || cabin.building || "";
+    const bldObj = buildingList.find((b: any) => b._id === rawBld || b.name === rawBld);
+    const bldId = bldObj ? bldObj._id : rawBld;
     setBuilding(bldId);
+
+    // Resolve floor ID (maps names like "1st Floor" to valid database ObjectIds if needed)
+    const rawFlr = cabin.floorId?._id || cabin.floorId || cabin.floor?._id || cabin.floor || "";
+    const flrObj = bldObj?.floors?.find((f: any) => f._id === rawFlr || f.name === rawFlr);
+    const flrId = flrObj ? flrObj._id : rawFlr;
     setFloor(flrId);
     setCapacity(cabin.capacity);
     setFacilities(cabin.facilities);
