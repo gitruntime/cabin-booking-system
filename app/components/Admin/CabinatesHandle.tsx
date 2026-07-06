@@ -69,8 +69,8 @@ export default function CabinatesHandle() {
   // Cabin Form Inputs
   const [cabinName, setCabinName] = useState("");
   const [cabinType, setCabinType] = useState<CabinType["type"]>("cabin");
-  const [building, setBuilding] = useState<CabinType["building"]>("");
-  const [floor, setFloor] = useState<CabinType["floor"]>("");
+  const [building, setBuilding] = useState<CabinType["buildingId"]>("");
+  const [floor, setFloor] = useState<CabinType["floorId"]>("");
   const [capacity, setCapacity] = useState(4);
   const [facilities, setFacilities] = useState<CabinType["facilities"]>([]);
   const [dept, setDept] = useState<CabinType["department"]>("None");
