@@ -1,7 +1,7 @@
 "use client";
 
-import { buildings, cabinFacilities, departments } from "@/app/Data";
-import { BuildingType, CabinType, FloorType } from "@/app/Types/Cabin";
+import { cabinFacilities, departments } from "@/app/Data";
+import { BuildingType, CabinType } from "@/app/Types/Cabin";
 import {
   Edit3,
   Plus,
@@ -16,14 +16,12 @@ import { useBooking } from "../../context/BookingContext";
 import { createCabin, deleteCabin as deleteCabinApi, toggleMaintainance as toggleMaintainanceApi, updateCabin } from "../../http";
 
 export default function CabinatesHandle() {
-  const { cabinList, setCabinList, fetchCabins, loadingCabins, buildingList } = useBooking();
+  const { cabinList, setCabinList, facilities: facilityList, types: roomTypeList, fetchCabins, loadingCabins, buildingList, departments } = useBooking();
 
   // Maintenance Confirmation
   const [cabinToToggle, setCabinToToggle] = useState<any>(null);
   const [toggling, setToggling] = useState(false);
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingType>();
-  console.log(selectedBuilding);
-  const [selectedFloor, setSelectedFloor] = useState<FloorType>();
 
   const handleMaintenanceConfirm = async () => {
     if (!cabinToToggle) return;
@@ -68,7 +66,7 @@ export default function CabinatesHandle() {
 
   // Cabin Form Inputs
   const [cabinName, setCabinName] = useState("");
-  const [cabinType, setCabinType] = useState<CabinType["type"]>("cabin");
+  const [cabinType, setCabinType] = useState<CabinType["typeId"]>("");
   const [building, setBuilding] = useState<CabinType["buildingId"]>("");
   const [floor, setFloor] = useState<CabinType["floorId"]>("");
   const [capacity, setCapacity] = useState(4);
@@ -90,7 +88,7 @@ export default function CabinatesHandle() {
   const handleOpenAdd = () => {
     setEditingCabin(null);
     setCabinName("");
-    setCabinType("cabin");
+    setCabinType(roomTypeList?.[0]?._id || "");
     const defaultBld = buildingList?.[0];
     setBuilding(defaultBld ? defaultBld._id : "");
     setFloor(defaultBld?.floors?.[0]?._id || "");
@@ -107,7 +105,12 @@ export default function CabinatesHandle() {
   const handleOpenEdit = (cabin: any) => {
     setEditingCabin(cabin);
     setCabinName(cabin.name);
-    setCabinType(cabin.type);
+
+    // Resolve type ID (maps names like "cabin" to valid database ObjectIds if needed)
+    const rawType = cabin.typeId?._id || cabin.typeId || cabin.type?._id || cabin.type || "";
+    const typeObj = roomTypeList?.find((t: any) => t._id === rawType || t.name === rawType);
+    const typeId = typeObj ? typeObj._id : rawType;
+    setCabinType(typeId);
 
     // Resolve building ID (maps names like "Main HQ" to valid database ObjectIds if needed)
     const rawBld = cabin.buildingId?._id || cabin.buildingId || cabin.building?._id || cabin.building || "";
@@ -136,7 +139,7 @@ export default function CabinatesHandle() {
 
     const cabinData = {
       name: cabinName,
-      type: cabinType,
+      typeId: cabinType,
       buildingId: building,
       floorId: floor,
       capacity,
@@ -216,18 +219,28 @@ export default function CabinatesHandle() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {cabinList.map((cabin, i) => (
+                {cabinList && cabinList.map((cabin, i) => (
                   <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
                     <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{cabin?.name}</td>
-                    <td className="p-3 capitalize">{cabin?.type}</td>
+                    <td className="p-3 capitalize">
+                      {(() => {
+                        const typeVal = cabin?.typeId;
+                        const typeObj = roomTypeList?.find((t: any) => t._id === typeVal);
+                        return typeObj ? typeObj.name : typeVal;
+                      })()}
+                    </td>
                     <td className="p-3 font-bold">{cabin?.capacity} seats</td>
                     <td className="p-3">
                       <div className="flex flex-wrap gap-1 max-w-50">
-                        {cabin?.facilities.map((f: any, i: number) => (
-                          <span key={i} className="px-1.5 py-0.5 text-[9px] bg-slate-100 text-slate-500 rounded dark:bg-slate-800 dark:text-slate-400 font-medium">
-                            {f}
-                          </span>
-                        ))}
+                        {cabin?.facilities?.map((fId: string, idx: number) => {
+                          const facilityObj = facilityList?.find((f: any) => f._id === fId);
+                          const facilityName = facilityObj ? facilityObj.name : fId;
+                          return (
+                            <span key={idx} className="px-1.5 py-0.5 text-[9px] bg-slate-100 text-slate-500 rounded dark:bg-slate-800 dark:text-slate-400 font-medium">
+                              {facilityName}
+                            </span>
+                          );
+                        })}
                       </div>
                     </td>
                     <td className="p-3">
@@ -388,11 +401,9 @@ export default function CabinatesHandle() {
                     onChange={(e) => setCabinType(e.target.value as any)}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    <option value="cabin">Individual Cabin</option>
-                    <option value="conference">Conference Hall</option>
-                    <option value="meeting">Standard Meeting Room</option>
-                    <option value="boardroom">Board Room</option>
-                    <option value="pod">Acoustic Pod</option>
+                    {roomTypeList?.map((t, i) => (
+                      <option key={i} value={t._id}>{t.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -464,8 +475,8 @@ export default function CabinatesHandle() {
                 >
                   <option value="None">None (Shared Space)</option>
                   {
-                    departments.map((dept, i) => (
-                      <option key={i} value={dept}>{dept}</option>
+                    departments?.map((dept, i) => (
+                      <option key={i} value={dept?._id}>{dept?.name}</option>
                     ))
                   }
                 </select>
@@ -498,11 +509,11 @@ export default function CabinatesHandle() {
               <div className="space-y-1">
                 <label className="text-slate-600 dark:text-slate-400">Cabin Facilities</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 font-normal">
-                  {cabinFacilities.map((fac) => {
-                    const isChecked = facilities.includes(fac);
+                  {facilityList?.map((fac, i) => {
+                    const isChecked = facilities.includes(fac?._id);
                     return (
                       <label
-                        key={fac}
+                        key={i}
                         className={`
                           flex items-center gap-2 p-2 rounded-lg border cursor-pointer select-none text-[11px] font-semibold transition-all
                           ${isChecked
@@ -513,10 +524,10 @@ export default function CabinatesHandle() {
                         <input
                           type="checkbox"
                           checked={isChecked}
-                          onChange={() => handleFacilityChange(fac)}
+                          onChange={() => handleFacilityChange(fac?._id)}
                           className="h-3.5 w-3.5 rounded border-slate-350 text-blue-600 focus:ring-blue-500"
                         />
-                        <span>{fac}</span>
+                        <span>{fac?.name}</span>
                       </label>
                     );
                   })}

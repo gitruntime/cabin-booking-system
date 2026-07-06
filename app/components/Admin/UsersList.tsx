@@ -4,22 +4,22 @@ import { AlertCircle, Camera, Edit3, Eye, EyeOff, Trash2, UserCircle, UserPlus, 
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useBooking } from "../../context/BookingContext";
-import { departments } from "../../Data";
 import { deleteUser, listOfUsers, register, updateUser } from "../../http";
 
 export default function UsersList() {
   const {
     currentUser,
-    userList, 
-    setUserList
+    userList,
+    setUserList,
+    departments
   } = useBooking();
-  
+
   const [loadingUsers, setLoadingUsers] = useState<boolean>(true);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
 
   useEffect(() => {
-    if(userList?.users?.length !== 0) {
+    if (userList?.users?.length !== 0) {
       setLoadingUsers(false);
     }
     const fetchUsers = async () => {
@@ -448,7 +448,7 @@ export default function UsersList() {
                   >
                     {
                       departments.map((dept, i) => (
-                        <option key={i} value={dept}>{dept}</option>
+                        <option key={i} value={dept?._id}>{dept?.name}</option>
                       ))
                     }
                   </select>
@@ -628,7 +628,7 @@ export default function UsersList() {
                   >
                     {
                       departments.map((dept, i) => (
-                        <option key={i} value={dept}>{dept}</option>
+                        <option key={i} value={dept?._id}>{dept?.name}</option>
                       ))
                     }
                   </select>
