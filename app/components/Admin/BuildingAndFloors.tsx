@@ -12,7 +12,6 @@ export default function BuildingAndFloors() {
   const { setBuildingList, loadingBuildings, fetchBuildings, buildingList } = useBooking();
   const [floors, setFloors] = useState<FloorType[]>([]);
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingType | null>(null);
-
   // ── Building modal ──────────────────────────────────────────────────────────
   const [showBuildingModal, setShowBuildingModal] = useState(false);
   const [editingBuilding, setEditingBuilding] = useState<BuildingType | null>(null);
@@ -64,6 +63,7 @@ export default function BuildingAndFloors() {
       toast.error(err?.response?.data?.message ?? "Failed to save building.");
     } finally {
       setBuildingSubmitting(false);
+      fetchBuildings();
     }
   };
 
@@ -137,6 +137,7 @@ export default function BuildingAndFloors() {
       toast.error(err?.response?.data?.message ?? "Failed to save floor.");
     } finally {
       setFloorSubmitting(false);
+      fetchBuildings();
     }
   };
 
@@ -156,6 +157,7 @@ export default function BuildingAndFloors() {
       toast.error(err?.response?.data?.message ?? "Failed to delete building.");
     } finally {
       setBuildingToDelete(null);
+      fetchBuildings();
     }
   };
 
@@ -171,6 +173,7 @@ export default function BuildingAndFloors() {
       setFloorToDelete(null);
     }
     setFloorToDelete(null);
+    fetchBuildings();
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
