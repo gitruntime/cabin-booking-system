@@ -2,16 +2,16 @@ export interface CabinType {
   _id: string;
   name: string;
   type: string;
-  building: any;
-  floor: any;
+  buildingId: BuildingType['_id'];
+  floorId: FloorType['_id'];
   capacity: number;
   facilities: any[];
   status: any;
   department?: string
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  xAxis?: number;
+  yAxis?: number;
+  width?: number;
+  height?: number;
 }
 
 export interface BuildingType {

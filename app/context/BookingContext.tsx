@@ -82,34 +82,6 @@ interface BookingContextType {
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);
 
-const initialCabins: CabinType[] = [
-  // Ground Floor
-  { _id: "c1", name: "CEO Executive Suite", type: "boardroom", building: "Main HQ", floor: "Ground Floor", capacity: 8, facilities: ["TV", "Video Conference", "Audio System", "Whiteboard"], status: "available", department: "Executive", x: 8, y: 12, w: 24, h: 20 },
-  { _id: "c2", name: "Executive Board Room", type: "boardroom", building: "Main HQ", floor: "Ground Floor", capacity: 20, facilities: ["Projector", "TV", "Whiteboard", "Video Conference", "Audio System"], status: "occupied", department: "Executive", x: 36, y: 12, w: 32, h: 20 },
-  { _id: "c3", name: "Finance Cabin 1", type: "cabin", building: "Main HQ", floor: "Ground Floor", capacity: 4, facilities: ["TV", "Whiteboard"], status: "available", department: "Finance", x: 72, y: 12, w: 20, h: 20 },
-  { _id: "c4", name: "Finance Cabin 2", type: "cabin", building: "Main HQ", floor: "Ground Floor", capacity: 4, facilities: ["TV", "Whiteboard"], status: "available", department: "Finance", x: 72, y: 38, w: 20, h: 16 },
-
-  // 1st Floor
-  { _id: "c5", name: "HR Interview Room A", type: "meeting", building: "Main HQ", floor: "1st Floor", capacity: 6, facilities: ["TV", "Whiteboard"], status: "available", department: "HR", x: 8, y: 12, w: 22, h: 18 },
-  { _id: "c6", name: "HR Interview Room B", type: "meeting", building: "Main HQ", floor: "1st Floor", capacity: 6, facilities: ["TV", "Whiteboard"], status: "reserved", department: "HR", x: 8, y: 35, w: 22, h: 18 },
-  { _id: "c7", name: "IT Scrum Room Alpha", type: "conference", building: "Main HQ", floor: "1st Floor", capacity: 12, facilities: ["TV", "Whiteboard", "Video Conference"], status: "available", department: "IT", x: 34, y: 12, w: 30, h: 22 },
-  { _id: "c8", name: "IT Huddle Room 1", type: "meeting", building: "Main HQ", floor: "1st Floor", capacity: 4, facilities: ["TV", "Whiteboard"], status: "available", department: "IT", x: 68, y: 12, w: 14, h: 16 },
-  { _id: "c9", name: "IT Huddle Room 2", type: "meeting", building: "Main HQ", floor: "1st Floor", capacity: 4, facilities: ["TV", "Whiteboard"], status: "maintenance", department: "IT", x: 84, y: 12, w: 12, h: 16 },
-  { _id: "c10", name: "Open Quiet Pod 1", type: "pod", building: "Main HQ", floor: "1st Floor", capacity: 2, facilities: ["Audio System"], status: "available", department: "None", x: 68, y: 34, w: 12, h: 14 },
-  { _id: "c11", name: "Open Quiet Pod 2", type: "pod", building: "Main HQ", floor: "1st Floor", capacity: 2, facilities: ["Audio System"], status: "available", department: "None", x: 82, y: 34, w: 12, h: 14 },
-
-  // 2nd Floor
-  { _id: "c12", name: "Marketing Creative Studio", type: "conference", building: "Main HQ", floor: "2nd Floor", capacity: 15, facilities: ["Projector", "TV", "Whiteboard", "Audio System"], status: "available", department: "Marketing", x: 8, y: 12, w: 28, h: 22 },
-  { _id: "c13", name: "Sales Call Cabin A", type: "cabin", building: "Main HQ", floor: "2nd Floor", capacity: 3, facilities: ["TV"], status: "available", department: "Sales", x: 40, y: 12, w: 16, h: 16 },
-  { _id: "c14", name: "Sales Call Cabin B", type: "cabin", building: "Main HQ", floor: "2nd Floor", capacity: 3, facilities: ["TV"], status: "available", department: "Sales", x: 58, y: 12, w: 16, h: 16 },
-  { _id: "c15", name: "Central Conference Hall", type: "boardroom", building: "Main HQ", floor: "2nd Floor", capacity: 25, facilities: ["Projector", "TV", "Whiteboard", "Video Conference", "Audio System"], status: "available", department: "None", x: 8, y: 40, w: 48, h: 24 },
-
-  // West Wing - Floor 1
-  { _id: "c16", name: "West Wing Meeting Room 101", type: "meeting", building: "West Wing", floor: "1st Floor", capacity: 8, facilities: ["TV", "Whiteboard"], status: "available", department: "None", x: 10, y: 15, w: 25, h: 20 },
-  { _id: "c17", name: "West Wing Huddle Room A", type: "meeting", building: "West Wing", floor: "1st Floor", capacity: 5, facilities: ["Whiteboard"], status: "available", department: "None", x: 40, y: 15, w: 20, h: 20 },
-  { _id: "c18", name: "West Wing Board Room", type: "boardroom", building: "West Wing", floor: "1st Floor", capacity: 14, facilities: ["Projector", "TV", "Whiteboard", "Video Conference"], status: "available", department: "None", x: 65, y: 15, w: 30, h: 22 }
-];
-
 // Seeded bookings for today (2026-07-01). The current simulated time is 13:43.
 const initialBookings: Booking[] = [
   {
@@ -250,7 +222,7 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [selectedFloor, setSelectedFloor] = useState<"Ground Floor" | "1st Floor" | "2nd Floor">("1st Floor");
 
   // Databases states
-  const [cabins, setCabins] = useState<CabinType[]>(initialCabins);
+  const [cabins, setCabins] = useState<CabinType[]>([]);
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
 

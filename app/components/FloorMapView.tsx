@@ -3,7 +3,8 @@
 import { AlertTriangle, Building, FileText, HelpCircle, Layers, Projector, Tv, Video, Volume2, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
-import { buildings, departments } from "../Data";
+import { departments } from "../Data";
+import { getCabinsByFloorId } from "../http";
 import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
 
 export default function FloorMapView() {
@@ -21,6 +22,8 @@ export default function FloorMapView() {
   const [buildingSelected, setBuildingSelected] = useState<BuildingType | null>(null);
   const [floorList, setFloorList] = useState<BuildingType["floors"]>([]);
   const [floorSelected, setFloorSelected] = useState<FloorType | null>(null);
+  const [mapCabins, setMapCabins] = useState<CabinType[]>([]);
+  const [loadingMapCabins, setLoadingMapCabins] = useState(false);
 
 
 
@@ -41,6 +44,26 @@ export default function FloorMapView() {
   const filteredCabins = cabins.filter(
     c => c.building === selectedBuilding && c.floor === selectedFloor
   );
+
+  const displayCabins = floorSelected?._id ? mapCabins : filteredCabins;
+
+  const getBuildingName = (cabin: any) => {
+    if (typeof cabin.building === "string") return cabin.building;
+    if (cabin.building?.name) return cabin.building.name;
+    const bldId = cabin.buildingId?._id || cabin.buildingId || cabin.building?._id || cabin.building;
+    const found = buildingList.find((b: any) => b._id === bldId);
+    return found ? found.name : selectedBuilding;
+  };
+
+  const getFloorName = (cabin: any) => {
+    if (typeof cabin.floor === "string") return cabin.floor;
+    if (cabin.floor?.name) return cabin.floor.name;
+    const flrId = cabin.floorId?._id || cabin.floorId || cabin.floor?._id || cabin.floor;
+    const bldId = cabin.buildingId?._id || cabin.buildingId || cabin.building?._id || cabin.building;
+    const foundBld = buildingList.find((b: any) => b._id === bldId);
+    const foundFloor = foundBld?.floors?.find((f: any) => f._id === flrId);
+    return foundFloor ? foundFloor.name : (floorSelected?.name || selectedFloor);
+  };
 
   // Status mapping
   const statusColors = {
@@ -126,6 +149,35 @@ export default function FloorMapView() {
     }
   }, [buildingSelected]);
 
+  useEffect(() => {
+    if (buildingList && buildingList.length > 0 && !buildingSelected) {
+      const defaultBld = buildingList[0];
+      setBuildingSelected(defaultBld);
+      setSelectedBuilding(defaultBld.name as any);
+    }
+  }, [buildingList, buildingSelected, setSelectedBuilding]);
+
+  useEffect(() => {
+    const fetchCabins = async () => {
+      if (!floorSelected?._id) {
+        setMapCabins([]);
+        return;
+      }
+      setLoadingMapCabins(true);
+      try {
+        const res = await getCabinsByFloorId(floorSelected._id);
+        const fetchedCabins = res?.data?.cabins || res?.data || [];
+        setMapCabins(fetchedCabins);
+      } catch (err) {
+        console.error("Failed to fetch cabins for floor:", err);
+        setMapCabins([]);
+      } finally {
+        setLoadingMapCabins(false);
+      }
+    };
+    fetchCabins();
+  }, [floorSelected]);
+
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
@@ -150,7 +202,7 @@ export default function FloorMapView() {
                     <div
                       key={i}
                       onClick={() => {
-                        setSelectedBuilding(bld?.name || "Select Building");
+                        setSelectedBuilding((bld?.name || "Select Building") as any);
                         setBuildingSelected(bld || null);
                         setOpenBuilding(false);
                       }}
@@ -220,9 +272,8 @@ export default function FloorMapView() {
         {/* SVG Container */}
         <div className="w-full max-w-200 aspect-800/500 relative bg-slate-50 border border-slate-100 rounded-xl dark:bg-slate-950/40 dark:border-slate-800/50">
           <svg viewBox="0 0 800 500" className="w-full h-full select-none">
-            {/* Background Hallways / Grid outline */}
-            <path d="M 0,250 L 800,250" stroke="#cbd5e1" strokeWidth="20" strokeLinecap="square" className="dark:stroke-slate-900" opacity="0.3" />
-            <path d="M 400,0 L 400,500" stroke="#cbd5e1" strokeWidth="20" strokeLinecap="square" className="dark:stroke-slate-900" opacity="0.3" />
+            {/* <path d="M 0,250 L 800,250" stroke="#cbd5e1" strokeWidth="20" strokeLinecap="square" className="dark:stroke-slate-900" opacity="0.3" />
+            <path d="M 400,0 L 400,500" stroke="#cbd5e1" strokeWidth="20" strokeLinecap="square" className="dark:stroke-slate-900" opacity="0.3" /> */}
 
             {/* Static Non-Clickable Zones */}
             {selectedBuilding === "Main HQ" && selectedFloor === "Ground Floor" && (
@@ -292,59 +343,62 @@ export default function FloorMapView() {
             )}
 
             {/* Clickable Cabins */}
-            {filteredCabins.map((cabin) => {
-              // Convert coordinate percentages to actual SVG canvas pixels (width: 800, height: 500)
-              const cx = (cabin.x / 100) * 800;
-              const cy = (cabin.y / 100) * 500;
-              const cw = (cabin.w / 100) * 800;
-              const ch = (cabin.h / 100) * 500;
+            {loadingMapCabins ? (
+              <text x="400" y="250" textAnchor="middle" className="fill-slate-400 text-xs font-bold uppercase tracking-wider">Loading cabins...</text>
+            ) : (
+              displayCabins.map((cabin: CabinType) => {
+                // Convert coordinate percentages to actual SVG canvas pixels (width: 800, height: 500)
+                const cx = ((cabin.xAxis ?? 0) / 100) * 800;
+                const cy = ((cabin.yAxis ?? 0) / 100) * 500;
+                const cw = ((cabin.width ?? 15) / 100) * 800;
+                const ch = ((cabin.height ?? 15) / 100) * 500;
 
-              const styleClass = statusColors[cabin.status as keyof typeof statusColors];
-              const isMaintenance = cabin.status === "maintenance";
+                const styleClass = statusColors[cabin.status as keyof typeof statusColors];
+                const isMaintenance = cabin.status === "maintenance";
 
-              return (
-                <g
-                  key={cabin._id}
-                  className={isMaintenance ? "cursor-not-allowed" : "cursor-pointer"}
-                  onClick={() => handleCabinClick(cabin)}
-                  onMouseEnter={(e) => setHoveredCabin(cabin)}
-                  onMouseLeave={() => setHoveredCabin(null)}
-                  onMouseMove={handleMouseMove}
-                >
-                  {/* Room base block */}
-                  <rect
-                    x={cx}
-                    y={cy}
-                    width={cw}
-                    height={ch}
-                    rx="8"
-                    className={`${styleClass} transition-colors duration-200 stroke-2`}
-                  />
-
-                  {/* Room Name label */}
-                  <text
-                    x={cx + cw / 2}
-                    y={cy + ch / 2 + 3}
-                    textAnchor="middle"
-                    className="fill-slate-800 dark:fill-slate-200 text-[10px] font-bold pointer-events-none truncate max-w-[90%]"
+                return (
+                  <g
+                    key={cabin._id}
+                    className={isMaintenance ? "cursor-not-allowed" : "cursor-pointer"}
+                    onClick={() => handleCabinClick(cabin)}
+                    onMouseEnter={(e) => setHoveredCabin(cabin)}
+                    onMouseLeave={() => setHoveredCabin(null)}
+                    onMouseMove={handleMouseMove}
                   >
-                    {cabin.name.split(" ").slice(-1)[0] === "Suite" || cabin.name.split(" ").slice(-1)[0] === "Room" || cabin.name.split(" ").slice(-1)[0] === "Hall"
-                      ? cabin.name.split(" ").slice(-2).join(" ")
-                      : cabin.name.split(" ").slice(0, 3).join(" ")}
-                  </text>
+                    {/* Room base block */}
+                    <rect
+                      x={cx}
+                      y={cy}
+                      width={cw}
+                      height={ch}
+                      rx="8"
+                      className={`${styleClass} transition-colors duration-200 stroke-2`}
+                    />
 
-                  {/* Mini capacity indicator */}
-                  <text
-                    x={cx + cw / 2}
-                    y={cy + ch / 2 + 15}
-                    textAnchor="middle"
-                    className="fill-slate-400 dark:fill-slate-500 text-[8px] font-medium pointer-events-none"
-                  >
-                    Cap: {cabin.capacity}
-                  </text>
-                </g>
-              );
-            })}
+                    {/* Room Name label */}
+                    <text
+                      x={cx + cw / 2}
+                      y={cy + ch / 2 + 3}
+                      textAnchor="middle"
+                      className="fill-slate-800 dark:fill-slate-200 text-[10px] font-bold pointer-events-none truncate max-w-[90%]"
+                    >
+                      {cabin.name.split(" ").slice(-1)[0] === "Suite" || cabin.name.split(" ").slice(-1)[0] === "Room" || cabin.name.split(" ").slice(-1)[0] === "Hall"
+                        ? cabin.name.split(" ").slice(-2).join(" ")
+                        : cabin.name.split(" ").slice(0, 3).join(" ")}
+                    </text>
+
+                    {/* Mini capacity indicator */}
+                    <text
+                      x={cx + cw / 2}
+                      y={cy + ch / 2 + 15}
+                      textAnchor="middle"
+                      className="fill-slate-400 dark:fill-slate-500 text-[8px] font-medium pointer-events-none"
+                    >
+                      Cap: {cabin.capacity}
+                    </text>
+                  </g>
+                );
+              }))}
           </svg>
         </div>
 
@@ -359,7 +413,7 @@ export default function FloorMapView() {
           >
             <div>
               <span className="text-[8px] font-bold text-blue-500 dark:text-blue-400 uppercase tracking-wide">
-                {hoveredCabin.building} • {hoveredCabin.floor}
+                {getBuildingName(hoveredCabin)} • {getFloorName(hoveredCabin)}
               </span>
               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 leading-tight">{hoveredCabin.name}</h4>
               <p className="text-[10px] text-slate-400 capitalize mt-0.5">Type: {hoveredCabin.type}</p>
@@ -398,7 +452,7 @@ export default function FloorMapView() {
 
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <div>
-                <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wide">{bookingCabin.building} • {bookingCabin.floor}</span>
+                <span className="text-[8px] font-bold text-blue-500 uppercase tracking-wide">{getBuildingName(bookingCabin)} • {getFloorName(bookingCabin)}</span>
                 <h3 className="text-sm font-bold text-slate-800 dark:text-white">Quick Book: {bookingCabin.name}</h3>
               </div>
               <button
