@@ -44,6 +44,7 @@ export default function BookingView() {
   const [date, setDate] = useState("2026-07-01");
   const [startTime, setStartTime] = useState("14:30");
   const [endTime, setEndTime] = useState("15:30");
+  const [isEndTimeManuallySet, setIsEndTimeManuallySet] = useState(false);
   const [attendees, setAttendees] = useState(4);
   const [purpose, setPurpose] = useState("");
   const [department, setDepartment] = useState<string | undefined>();
@@ -219,6 +220,31 @@ export default function BookingView() {
     const [sH, sM] = start.split(":").map(Number);
     const [eH, eM] = end.split(":").map(Number);
     return (eH * 60 + eM) - (sH * 60 + sM);
+  };
+
+  const getThirtyMinsAfter = (timeStr: string): string => {
+    if (!timeStr) return "";
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    let totalMinutes = hours * 60 + minutes + 30;
+    if (totalMinutes >= 24 * 60) {
+      totalMinutes = 24 * 60 - 1;
+    }
+    const nextHours = Math.floor(totalMinutes / 60);
+    const nextMinutes = totalMinutes % 60;
+    const pad = (num: number) => String(num).padStart(2, "0");
+    return `${pad(nextHours)}:${pad(nextMinutes)}`;
+  };
+
+  const handleStartTimeChange = (val: string) => {
+    setStartTime(val);
+    if (!isEndTimeManuallySet) {
+      setEndTime(getThirtyMinsAfter(val));
+    }
+  };
+
+  const handleEndTimeChange = (val: string) => {
+    setEndTime(val);
+    setIsEndTimeManuallySet(true);
   };
 
   const handleApplyRecommendation = (recCabin: CabinType) => {
@@ -445,7 +471,7 @@ export default function BookingView() {
                 <input
                   type="time"
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  onChange={(e) => handleStartTimeChange(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 />
               </div>
@@ -459,7 +485,8 @@ export default function BookingView() {
                 <input
                   type="time"
                   value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
+                  min={startTime}
+                  onChange={(e) => handleEndTimeChange(e.target.value)}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 />
               </div>
