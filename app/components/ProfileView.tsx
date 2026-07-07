@@ -1,24 +1,23 @@
 "use client";
 
+import {
+  CalendarDays,
+  CheckCircle2,
+  Hourglass,
+  Layers,
+  Mail,
+  MapPin,
+  Save,
+  Shield,
+  SlidersHorizontal,
+  User,
+  Video
+} from "lucide-react";
 import React, { useState } from "react";
 import { useBooking } from "../context/BookingContext";
-import {
-  User,
-  Mail,
-  Shield,
-  MapPin,
-  Layers,
-  Hourglass,
-  Video,
-  SlidersHorizontal,
-  Save,
-  CheckCircle2,
-  CalendarDays
-} from "lucide-react";
-import { buildings } from "../Data";
 
 export default function ProfileView() {
-  const { currentUser, bookings, selectedBuilding, setSelectedBuilding, selectedFloor, setSelectedFloor } = useBooking();
+  const { currentUser, bookings, selectedBuilding, setSelectedBuilding, selectedFloor, setSelectedFloor, buildingList } = useBooking();
   const [successMsg, setSuccessMsg] = useState(false);
 
   // Compute profile statistics
@@ -155,8 +154,8 @@ export default function ProfileView() {
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-205 bg-slate-50 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
                     {
-                      buildings.map((bld, i) => (
-                        <option key={i} value={bld}>{bld}</option>
+                      buildingList.map((bld, i) => (
+                        <option key={i} value={bld._id}>{bld.name}</option>
                       ))
                     }
                   </select>

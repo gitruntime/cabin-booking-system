@@ -1,21 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
-import { useBooking, Booking } from "../context/BookingContext";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
-  Filter,
-  Layers,
-  Building,
-  SlidersHorizontal,
-  Info
+  Info,
+  SlidersHorizontal
 } from "lucide-react";
-import { buildings, departments } from "../Data";
+import { useState } from "react";
+import { useBooking } from "../context/BookingContext";
 
 export default function CalendarView() {
-  const { bookings, cabins } = useBooking();
+  const { bookings, cabins, buildingList, departments } = useBooking();
 
   // View mode
   const [viewMode, setViewMode] = useState<"month" | "week" | "day">("month");
@@ -388,8 +384,8 @@ export default function CalendarView() {
               >
                 <option value="All">All Buildings</option>
                 {
-                  buildings.map((bld, i) => (
-                    <option key={i} value={bld}>{bld}</option>
+                  buildingList.map((bld, i) => (
+                    <option key={i} value={bld._id}>{bld.name}</option>
                   ))
                 }
               </select>
@@ -435,7 +431,7 @@ export default function CalendarView() {
               >
                 {
                   departments.map((dept, i) => (
-                    <option key={i} value={dept}>{dept}</option>
+                    <option key={i} value={dept?._id}>{dept?.name}</option>
                   ))
                 }
               </select>

@@ -1,6 +1,5 @@
 "use client";
 
-import { cabinFacilities, departments } from "@/app/Data";
 import { BuildingType, CabinType } from "@/app/Types/Cabin";
 import {
   Edit3,

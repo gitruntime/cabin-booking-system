@@ -1,21 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
-import { useBooking, Booking } from "../context/BookingContext";
 import {
+  AlertCircle,
+  AlertTriangle,
   Bookmark,
   Calendar,
   Clock,
-  MapPin,
-  Trash2,
   Edit3,
-  UserCheck,
-  AlertTriangle,
-  X,
   History,
-  CheckCircle2,
-  AlertCircle
+  Trash2,
+  UserCheck,
+  X
 } from "lucide-react";
+import React, { useState } from "react";
+import { Booking, useBooking } from "../context/BookingContext";
 
 export default function MyBookingsView() {
   const { bookings, cabins, cancelBooking, checkInBooking, editBooking, currentUser } = useBooking();
