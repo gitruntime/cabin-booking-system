@@ -19,11 +19,11 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
+import { bookCabin } from "../http";
 
 export default function BookingView() {
   const {
     cabinList,
-    addBooking,
     checkAvailability,
     getAIRecommendations,
     buildingList,
@@ -34,13 +34,11 @@ export default function BookingView() {
 
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingType>();
   const [selectedFloor, setSelectedFloor] = useState<FloorType>();
-  console.log(selectedBuilding)
   const [isBuildingDropdownOpen, setIsBuildingDropdownOpen] = useState(false);
   const [isFloorDropdownOpen, setIsFloorDropdownOpen] = useState(false);
   const buildingDropdownRef = useRef(null)
   const floorDropdownRef = useRef(null)
   const [floorList, setFloorList] = useState<FloorType[]>();
-  console.log(floorList)
   // Form states
   const [cabinId, setCabinId] = useState("");
   const [date, setDate] = useState("2026-07-01");
@@ -48,10 +46,11 @@ export default function BookingView() {
   const [endTime, setEndTime] = useState("15:30");
   const [attendees, setAttendees] = useState(4);
   const [purpose, setPurpose] = useState("");
-  const [department, setDepartment] = useState<"HR" | "Finance" | "Executive" | "IT" | "Marketing" | "Sales">("IT");
+  const [department, setDepartment] = useState<string | undefined>();
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   // Availability & Recommendation state
-  const [availability, setAvailability] = useState<"available" | "occupied" | "reserved" | "maintenance">("available");
+  const [availability, setAvailability] = useState("");
   const [recommendations, setRecommendations] = useState<CabinType[]>([]);
   const [submitError, setSubmitError] = useState("");
   const [successModal, setSuccessModal] = useState(false);
@@ -103,41 +102,65 @@ export default function BookingView() {
     setRecommendations(recs.filter(r => r._id !== cabinId));
   }, [cabinId, date, startTime, endTime, attendees, cabinList]);
 
+  useEffect(() => {
+    if (departments) {
+      setDepartment(departments[0].name);
+    }
+  }, [departments])
   // Handle Form Submission
-  const handleBook = (e: React.FormEvent) => {
+  const handleBook = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError("");
+    setSubmitLoading(true)
 
     if (!cabinId) {
       setSubmitError("Please select a cabin.");
+      setSubmitLoading(false)
       return;
     }
     if (!purpose.trim()) {
       setSubmitError("Please describe the meeting purpose.");
+      setSubmitLoading(false)
       return;
     }
     if (startTime >= endTime) {
       setSubmitError("Start time must be earlier than End time.");
+      setSubmitLoading(false)
       return;
     }
 
-    // Submit booking to context
-    const res = addBooking({
-      cabinId,
-      userId: "u1", // Default logged-in user
-      date,
-      startTime,
-      endTime,
-      duration: calculateDuration(startTime, endTime),
-      attendees,
-      purpose,
-      department
-    });
+    const selectedDeptObj = departments.find(d => d.name === department);
+    if (!selectedDeptObj) {
+      setSubmitError("Please select a valid department.");
+      setSubmitLoading(false)
+      return;
+    }
 
-    if (res.success) {
-      setSuccessModal(true);
-    } else {
-      setSubmitError(res.error || "Failed to book room.");
+    try {
+      const response = await bookCabin({
+        buildingId: selectedBuilding?._id,
+        floorId: selectedFloor?._id,
+        cabinId,
+        departmentId: selectedDeptObj._id,
+        date,
+        startTime,
+        endTime,
+        attendees,
+        meetingPurpose: purpose
+      });
+
+      if (response.data && response.data.success) {
+        setSuccessModal(true);
+        setSubmitLoading(false)
+      } else {
+        setSubmitError(response.data?.message || "Failed to book room.");
+        setSubmitLoading(false)
+      }
+    } catch (error: any) {
+      console.error("Booking error:", error);
+      const msg = error.response?.data?.message || error.message || "Failed to book room.";
+      setSubmitError(msg);
+      setSubmitLoading(false)
     }
   };
 
@@ -444,9 +467,9 @@ export default function BookingView() {
                       availability === "maintenance" ? "bg-slate-400" : "bg-red-500"
                     }`} />
                   <span>
-                    {availability === "available" ? "🟢 Available Instantly" :
-                      availability === "reserved" ? "🟡 Reserved Soon" :
-                        availability === "maintenance" ? "⚫ Under Maintenance" : "🔴 Already Booked"}
+                    {availability === "available" ? "Available Instantly" :
+                      availability === "reserved" ? "Reserved Soon" :
+                        availability === "maintenance" ? "Under Maintenance" : "Already Booked"}
                   </span>
                 </div>
               </div>
