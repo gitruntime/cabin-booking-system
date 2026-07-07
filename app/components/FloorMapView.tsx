@@ -191,13 +191,13 @@ export default function FloorMapView() {
             <div className="relative">
               <div
                 onClick={() => setOpenBuilding(!openBuilding)}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs font-semibold outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200 cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs font-semibold outline-none dark:border-slate-800 dark:bg-transparent dark:text-slate-200 cursor-pointer"
               >
                 {selectedBuilding || "Select Building"}
               </div>
 
               {openBuilding && (
-                <div className="absolute top-full left-0 mt-1 rounded-lg border border-slate-200 bg-white dark:bg-slate-850 dark:border-slate-800 shadow-lg z-20">
+                <div className="absolute top-full left-0 mt-1 rounded-lg border border-slate-200 bg-white dark:bg-[#0F172B] dark:border-slate-800 shadow-lg z-20">
                   {buildingList.map((bld: BuildingType, i) => (
                     <div
                       key={i}
@@ -223,13 +223,13 @@ export default function FloorMapView() {
             <div className="relative">
               <div
                 onClick={() => setOpenFloor(!openFloor)}
-                className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs font-semibold outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200 cursor-pointer"
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs font-semibold outline-none dark:border-slate-800 dark:bg-[#0F172B] dark:bg-transparent dark:text-slate-200 cursor-pointer"
               >
                 {floorSelected?.name || "Select Floor"}
               </div>
 
               {openFloor && (
-                <div className="absolute top-full left-0 mt-1 rounded-lg border border-slate-200 bg-white dark:bg-slate-850 dark:border-slate-800 shadow-lg z-20">
+                <div className="absolute top-full left-0 mt-1 rounded-lg border border-slate-200 bg-white dark:bg-[#0F172B] dark:border-slate-800 shadow-lg z-20">
                   {floorList.map((floor: FloorType, i) => (
                     <div
                       key={i}

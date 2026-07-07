@@ -19,7 +19,7 @@ import {
 import React, { useEffect, useRef, useState } from "react";
 import { useBooking } from "../context/BookingContext";
 import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
-import { bookCabin } from "../http";
+import { bookCabin, getBookingsByCabinId } from "../http";
 
 export default function BookingView() {
   const {
@@ -74,6 +74,27 @@ export default function BookingView() {
     return isBuildingMatch && isFloorMatch;
   });
 
+
+  const [cabinBookings, setCabinBookings] = useState<any[]>([]);
+
+  const checkAvailabilityByCabinId = async (id: string) => {
+    try {
+      const res = await getBookingsByCabinId(id);
+      setCabinBookings(res?.data?.bookings || []);
+    } catch (error) {
+      console.error(error);
+      setCabinBookings([]);
+    }
+  };
+
+  useEffect(() => {
+    if (cabinId) {
+      checkAvailabilityByCabinId(cabinId);
+    } else {
+      setCabinBookings([]);
+    }
+  }, [cabinId]);
+
   useEffect(() => {
     if (filteredCabins.length > 0) {
       // Keep selected cabin if it exists on new floor, otherwise reset
@@ -86,15 +107,42 @@ export default function BookingView() {
     }
   }, [selectedBuilding, selectedFloor, cabinId, filteredCabins]);
 
-  // Run validation & recommendations check when parameters change
+  // Compute availability based on selected cabin, date, time and loaded bookings
+  useEffect(() => {
+    if (!cabinId) {
+      setAvailability("");
+      return;
+    }
+
+    const activeCabin = cabinList.find(c => c._id === cabinId);
+    if (activeCabin?.status === "maintenance") {
+      setAvailability("maintenance");
+      return;
+    }
+
+    if (!date || !startTime || !endTime) {
+      setAvailability("available");
+      return;
+    }
+
+    // Find overlapping active booking
+    const overlapping = cabinBookings.find(b => {
+      if (b.status === "cancelled" || b.status === "completed") return false;
+      return b.date === date && b.startTime < endTime && b.endTime > startTime;
+    });
+
+    if (overlapping) {
+      setAvailability(overlapping.status); // "confirmed" or "checked-in"
+    } else {
+      setAvailability("available");
+    }
+  }, [cabinId, date, startTime, endTime, cabinBookings, cabinList]);
+
+  // Run recommendations check when parameters change
   useEffect(() => {
     if (!cabinId || !date || !startTime || !endTime) return;
 
-    // 1. Check availability
-    const status = checkAvailability(cabinId, date, startTime, endTime);
-    setAvailability(status);
-
-    // 2. Fetch AI Recommendations based on requirements (needed facilities can be mapped, let's pass empty/all for general matching)
+    // Fetch AI Recommendations based on requirements (needed facilities can be mapped)
     const activeCabin = cabinList.find(c => c._id === cabinId);
     const neededFacilities = activeCabin ? activeCabin.facilities : [];
     const recs = getAIRecommendations(attendees, neededFacilities, date, startTime, endTime);
@@ -151,10 +199,13 @@ export default function BookingView() {
 
       if (response.data && response.data.success) {
         setSuccessModal(true);
-        setSubmitLoading(false)
+        setSubmitLoading(false);
+        if (cabinId) {
+          checkAvailabilityByCabinId(cabinId);
+        }
       } else {
         setSubmitError(response.data?.message || "Failed to book room.");
-        setSubmitLoading(false)
+        setSubmitLoading(false);
       }
     } catch (error: any) {
       console.error("Booking error:", error);
@@ -455,21 +506,33 @@ export default function BookingView() {
               {/* Booking status visualizer */}
               <div className="space-y-1.5 flex flex-col justify-end">
                 <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-semibold ${availability === "available"
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
-                  : availability === "reserved"
-                    ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
-                    : availability === "maintenance"
-                      ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
-                      : "bg-red-50 border-red-200 text-red-800 dark:bg-red-950/20 dark:border-red-900/50 dark:text-red-400"
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
+                    : availability === "confirmed"
+                      ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
+                      : availability === "checked-in"
+                        ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/20 dark:border-rose-900/50 dark:text-rose-400"
+                        : availability === "completed"
+                          ? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400"
+                          : availability === "cancelled"
+                            ? "bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
+                            : availability === "maintenance"
+                              ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
+                              : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
                   }`}>
                   <span className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse ${availability === "available" ? "bg-emerald-500" :
-                    availability === "reserved" ? "bg-amber-500" :
-                      availability === "maintenance" ? "bg-slate-400" : "bg-red-500"
+                      availability === "confirmed" ? "bg-amber-500" :
+                        availability === "checked-in" ? "bg-rose-500" :
+                          availability === "completed" ? "bg-blue-500" :
+                            availability === "cancelled" ? "bg-slate-400" :
+                              availability === "maintenance" ? "bg-slate-400" : "bg-emerald-500"
                     }`} />
                   <span>
                     {availability === "available" ? "Available Instantly" :
-                      availability === "reserved" ? "Reserved Soon" :
-                        availability === "maintenance" ? "Under Maintenance" : "Already Booked"}
+                      availability === "confirmed" ? "Confirmed (Reserved)" :
+                        availability === "checked-in" ? "Checked In" :
+                          availability === "completed" ? "Completed" :
+                            availability === "cancelled" ? "Cancelled" :
+                              availability === "maintenance" ? "Under Maintenance" : "Available"}
                   </span>
                 </div>
               </div>
@@ -493,11 +556,26 @@ export default function BookingView() {
             {/* Submit */}
             <button
               type="submit"
-              disabled={availability !== "available" && availability !== "reserved"}
+              disabled={
+                (availability !== "available" &&
+                  availability !== "cancelled" &&
+                  availability !== "completed" &&
+                  availability !== "") ||
+                submitLoading
+              }
               className="w-full py-2.5 rounded-xl bg-linear-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold text-sm transition-all shadow-md shadow-blue-500/10 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
             >
               <ShieldCheck size={16} />
-              <span>Book Space Now</span>
+              <span>
+                {submitLoading
+                  ? "Loading..."
+                  : (availability === "available" ||
+                    availability === "cancelled" ||
+                    availability === "completed" ||
+                    availability === "")
+                    ? "Book Space Now"
+                    : "Book"}
+              </span>
             </button>
           </form>
         </div>
