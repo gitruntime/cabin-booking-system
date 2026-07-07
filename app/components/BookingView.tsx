@@ -83,7 +83,7 @@ export default function BookingView() {
       const res = await getBookingsByCabinId(id);
       setCabinBookings(res?.data?.bookings || []);
     } catch (error) {
-      console.error(error);
+      console.log(error);
       setCabinBookings([]);
     }
   };

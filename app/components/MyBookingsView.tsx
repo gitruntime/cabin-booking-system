@@ -13,14 +13,15 @@ import {
   X
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { Booking, useBooking } from "../context/BookingContext";
-import { getMyBookings } from "../http";
+import { cancelMyBookings, checkInMyBookings, getMyBookings, rescheduleMyBookings } from "../http";
 
 export default function MyBookingsView() {
   const { cabins, cancelBooking, checkInBooking, editBooking, buildingList } = useBooking();
 
   const [myBookingsList, setMyBookingsList] = useState<any[]>([]);
-  const [loading, setloading] = useState<boolean>(true)
+  const [loading, setloading] = useState<boolean>(true);
   // Reschedule Modal
   const [rescheduleItem, setRescheduleItem] = useState<any>(null);
   const [newDate, setNewDate] = useState("");
@@ -30,6 +31,11 @@ export default function MyBookingsView() {
 
   // Cancel Modal
   const [cancelItem, setCancelItem] = useState<any>(null);
+
+  // Button Loading States
+  const [isRescheduling, setIsRescheduling] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [isCheckingIn, setIsCheckingIn] = useState<string | null>(null);
 
   // Active user's bookings from API list
   const activeBookings = myBookingsList.filter(b => b.status !== "cancelled");
@@ -55,7 +61,7 @@ export default function MyBookingsView() {
     setEditError("");
   };
 
-  const handleRescheduleSubmit = (e: React.FormEvent) => {
+  const handleRescheduleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rescheduleItem) return;
     setEditError("");
@@ -66,17 +72,27 @@ export default function MyBookingsView() {
     }
 
     const bookingId = rescheduleItem._id || rescheduleItem.id;
-    const res = editBooking(bookingId, {
-      date: newDate,
-      startTime: newStart,
-      endTime: newEnd
-    });
+    setIsRescheduling(true);
+    try {
+      const response = await rescheduleMyBookings(bookingId, {
+        date: newDate,
+        startTime: newStart,
+        endTime: newEnd
+      });
 
-    if (res.success) {
-      setMyBookingsList(prev => prev.map(b => (b._id === bookingId || b.id === bookingId) ? { ...b, date: newDate, startTime: newStart, endTime: newEnd } : b));
-      setRescheduleItem(null);
-    } else {
-      setEditError(res.error || "Conflict detected.");
+      if (response.data && response.data.success) {
+        setMyBookingsList(prev => prev.map(b => (b._id === bookingId || b.id === bookingId) ? { ...b, date: newDate, startTime: newStart, endTime: newEnd } : b));
+        setRescheduleItem(null);
+        toast.success("Booking rescheduled successfully");
+      } else {
+        setEditError(response.data?.message || "Conflict detected.");
+      }
+    } catch (error: any) {
+      console.error(error);
+      const msg = error.response?.data?.message || error.message || "Conflict detected.";
+      setEditError(msg);
+    } finally {
+      setIsRescheduling(false);
     }
   };
 
@@ -84,18 +100,44 @@ export default function MyBookingsView() {
     setCancelItem(booking);
   };
 
-  const confirmCancel = () => {
+  const confirmCancel = async () => {
     if (cancelItem) {
       const bookingId = cancelItem._id || cancelItem.id;
-      cancelBooking(bookingId);
-      setMyBookingsList(prev => prev.map(b => (b._id === bookingId || b.id === bookingId) ? { ...b, status: "cancelled" } : b));
-      setCancelItem(null);
+      setIsCancelling(true);
+      try {
+        const response = await cancelMyBookings(bookingId);
+        if (response.data && response.data.success) {
+          setMyBookingsList(prev => prev.map(b => (b._id === bookingId || b.id === bookingId) ? { ...b, status: "cancelled" } : b));
+          setCancelItem(null);
+          toast.success("Booking cancelled successfully");
+        } else {
+          toast.error(response.data?.message || "Failed to cancel booking.");
+        }
+      } catch (error: any) {
+        console.error(error);
+        toast.error(error.response?.data?.message || error.message || "Failed to cancel booking.");
+      } finally {
+        setIsCancelling(false);
+      }
     }
   };
 
-  const handleCheckIn = (id: string) => {
-    checkInBooking(id);
-    setMyBookingsList(prev => prev.map(b => (b._id === id || b.id === id) ? { ...b, status: "checked-in" } : b));
+  const handleCheckIn = async (id: string) => {
+    setIsCheckingIn(id);
+    try {
+      const response = await checkInMyBookings(id);
+      if (response.data && response.data.success) {
+        setMyBookingsList(prev => prev.map(b => (b._id === id || b.id === id) ? { ...b, status: "checked-in" } : b));
+        toast.success("Checked in successfully");
+      } else {
+        toast.error(response.data?.message || "Failed to check in.");
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error.response?.data?.message || error.message || "Failed to check in.");
+    } finally {
+      setIsCheckingIn(null);
+    }
   };
 
   const renderStatusBadge = (status: Booking["status"]) => {
@@ -186,11 +228,12 @@ export default function MyBookingsView() {
 
                       {showCheckIn && (
                         <button
+                          disabled={isCheckingIn === (b._id || b.id)}
                           onClick={() => handleCheckIn(b._id || b.id)}
-                          className="mr-auto flex items-center gap-1 py-1.5 px-3 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 transition-colors"
+                          className="mr-auto flex items-center gap-1 py-1.5 px-3 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:pointer-events-none"
                         >
                           <UserCheck size={12} />
-                          <span>Check In</span>
+                          <span>{isCheckingIn === (b._id || b.id) ? "Checking In..." : "Check In"}</span>
                         </button>
                       )}
 
@@ -321,9 +364,10 @@ export default function MyBookingsView() {
               {/* Action buttons */}
               <button
                 type="submit"
-                className="w-full mt-2 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md shadow-blue-500/10 transition-colors"
+                disabled={isRescheduling}
+                className="w-full mt-2 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md shadow-blue-500/10 transition-colors disabled:opacity-50 disabled:pointer-events-none"
               >
-                Save Rescheduled Times
+                {isRescheduling ? "Saving..." : "Save Rescheduled Times"}
               </button>
             </form>
           </div>
@@ -353,10 +397,11 @@ export default function MyBookingsView() {
                 No, Keep
               </button>
               <button
+                disabled={isCancelling}
                 onClick={confirmCancel}
-                className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors"
+                className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:pointer-events-none"
               >
-                Yes, Cancel
+                {isCancelling ? "Cancelling..." : "Yes, Cancel"}
               </button>
             </div>
           </div>

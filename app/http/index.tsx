@@ -23,6 +23,10 @@ export const getRoomFacilities = () => api.get(`/cabins/getFacilities`);
 export const bookCabin = (data: any) => api.post('/bookings/create', data)
 export const getBookingsByCabinId = (cabinId: string) => api.get(`/bookings/getBookingByCabinId/${cabinId}`);
 export const getMyBookings = () => api.get(`/bookings/getMyBookings`);
+export const checkInMyBookings = (id: string) => api.put(`/bookings/checkInMyBooking/${id}`);
+export const rescheduleMyBookings = (id: string, data: any) => api.put(`/bookings/rescheduleBooking/${id}`, data);
+export const cancelMyBookings = (id: string) => api.put(`/bookings/cancelBooking/${id}`);
+
 
 
 
