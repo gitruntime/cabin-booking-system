@@ -7,12 +7,10 @@ import {
   Info,
   SlidersHorizontal
 } from "lucide-react";
-import { useState } from "react";
-import { useBooking } from "../context/BookingContext";
+import { useState, useEffect } from "react";
+import { masterData, calenderData } from "../http";
 
 export default function CalendarView() {
-  const { bookings, cabins, buildingList, departments } = useBooking();
-
   // View mode
   const [viewMode, setViewMode] = useState<"month" | "week" | "day">("week");
 
@@ -25,6 +23,13 @@ export default function CalendarView() {
   const [filterCabin, setFilterCabin] = useState("All");
   const [filterDept, setFilterDept] = useState("All");
 
+  // Dynamic API states
+  const [buildings, setBuildings] = useState<any[]>([]);
+  const [cabins, setCabins] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [apiBookings, setApiBookings] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
   // Department Styling
   const deptBgColors = {
     Executive: "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800",
@@ -35,6 +40,63 @@ export default function CalendarView() {
     Sales: "bg-amber-100 text-amber-850 border-amber-200 dark:bg-amber-900/40 dark:text-amber-305 dark:border-amber-800",
   };
 
+  // Fetch Master Data on Mount
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      try {
+        const response = await masterData();
+        if (response.data && response.data.success) {
+          setBuildings(response.data.buildings || []);
+          setCabins(response.data.cabins || []);
+          setDepartments(response.data.departments || []);
+        }
+      } catch (error) {
+        console.error("Error fetching master data:", error);
+      }
+    };
+    fetchMasterData();
+  }, []);
+
+  const formatDateString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Fetch Calendar Bookings on change of date/mode/filters
+  useEffect(() => {
+    const fetchCalendarBookings = async () => {
+      setLoading(true);
+      try {
+        const startOfWeek = new Date(currentDate);
+        startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+        const params: any = {
+          startDate: viewMode === "day" ? formatDateString(currentDate) : formatDateString(startOfWeek),
+          endDate: viewMode === "day" ? formatDateString(currentDate) : formatDateString(endOfWeek)
+        };
+
+        if (filterBuilding !== "All") params.buildingId = filterBuilding;
+        if (filterFloor !== "All") params.floorId = filterFloor;
+        if (filterCabin !== "All") params.cabinId = filterCabin;
+        if (filterDept !== "All") params.departmentId = filterDept;
+
+        const response = await calenderData(params);
+        if (response.data && response.data.success) {
+          setApiBookings(response.data.bookings || response.data.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching calendar bookings:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCalendarBookings();
+  }, [currentDate, viewMode, filterBuilding, filterFloor, filterCabin, filterDept]);
+
   // Helper date logic
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -44,20 +106,38 @@ export default function CalendarView() {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
-  // Filtered Bookings
-  const getFilteredBookings = () => {
-    return bookings.filter(b => {
-      if (b.status === "cancelled") return false;
-      const cabin = cabins.find(c => c._id === b.cabinId);
-      if (!cabin) return false;
+  const getFloorsList = () => {
+    if (filterBuilding !== "All") {
+      const bld = buildings.find(b => b._id === filterBuilding);
+      return bld?.floors || [];
+    }
+    const allFloors: any[] = [];
+    buildings.forEach(b => {
+      if (b.floors) {
+        b.floors.forEach((f: any) => {
+          if (!allFloors.some(x => x._id === f._id)) {
+            allFloors.push(f);
+          }
+        });
+      }
+    });
+    return allFloors;
+  };
 
-      if (filterBuilding !== "All" && cabin.building !== filterBuilding) return false;
-      if (filterFloor !== "All" && cabin.floor !== filterFloor) return false;
-      if (filterCabin !== "All" && cabin.name !== filterCabin) return false;
-      if (filterDept !== "All" && b.department !== filterDept) return false;
+  const getFilteredCabinsOptions = () => {
+    return cabins.filter(c => {
+      const cBuildingId = typeof c.buildingId === "object" ? c.buildingId?._id : c.buildingId;
+      const cFloorId = typeof c.floorId === "object" ? c.floorId?._id : c.floorId;
 
+      if (filterBuilding !== "All" && cBuildingId !== filterBuilding) return false;
+      if (filterFloor !== "All" && cFloorId !== filterFloor) return false;
       return true;
     });
+  };
+
+  // Filtered Bookings client-side helper to filter out cancelled ones
+  const getFilteredBookings = () => {
+    return apiBookings.filter(b => b.status !== "cancelled");
   };
 
   const activeBookings = getFilteredBookings();
@@ -125,15 +205,18 @@ export default function CalendarView() {
           {/* Bookings inside the day box */}
           <div className="space-y-1 mt-1 overflow-y-auto max-h-15">
             {dayBookings.slice(0, 3).map((b) => {
-              const cabin = cabins.find(c => c._id === b.cabinId);
-              const colorClass = deptBgColors[b.department as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
+              const cabinIdStr = typeof b.cabinId === "object" ? b.cabinId?._id : b.cabinId;
+              const cabin = cabins.find(c => c._id === cabinIdStr);
+              const cabinName = typeof b.cabinId === "object" ? b.cabinId?.name : cabin?.name || "Space";
+              const deptName = typeof b.departmentId === "object" ? b.departmentId?.name : b.department;
+              const colorClass = deptBgColors[deptName as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
               return (
                 <div
-                  key={b.id}
-                  title={`${b.purpose} (${b.startTime}-${b.endTime}) - ${cabin?.name}`}
+                  key={b._id || b.id}
+                  title={`${b.meetingPurpose || b.purpose} (${b.startTime}-${b.endTime}) - ${cabinName}`}
                   className={`px-1.5 py-0.5 rounded text-[8px] font-bold border truncate ${colorClass}`}
                 >
-                  {b.startTime} {cabin?.name.split(" ").slice(-1)[0]}
+                  {b.startTime} {cabinName.split(" ").slice(-1)[0]}
                 </div>
               );
             })}
@@ -174,7 +257,7 @@ export default function CalendarView() {
       <div className="border border-slate-200/80 rounded-xl overflow-hidden bg-white dark:border-slate-800 dark:bg-slate-900/50">
         {/* Header grid */}
         <div className="grid grid-cols-8 border-b border-slate-200 dark:border-slate-800">
-          <div className="py-2.5 px-3 text-[10px] font-bold bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800/60 uppercase">
+          <div className="py-2.5 px-3 text-[10px] font-bold bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800/60 uppercase">
             Time
           </div>
           {weekDays.map((day, idx) => {
@@ -198,10 +281,10 @@ export default function CalendarView() {
 
         {/* Hour Rows */}
         <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-100 overflow-y-auto">
-          {["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"].map((hour) => (
+          {["00:00", "00:30", "01:00", "01:30", "02:00", "02:30", "03:00", "03:30", "04:00", "04:30", "05:00", "05:30", "06:00", "06:30", "07:00", "07:30", "08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30", "23:00", "23:30"].map((hour) => (
             <div key={hour} className="grid grid-cols-8 min-h-12.5">
               {/* Hour cell */}
-              <div className="p-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-850/50 border-r border-slate-100 dark:border-slate-800/60 flex items-center justify-center">
+              <div className="p-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-950 border-r border-slate-100 dark:border-slate-800/60 flex items-center justify-center">
                 {hour}
               </div>
 
@@ -220,15 +303,18 @@ export default function CalendarView() {
                 return (
                   <div key={idx} className="p-1.5 border-r border-slate-100 dark:border-slate-800 last:border-r-0 relative hover:bg-slate-50/40 dark:hover:bg-slate-850/10 transition-colors">
                     {slotBookings.map((b) => {
-                      const cabin = cabins.find(c => c._id === b.cabinId);
-                      const colorClass = deptBgColors[b.department as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
+                      const cabinIdStr = typeof b.cabinId === "object" ? b.cabinId?._id : b.cabinId;
+                      const cabin = cabins.find(c => c._id === cabinIdStr);
+                      const cabinName = typeof b.cabinId === "object" ? b.cabinId?.name : cabin?.name || "Space";
+                      const deptName = typeof b.departmentId === "object" ? b.departmentId?.name : b.department;
+                      const colorClass = deptBgColors[deptName as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
                       return (
                         <div
-                          key={b.id}
+                          key={b._id || b.id}
                           className={`p-1.5 rounded text-[8px] font-bold border ${colorClass} truncate mb-1 shadow-xs`}
-                          title={`${b.purpose} - ${cabin?.name}`}
+                          title={`${b.meetingPurpose || b.purpose} - ${cabinName}`}
                         >
-                          <p className="leading-none">{cabin?.name.split(" ").slice(0, 2).join(" ")}</p>
+                          <p className="leading-none">{cabinName.split(" ").slice(0, 2).join(" ")}</p>
                           <p className="opacity-75 text-[7px] mt-0.5">{b.startTime}-{b.endTime}</p>
                         </div>
                       );
@@ -260,50 +346,51 @@ export default function CalendarView() {
             {dayBookings.length} Active Bookings
           </span>
         </div>
-
-        {/* Hourly Breakdown list */}
         <div className="divide-y divide-slate-100 dark:divide-slate-800 max-h-100 overflow-y-auto p-4 space-y-3">
           {dayBookings.length > 0 ? (
             dayBookings.map((b) => {
-              const cabin = cabins.find(c => c._id === b.cabinId);
-              const colorClass = deptBgColors[b.department as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800";
+              const cabinIdStr = typeof b.cabinId === "object" ? b.cabinId?._id : b.cabinId;
+              const cabin = cabins.find(c => c._id === cabinIdStr);
+              const cabinName = typeof b.cabinId === "object" ? b.cabinId?.name : cabin?.name || "Space";
+              const bldId = typeof b.buildingId === "object" ? b.buildingId?._id : b.buildingId;
+              const bld = buildings.find(x => x._id === bldId);
+              const bldName = typeof b.buildingId === "object" ? b.buildingId?.name : bld?.name || "HQ";
+              const flrId = typeof b.floorId === "object" ? b.floorId?._id : b.floorId;
+              const flrName = bld?.floors?.find((f: any) => f._id === flrId)?.name || "Floor";
+              const deptName = typeof b.departmentId === "object" ? b.departmentId?.name : b.department;
+              const colorClass = deptBgColors[deptName as keyof typeof deptBgColors] || "bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:border-slate-700";
+              const userName = typeof b.userId === "object" ? b.userId?.name : b.userName || "Guest";
 
               return (
-                <div
-                  key={b.id}
-                  className={`p-4 rounded-xl border flex items-center justify-between shadow-xs transition-transform hover:translate-x-1 ${colorClass}`}
-                >
+                <div key={b._id || b.id} className={`p-4 rounded-xl border flex items-center justify-between shadow-xs transition-transform hover:translate-x-1 ${colorClass}`}>
                   <div className="flex gap-4">
                     <div className="flex flex-col justify-center items-center px-3 py-2 rounded-lg bg-white/70 dark:bg-slate-900/70 border border-white/50 dark:border-slate-800/40 min-w-20">
                       <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase">Time</span>
                       <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{b.startTime} - {b.endTime}</span>
                     </div>
-
                     <div>
-                      <p className="text-sm font-bold leading-tight">{b.purpose}</p>
+                      <p className="text-sm font-bold leading-tight">{b.meetingPurpose || b.purpose}</p>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1 text-[11px] opacity-80">
-                        <span className="font-semibold">{cabin?.name}</span>
+                        <span className="font-semibold">{cabinName}</span>
                         <span>•</span>
-                        <span>Capacity: {cabin?.capacity} seats</span>
+                        <span>Capacity: {cabin?.capacity || 4} seats</span>
                         <span>•</span>
-                        <span>Building: {cabin?.building} • Floor {cabin?.floor}</span>
+                        <span>Building: {bldName} • {flrName}</span>
                       </div>
                     </div>
                   </div>
-
                   <div className="text-right">
-                    <span className="text-[10px] font-bold bg-white/50 px-2 py-0.5 rounded border border-white/20 uppercase tracking-wider">
-                      {b.department}
+                    <span className="text-[10px] font-bold bg-white/50 px-2 py-0.5 rounded border border-white/20 uppercase tracking-wider font-semibold">
+                      {deptName}
                     </span>
-                    <p className="text-[10px] opacity-75 mt-1">Host: {b.userName}</p>
+                    <p className="text-[10px] opacity-75 mt-1">Host: {userName}</p>
                   </div>
                 </div>
               );
             })
           ) : (
-            <div className="py-16 text-center text-slate-400 text-xs flex flex-col items-center gap-2">
-              <Info size={32} className="text-slate-300 dark:text-slate-700" />
-              <p className="font-semibold">No bookings scheduled on this date.</p>
+            <div className="py-12 text-center text-slate-400 text-xs font-medium">
+              No cabin bookings found for this day.
             </div>
           )}
         </div>
@@ -348,7 +435,7 @@ export default function CalendarView() {
 
           {/* View Toggles */}
           <div className="flex rounded-xl bg-slate-100 dark:bg-white/40 p-1">
-            {["week", "day"].map((mode) => (
+            {["month", "week", "day"].map((mode) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode as any)}
@@ -379,12 +466,16 @@ export default function CalendarView() {
               <label className="text-[10px] font-bold text-slate-400 uppercase">Building</label>
               <select
                 value={filterBuilding}
-                onChange={(e) => setFilterBuilding(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
+                onChange={(e) => {
+                  setFilterBuilding(e.target.value);
+                  setFilterFloor("All");
+                  setFilterCabin("All");
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
               >
                 <option value="All">All Buildings</option>
                 {
-                  buildingList.map((bld, i) => (
+                  buildings.map((bld, i) => (
                     <option key={i} value={bld._id}>{bld.name}</option>
                   ))
                 }
@@ -396,13 +487,16 @@ export default function CalendarView() {
               <label className="text-[10px] font-bold text-slate-400 uppercase">Floor</label>
               <select
                 value={filterFloor}
-                onChange={(e) => setFilterFloor(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
+                onChange={(e) => {
+                  setFilterFloor(e.target.value);
+                  setFilterCabin("All");
+                }}
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
               >
                 <option value="All">All Floors</option>
-                <option value="Ground Floor">Ground Floor</option>
-                <option value="1st Floor">1st Floor</option>
-                <option value="2nd Floor">2nd Floor</option>
+                {getFloorsList().map((flr: any) => (
+                  <option key={flr._id} value={flr._id}>{flr.name}</option>
+                ))}
               </select>
             </div>
 
@@ -412,10 +506,10 @@ export default function CalendarView() {
               <select
                 value={filterCabin}
                 onChange={(e) => setFilterCabin(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
               >
                 <option value="All">All Rooms</option>
-                {cabins.map((c, i) => (
+                {getFilteredCabinsOptions().map((c, i) => (
                   <option key={i} value={c._id}>{c.name}</option>
                 ))}
               </select>
@@ -427,8 +521,9 @@ export default function CalendarView() {
               <select
                 value={filterDept}
                 onChange={(e) => setFilterDept(e.target.value)}
-                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-850 dark:text-slate-200"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-800 dark:text-slate-200"
               >
+                <option value="All">All Departments</option>
                 {
                   departments.map((dept, i) => (
                     <option key={i} value={dept?._id}>{dept?.name}</option>
@@ -441,7 +536,12 @@ export default function CalendarView() {
       </div>
 
       {/* Calendar Grid rendering based on mode */}
-      <div className="space-y-4">
+      <div className="space-y-4 relative">
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-xs rounded-xl">
+            <span className="text-xs font-semibold text-slate-500">Loading Calendar Bookings...</span>
+          </div>
+        )}
         {viewMode === "month" && renderMonthView()}
         {viewMode === "week" && renderWeekView()}
         {viewMode === "day" && renderDayView()}

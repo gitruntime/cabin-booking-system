@@ -26,6 +26,8 @@ export const getMyBookings = () => api.get(`/bookings/getMyBookings`);
 export const checkInMyBookings = (id: string) => api.put(`/bookings/checkInMyBooking/${id}`);
 export const rescheduleMyBookings = (id: string, data: any) => api.put(`/bookings/rescheduleBooking/${id}`, data);
 export const cancelMyBookings = (id: string) => api.put(`/bookings/cancelBooking/${id}`);
+export const masterData = () => api.get(`/bookings/master-data`)
+export const calenderData = (params?: any) => api.get(`/bookings/calendar`, { params })
 
 
 
