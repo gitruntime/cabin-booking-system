@@ -14,7 +14,7 @@ export default function CalendarView() {
   const { bookings, cabins, buildingList, departments } = useBooking();
 
   // View mode
-  const [viewMode, setViewMode] = useState<"month" | "week" | "day">("month");
+  const [viewMode, setViewMode] = useState<"month" | "week" | "day">("week");
 
   // Navigation states
   const [currentDate, setCurrentDate] = useState(new Date("2026-07-01")); // Base seed date
@@ -347,8 +347,8 @@ export default function CalendarView() {
           </div>
 
           {/* View Toggles */}
-          <div className="flex rounded-xl bg-slate-100 dark:bg-slate-850 p-1">
-            {["month", "week", "day"].map((mode) => (
+          <div className="flex rounded-xl bg-slate-100 dark:bg-white/40 p-1">
+            {["week", "day"].map((mode) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode as any)}
@@ -356,7 +356,7 @@ export default function CalendarView() {
                   px-4 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all
                   ${viewMode === mode
                     ? "bg-white text-blue-600 shadow-xs dark:bg-slate-700 dark:text-blue-400"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"}
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-500"}
                 `}
               >
                 {mode}
