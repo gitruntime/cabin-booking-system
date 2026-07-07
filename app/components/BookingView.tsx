@@ -24,11 +24,11 @@ import { bookCabin, getBookingsByCabinId } from "../http";
 export default function BookingView() {
   const {
     cabinList,
-    checkAvailability,
     getAIRecommendations,
     buildingList,
     departments,
-    setCurrentTab
+    setCurrentTab,
+    facilities
   } = useBooking();
 
 
@@ -506,25 +506,25 @@ export default function BookingView() {
               {/* Booking status visualizer */}
               <div className="space-y-1.5 flex flex-col justify-end">
                 <div className={`p-2.5 rounded-xl border flex items-center gap-2 text-xs font-semibold ${availability === "available"
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
-                    : availability === "confirmed"
-                      ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
-                      : availability === "checked-in"
-                        ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/20 dark:border-rose-900/50 dark:text-rose-400"
-                        : availability === "completed"
-                          ? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400"
-                          : availability === "cancelled"
-                            ? "bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
-                            : availability === "maintenance"
-                              ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
-                              : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
+                  : availability === "confirmed"
+                    ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/20 dark:border-amber-900/50 dark:text-amber-400"
+                    : availability === "checked-in"
+                      ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/20 dark:border-rose-900/50 dark:text-rose-400"
+                      : availability === "completed"
+                        ? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400"
+                        : availability === "cancelled"
+                          ? "bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
+                          : availability === "maintenance"
+                            ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
+                            : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
                   }`}>
                   <span className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse ${availability === "available" ? "bg-emerald-500" :
-                      availability === "confirmed" ? "bg-amber-500" :
-                        availability === "checked-in" ? "bg-rose-500" :
-                          availability === "completed" ? "bg-blue-500" :
-                            availability === "cancelled" ? "bg-slate-400" :
-                              availability === "maintenance" ? "bg-slate-400" : "bg-emerald-500"
+                    availability === "confirmed" ? "bg-amber-500" :
+                      availability === "checked-in" ? "bg-rose-500" :
+                        availability === "completed" ? "bg-blue-500" :
+                          availability === "cancelled" ? "bg-slate-400" :
+                            availability === "maintenance" ? "bg-slate-400" : "bg-emerald-500"
                     }`} />
                   <span>
                     {availability === "available" ? "Available Instantly" :
@@ -589,7 +589,7 @@ export default function BookingView() {
               <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2">Space Details</h3>
 
               <div>
-                <span className="text-[9px] font-bold text-blue-500 uppercase">{activeCabinObj.building} • {activeCabinObj.floor}</span>
+                <span className="text-[9px] font-bold text-blue-500 uppercase">{buildingList.find(b => b._id === activeCabinObj.buildingId)?.name} • {floorList && floorList.find(f => f._id === activeCabinObj.floorId)?.name}</span>
                 <h4 className="text-base font-bold text-slate-800 dark:text-slate-100 mt-0.5">{activeCabinObj.name}</h4>
                 <p className="text-xs text-slate-400 capitalize mt-0.5">Type: {activeCabinObj.name}</p>
               </div>
@@ -615,7 +615,7 @@ export default function BookingView() {
                 <div className="flex flex-wrap gap-1.5">
                   {activeCabinObj.facilities.map((fac, idx) => (
                     <span key={idx} className="px-2 py-1 rounded bg-slate-100 text-slate-600 text-[10px] font-semibold dark:bg-slate-800 dark:text-slate-300">
-                      {fac}
+                      {facilities.find(f => f._id === fac)?.name}
                     </span>
                   ))}
                 </div>
@@ -631,7 +631,7 @@ export default function BookingView() {
           <div className="p-5 rounded-2xl bg-linear-to-tr from-slate-50 to-blue-50/50 border border-slate-200/60 dark:from-slate-900 dark:to-blue-950/20 dark:border-slate-800/80 shadow-xs space-y-4">
             <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400 border-b border-blue-100/50 dark:border-slate-800 pb-2">
               <Sparkles size={16} className="animate-pulse" />
-              <h3 className="font-bold text-sm">Smart Room Suggest</h3>
+              <h3 className="font-bold text-sm">Room Suggest</h3>
             </div>
 
             <div className="space-y-3">
@@ -643,13 +643,10 @@ export default function BookingView() {
                   >
                     <div>
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">{rec.building} • {rec.floor}</span>
-                        <span className="text-[9px] font-bold text-blue-600 dark:text-blue-400 bg-blue-100/40 px-1.5 py-0.5 rounded dark:bg-blue-900/40">
-                          98% Match
-                        </span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase">{buildingList.find(b => b._id === rec.buildingId)?.name} • {floorList && floorList.find(f => f._id === rec.floorId)?.name}</span>
                       </div>
                       <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{rec.name}</h4>
-                      <p className="text-[10px] text-slate-400">Fits {rec.capacity} seats • {rec.facilities.slice(0, 2).join(", ")}</p>
+                      <p className="text-[10px] text-slate-400">Fits {rec.capacity} seats • {rec.facilities.map(f => facilities.find(fac => fac._id === f)?.name).join(", ")}</p>
                     </div>
 
                     <button
