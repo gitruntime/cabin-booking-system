@@ -22,6 +22,7 @@ export const getRoomTypes = () => api.get(`/cabins/getTypes`);
 export const getRoomFacilities = () => api.get(`/cabins/getFacilities`);
 export const bookCabin = (data: any) => api.post('/bookings/create', data)
 export const getBookingsByCabinId = (cabinId: string) => api.get(`/bookings/getBookingByCabinId/${cabinId}`);
+export const getMyBookings = () => api.get(`/bookings/getMyBookings`);
 
 
 

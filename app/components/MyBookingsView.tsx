@@ -12,28 +12,42 @@ import {
   UserCheck,
   X
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Booking, useBooking } from "../context/BookingContext";
+import { getMyBookings } from "../http";
 
 export default function MyBookingsView() {
-  const { bookings, cabins, cancelBooking, checkInBooking, editBooking, currentUser } = useBooking();
+  const { cabins, cancelBooking, checkInBooking, editBooking, buildingList } = useBooking();
 
+  const [myBookingsList, setMyBookingsList] = useState<any[]>([]);
+  const [loading, setloading] = useState<boolean>(true)
   // Reschedule Modal
-  const [rescheduleItem, setRescheduleItem] = useState<Booking | null>(null);
+  const [rescheduleItem, setRescheduleItem] = useState<any>(null);
   const [newDate, setNewDate] = useState("");
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
   const [editError, setEditError] = useState("");
 
   // Cancel Modal
-  const [cancelItem, setCancelItem] = useState<Booking | null>(null);
+  const [cancelItem, setCancelItem] = useState<any>(null);
 
-  // Active user's bookings
-  const myBookings = bookings.filter(b => b.userId === currentUser.id);
-  const activeBookings = myBookings.filter(b => b.status !== "cancelled");
-  const pastBookings = myBookings.filter(b => b.status === "cancelled");
+  // Active user's bookings from API list
+  const activeBookings = myBookingsList.filter(b => b.status !== "cancelled");
+  const pastBookings = myBookingsList.filter(b => b.status === "cancelled");
 
-  const handleEditClick = (booking: Booking) => {
+  const getFloorName = (b: any) => {
+    const bldId = typeof b.buildingId === "object" ? b.buildingId?._id : b.buildingId;
+    const flrId = typeof b.floorId === "object" ? b.floorId?._id : b.floorId;
+    if (!bldId || !flrId) return "";
+    const bld = buildingList?.find((x: any) => x._id === bldId);
+    if (bld && bld.floors) {
+      const flr = bld.floors.find((x: any) => x._id === flrId);
+      if (flr) return flr.name;
+    }
+    return "";
+  };
+
+  const handleEditClick = (booking: any) => {
     setRescheduleItem(booking);
     setNewDate(booking.date);
     setNewStart(booking.startTime);
@@ -51,28 +65,37 @@ export default function MyBookingsView() {
       return;
     }
 
-    const res = editBooking(rescheduleItem.id, {
+    const bookingId = rescheduleItem._id || rescheduleItem.id;
+    const res = editBooking(bookingId, {
       date: newDate,
       startTime: newStart,
       endTime: newEnd
     });
 
     if (res.success) {
+      setMyBookingsList(prev => prev.map(b => (b._id === bookingId || b.id === bookingId) ? { ...b, date: newDate, startTime: newStart, endTime: newEnd } : b));
       setRescheduleItem(null);
     } else {
       setEditError(res.error || "Conflict detected.");
     }
   };
 
-  const handleCancelClick = (booking: Booking) => {
+  const handleCancelClick = (booking: any) => {
     setCancelItem(booking);
   };
 
   const confirmCancel = () => {
     if (cancelItem) {
-      cancelBooking(cancelItem.id);
+      const bookingId = cancelItem._id || cancelItem.id;
+      cancelBooking(bookingId);
+      setMyBookingsList(prev => prev.map(b => (b._id === bookingId || b.id === bookingId) ? { ...b, status: "cancelled" } : b));
       setCancelItem(null);
     }
+  };
+
+  const handleCheckIn = (id: string) => {
+    checkInBooking(id);
+    setMyBookingsList(prev => prev.map(b => (b._id === id || b.id === id) ? { ...b, status: "checked-in" } : b));
   };
 
   const renderStatusBadge = (status: Booking["status"]) => {
@@ -86,6 +109,24 @@ export default function MyBookingsView() {
     }
   };
 
+  const fetchMyBooking = async () => {
+    if (myBookingsList.length === 0) {
+      setloading(true)
+    }
+    try {
+      const response = await getMyBookings();
+      setMyBookingsList(response?.data?.bookings || []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setloading(false)
+    }
+  };
+
+  useEffect(() => {
+    fetchMyBooking();
+  }, []);
+
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
@@ -96,82 +137,88 @@ export default function MyBookingsView() {
           <h3 className="font-bold text-slate-800 dark:text-slate-200">Active Bookings</h3>
         </div>
 
-        {activeBookings.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {activeBookings.map((b) => {
-              const cabin = cabins.find(c => c._id === b.cabinId);
+        {loading ?
+          <div className="py-12 text-center text-slate-400 text-xs font-medium">loading...</div>
+          : activeBookings.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeBookings.map((b) => {
+                const cabinIdStr = typeof b.cabinId === "object" ? b.cabinId?._id : b.cabinId;
+                const cabin = cabins.find(c => c._id === cabinIdStr);
 
-              // Enable check in button only for today's bookings starting soon/active, and not yet checked-in
-              const isToday = b.date === "2026-07-01";
-              const showCheckIn = isToday && b.status === "confirmed";
+                // Enable check in button only for today's bookings starting soon/active, and not yet checked-in
+                const isToday = b.date === "2026-07-01";
+                const showCheckIn = isToday && b.status === "confirmed";
 
-              return (
-                <div
-                  key={b.id}
-                  className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100/30 transition-all dark:border-slate-800/60 dark:bg-slate-800/20 dark:hover:bg-slate-800/40 flex flex-col justify-between"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-blue-500 uppercase">{cabin?.building} • {cabin?.floor}</span>
-                      {renderStatusBadge(b.status)}
-                    </div>
+                const cabinName = typeof b.cabinId === "object" ? b.cabinId?.name : cabin?.name || "Deleted Space";
+                const buildingName = typeof b.buildingId === "object" ? b.buildingId?.name : "";
 
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">{b.purpose}</h4>
-                      <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">{cabin?.name || "Deleted Space"}</p>
-                    </div>
-
-                    {/* Details row */}
-                    <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar size={13} />
-                        <span>{b.date}</span>
+                return (
+                  <div
+                    key={b._id || b.id}
+                    className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100/30 transition-all dark:border-slate-800/60 dark:bg-slate-800/20 dark:hover:bg-slate-800/40 flex flex-col justify-between"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-blue-500 uppercase">{buildingName} • {getFloorName(b)}</span>
+                        {renderStatusBadge(b.status)}
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock size={13} />
-                        <span>{b.startTime} - {b.endTime}</span>
+
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">{b.meetingPurpose || b.purpose}</h4>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold mt-0.5">{cabinName}</p>
+                      </div>
+
+                      {/* Details row */}
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={13} />
+                          <span>{b.date}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={13} />
+                          <span>{b.startTime} - {b.endTime}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Actions buttons */}
-                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 justify-end">
+                    {/* Actions buttons */}
+                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 justify-end">
 
-                    {showCheckIn && (
+                      {showCheckIn && (
+                        <button
+                          onClick={() => handleCheckIn(b._id || b.id)}
+                          className="mr-auto flex items-center gap-1 py-1.5 px-3 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 transition-colors"
+                        >
+                          <UserCheck size={12} />
+                          <span>Check In</span>
+                        </button>
+                      )}
+
                       <button
-                        onClick={() => checkInBooking(b.id)}
-                        className="mr-auto flex items-center gap-1 py-1.5 px-3 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 transition-colors"
+                        onClick={() => handleEditClick(b)}
+                        className="flex items-center gap-1 py-1.5 px-2.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 text-[10px] font-bold transition-all dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                       >
-                        <UserCheck size={12} />
-                        <span>Check In</span>
+                        <Edit3 size={12} />
+                        <span>Reschedule</span>
                       </button>
-                    )}
 
-                    <button
-                      onClick={() => handleEditClick(b)}
-                      className="flex items-center gap-1 py-1.5 px-2.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 text-[10px] font-bold transition-all dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                    >
-                      <Edit3 size={12} />
-                      <span>Reschedule</span>
-                    </button>
-
-                    <button
-                      onClick={() => handleCancelClick(b)}
-                      className="flex items-center gap-1 py-1.5 px-2.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 text-[10px] font-bold transition-all dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
-                    >
-                      <Trash2 size={12} />
-                      <span>Cancel</span>
-                    </button>
+                      <button
+                        onClick={() => handleCancelClick(b)}
+                        className="flex items-center gap-1 py-1.5 px-2.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-600 text-[10px] font-bold transition-all dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-950/20"
+                      >
+                        <Trash2 size={12} />
+                        <span>Cancel</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="py-12 text-center text-slate-400 text-xs font-medium">
-            You don't have any active cabin bookings.
-          </div>
-        )}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="py-12 text-center text-slate-400 text-xs font-medium">
+              You don't have any active cabin bookings.
+            </div>
+          )}
       </div>
 
       {/* History / Cancelled Bookings */}
@@ -181,30 +228,37 @@ export default function MyBookingsView() {
           <h3 className="font-bold text-slate-700 dark:text-slate-350 text-sm">Past or Cancelled Logs</h3>
         </div>
 
-        {pastBookings.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {pastBookings.map((b, i) => {
-              const cabin = cabins.find(c => c._id === b.cabinId);
-              return (
-                <div
-                  key={i}
-                  className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/20 dark:border-slate-800/40 dark:bg-slate-900/10 flex items-center justify-between opacity-60"
-                >
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{cabin?.building}</p>
-                    <h4 className="text-xs font-bold text-slate-600 dark:text-slate-400 truncate">{b.purpose}</h4>
-                    <p className="text-[11px] text-slate-500 mt-0.5">{cabin?.name} • {b.date} ({b.startTime} - {b.endTime})</p>
-                  </div>
-                  {renderStatusBadge(b.status)}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="py-8 text-center text-slate-400 text-xs font-medium">
-            No booking cancellation history found.
-          </div>
-        )}
+        {
+          loading ?
+            <div className="py-12 text-center text-slate-400 text-xs font-medium">loading...</div>
+            :
+            pastBookings.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pastBookings.map((b, i) => {
+                  const cabinIdStr = typeof b.cabinId === "object" ? b.cabinId?._id : b.cabinId;
+                  const cabin = cabins.find(c => c._id === cabinIdStr);
+                  const cabinName = typeof b.cabinId === "object" ? b.cabinId?.name : cabin?.name || "Deleted Space";
+                  const buildingName = typeof b.buildingId === "object" ? b.buildingId?.name : "";
+                  return (
+                    <div
+                      key={i}
+                      className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/20 dark:border-slate-800/40 dark:bg-slate-900/10 flex items-center justify-between opacity-60"
+                    >
+                      <div className="overflow-hidden">
+                        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{buildingName} • {getFloorName(b)}</p>
+                        <h4 className="text-xs font-bold text-slate-600 dark:text-slate-400 truncate">{b.meetingPurpose || b.purpose}</h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5">{cabinName} • {b.date} ({b.startTime} - {b.endTime})</p>
+                      </div>
+                      {renderStatusBadge(b.status)}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-slate-400 text-xs font-medium">
+                No booking cancellation history found.
+              </div>
+            )}
       </div>
 
       {/* Reschedule Modal */}
