@@ -20,6 +20,7 @@ export const getCabinsByFloorId = (floorId: string) => api.get(`/cabins/getCabin
 export const getDepartments = () => api.get(`/cabins/getDepartments`);
 export const getRoomTypes = () => api.get(`/cabins/getTypes`);
 export const getRoomFacilities = () => api.get(`/cabins/getFacilities`);
+export const bookCabin = (data: any) => api.post('/bookings/create', data)
 
 
 

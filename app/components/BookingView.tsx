@@ -5,7 +5,9 @@ import {
   Briefcase,
   Building,
   Calendar,
+  Check,
   CheckCircle2,
+  ChevronDown,
   Clock,
   DoorOpen,
   Hash,
@@ -14,24 +16,31 @@ import {
   Sparkles,
   Users
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useBooking } from "../context/BookingContext";
-import { buildings, departments } from "../Data";
-import { CabinType } from "../Types/Cabin";
+import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
 
 export default function BookingView() {
   const {
-    cabins,
     cabinList,
     addBooking,
     checkAvailability,
     getAIRecommendations,
-    selectedFloor,
-    setSelectedFloor,
+    buildingList,
+    departments,
     setCurrentTab
   } = useBooking();
-  console.log("🚀 ~ BookingView ~ cabinList:", cabinList)
-  const [selectedBuilding, setSelectedBuilding] = useState("");
+
+
+  const [selectedBuilding, setSelectedBuilding] = useState<BuildingType>();
+  const [selectedFloor, setSelectedFloor] = useState<FloorType>();
+  console.log(selectedBuilding)
+  const [isBuildingDropdownOpen, setIsBuildingDropdownOpen] = useState(false);
+  const [isFloorDropdownOpen, setIsFloorDropdownOpen] = useState(false);
+  const buildingDropdownRef = useRef(null)
+  const floorDropdownRef = useRef(null)
+  const [floorList, setFloorList] = useState<FloorType[]>();
+  console.log(floorList)
   // Form states
   const [cabinId, setCabinId] = useState("");
   const [date, setDate] = useState("2026-07-01");
@@ -48,9 +57,23 @@ export default function BookingView() {
   const [successModal, setSuccessModal] = useState(false);
 
   // Set default cabin when floor/building changes
-  const filteredCabins = cabins.filter(
-    c => c.building === selectedBuilding && c.floor === selectedFloor
-  );
+  const filteredCabins = cabinList.filter(c => {
+    if (!selectedBuilding || !selectedFloor) return false;
+
+    const cBuildingId = c.buildingId || c.buildingId || c.building?._id;
+    const cBuildingName = typeof c.building === "string" ? c.building : c.building?.name;
+    const isBuildingMatch =
+      cBuildingId === selectedBuilding._id ||
+      cBuildingName === selectedBuilding.name;
+
+    const cFloorId = c.floorId || c.floorId || c.floor?._id;
+    const cFloorName = typeof c.floor === "string" ? c.floor : c.floor?.name;
+    const isFloorMatch =
+      cFloorId === selectedFloor._id ||
+      cFloorName === selectedFloor.name;
+
+    return isBuildingMatch && isFloorMatch;
+  });
 
   useEffect(() => {
     if (filteredCabins.length > 0) {
@@ -73,12 +96,12 @@ export default function BookingView() {
     setAvailability(status);
 
     // 2. Fetch AI Recommendations based on requirements (needed facilities can be mapped, let's pass empty/all for general matching)
-    const activeCabin = cabins.find(c => c._id === cabinId);
+    const activeCabin = cabinList.find(c => c._id === cabinId);
     const neededFacilities = activeCabin ? activeCabin.facilities : [];
     const recs = getAIRecommendations(attendees, neededFacilities, date, startTime, endTime);
     // Filter out the currently selected cabin from recommendations
     setRecommendations(recs.filter(r => r._id !== cabinId));
-  }, [cabinId, date, startTime, endTime, attendees, cabins]);
+  }, [cabinId, date, startTime, endTime, attendees, cabinList]);
 
   // Handle Form Submission
   const handleBook = (e: React.FormEvent) => {
@@ -125,12 +148,51 @@ export default function BookingView() {
   };
 
   const handleApplyRecommendation = (recCabin: CabinType) => {
-    setSelectedBuilding(recCabin.building);
-    setSelectedFloor(recCabin.floor);
+    let targetBuilding: BuildingType | undefined = undefined;
+    if (recCabin.building && typeof recCabin.building === "object") {
+      targetBuilding = recCabin.building;
+    } else {
+      const bldId = recCabin.buildingId || recCabin.buildingId || recCabin.building?._id || recCabin.building;
+      targetBuilding = buildingList.find(b => b._id === bldId || b.name === bldId);
+    }
+    if (targetBuilding) {
+      setSelectedBuilding(targetBuilding);
+    }
+
+    let targetFloor: FloorType | undefined = undefined;
+    if (recCabin.floor && typeof recCabin.floor === "object") {
+      targetFloor = recCabin.floor;
+    } else {
+      const flrId = recCabin.floorId || recCabin.floorId || recCabin.floor?._id || recCabin.floor;
+      const floorsToSearch = targetBuilding?.floors || floorList || [];
+      targetFloor = floorsToSearch.find(f => f._id === flrId || f.name === flrId);
+    }
+    if (targetFloor) {
+      setSelectedFloor(targetFloor);
+    }
+
     setCabinId(recCabin._id);
   };
 
-  const activeCabinObj = cabins.find(c => c._id === cabinId);
+  const activeCabinObj = cabinList.find(c => c._id === cabinId);
+
+  useEffect(() => {
+    if (buildingList && buildingList.length > 0) {
+      setSelectedBuilding(buildingList[0]);
+    }
+  }, [buildingList])
+
+  useEffect(() => {
+    if (selectedBuilding) {
+      setFloorList(selectedBuilding?.floors);
+    }
+  }, [selectedBuilding])
+
+  useEffect(() => {
+    if (floorList && floorList.length > 0) {
+      setSelectedFloor(floorList[0])
+    }
+  }, [floorList])
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -161,17 +223,50 @@ export default function BookingView() {
                   <Building size={14} className="text-slate-400" />
                   <span>Building</span>
                 </label>
-                <select
-                  value={selectedBuilding}
-                  onChange={(e) => setSelectedBuilding(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
-                >
-                  {
-                    buildings.map((bld, i) => (
-                      <option key={i} value={bld}>{bld}</option>
-                    ))
-                  }
-                </select>
+                <div className="relative" ref={buildingDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsBuildingDropdownOpen(!isBuildingDropdownOpen)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200 flex items-center justify-between"
+                  >
+                    <span>{selectedBuilding?.name}</span>
+                    <ChevronDown
+                      size={14}
+                      className={`text-slate-400 transition-transform duration-200 ${isBuildingDropdownOpen ? "rotate-180" : ""
+                        }`}
+                    />
+                  </button>
+
+                  {isBuildingDropdownOpen && (
+                    <div className="absolute top-full left-0 z-50 mt-1.5 w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden py-1">
+                      {buildingList && buildingList.length > 0 ? (
+                        buildingList.map((bld, i) => {
+                          const isSelected = selectedBuilding?._id === bld?._id;
+                          return (
+                            <div
+                              key={i}
+                              onClick={() => {
+                                setSelectedBuilding(bld);
+                                setIsBuildingDropdownOpen(false);
+                              }}
+                              className={`px-3 py-2 text-xs cursor-pointer flex items-center justify-between transition-colors ${isSelected
+                                ? "bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 font-semibold"
+                                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
+                                }`}
+                            >
+                              <span>{bld?.name}</span>
+                              {isSelected && <Check size={12} className="text-blue-600 dark:text-blue-400" />}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-slate-400 dark:text-slate-500 text-center">
+                          No buildings available
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Floor */}
@@ -180,21 +275,50 @@ export default function BookingView() {
                   <Layers size={14} className="text-slate-400" />
                   <span>Floor</span>
                 </label>
-                <select
-                  value={selectedFloor}
-                  onChange={(e) => setSelectedFloor(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
-                >
-                  {selectedBuilding === "Main HQ" ? (
-                    <>
-                      <option value="Ground Floor">Ground Floor</option>
-                      <option value="1st Floor">1st Floor</option>
-                      <option value="2nd Floor">2nd Floor</option>
-                    </>
-                  ) : (
-                    <option value="1st Floor">1st Floor</option>
+                <div className="relative" ref={floorDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setIsFloorDropdownOpen(!isFloorDropdownOpen)}
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200 flex items-center justify-between"
+                  >
+                    <span>{selectedFloor?.name}</span>
+                    <ChevronDown
+                      size={14}
+                      className={`text-slate-400 transition-transform duration-200 ${isFloorDropdownOpen ? "rotate-180" : ""
+                        }`}
+                    />
+                  </button>
+
+                  {isFloorDropdownOpen && (
+                    <div className="absolute top-full left-0 z-50 mt-1.5 w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden py-1">
+                      {floorList && floorList.length > 0 ? (
+                        floorList.map((floor, i) => {
+                          const isSelected = selectedFloor?._id === floor._id;
+                          return (
+                            <div
+                              key={i}
+                              onClick={() => {
+                                setSelectedFloor(floor);
+                                setIsFloorDropdownOpen(false);
+                              }}
+                              className={`px-3 py-2 text-xs cursor-pointer flex items-center justify-between transition-colors ${isSelected
+                                ? "bg-blue-50/50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 font-semibold"
+                                : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900"
+                                }`}
+                            >
+                              <span>{floor.name}</span>
+                              {isSelected && <Check size={12} className="text-blue-600 dark:text-blue-400" />}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="px-3 py-2 text-xs text-slate-400 dark:text-slate-500 text-center">
+                          No floors available
+                        </div>
+                      )}
+                    </div>
                   )}
-                </select>
+                </div>
               </div>
 
               {/* Cabin Select */}
@@ -206,7 +330,7 @@ export default function BookingView() {
                 <select
                   value={cabinId}
                   onChange={(e) => setCabinId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 >
                   {filteredCabins.length > 0 ? (
                     filteredCabins.map((c, i) => (
@@ -234,7 +358,7 @@ export default function BookingView() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 />
               </div>
 
@@ -248,7 +372,7 @@ export default function BookingView() {
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 />
               </div>
 
@@ -262,7 +386,7 @@ export default function BookingView() {
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 />
               </div>
             </div>
@@ -282,7 +406,7 @@ export default function BookingView() {
                   max="100"
                   value={attendees}
                   onChange={(e) => setAttendees(parseInt(e.target.value) || 1)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 />
               </div>
 
@@ -295,11 +419,11 @@ export default function BookingView() {
                 <select
                   value={department}
                   onChange={(e) => setDepartment(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
                 >
                   {
                     departments.map((dept, i) => (
-                      <option key={i} value={dept}>{dept}</option>
+                      <option key={i} value={dept?.name}>{dept?.name}</option>
                     ))
                   }
                 </select>
@@ -339,7 +463,7 @@ export default function BookingView() {
                 onChange={(e) => setPurpose(e.target.value)}
                 placeholder="E.g., Weekly Sync, Budget Approval, Candidate Evaluation..."
                 rows={3}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
               />
             </div>
 

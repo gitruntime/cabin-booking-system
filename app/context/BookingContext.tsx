@@ -247,6 +247,13 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
   const [notifications, setNotifications] = useState<NotificationItem[]>(initialNotifications);
 
+  // Sync cabins state with fetched cabinList
+  useEffect(() => {
+    if (cabinList && cabinList.length > 0) {
+      setCabins(cabinList);
+    }
+  }, [cabinList]);
+
   // Fetch system theme or handle mounting
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark" | null;
