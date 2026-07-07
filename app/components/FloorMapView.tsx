@@ -3,9 +3,9 @@
 import { AlertTriangle, Building, FileText, HelpCircle, Layers, Projector, Tv, Video, Volume2, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
-import { departments } from "../Data";
-import { getCabinsByFloorId } from "../http";
+import { bookCabin, getCabinsByFloorId } from "../http";
 import { BuildingType, CabinType, FloorType } from "../Types/Cabin";
+import toast from "react-hot-toast";
 
 export default function FloorMapView() {
   const {
@@ -14,7 +14,9 @@ export default function FloorMapView() {
     selectedBuilding,
     setSelectedBuilding,
     selectedFloor,
-    cabinList,
+    types,
+    facilities,
+    departments,
     buildingList
   } = useBooking();
   const [openBuilding, setOpenBuilding] = useState(false);
@@ -40,6 +42,8 @@ export default function FloorMapView() {
   const [attendees, setAttendees] = useState(4);
   const [dept, setDept] = useState<"HR" | "Finance" | "Executive" | "IT" | "Marketing" | "Sales">("IT");
   const [modalError, setModalError] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [submitLoading, setSubmitLoading] = useState(false);
 
   const filteredCabins = cabins.filter(
     c => c.building === selectedBuilding && c.floor === selectedFloor
@@ -97,50 +101,7 @@ export default function FloorMapView() {
     setModalError("");
   };
 
-  const handleQuickBookSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!bookingCabin) return;
-    setModalError("");
-
-    if (!purpose.trim()) {
-      setModalError("Please specify meeting purpose.");
-      return;
-    }
-    if (startTime >= endTime) {
-      setModalError("Start time must be earlier than End time.");
-      return;
-    }
-
-    const res = addBooking({
-      cabinId: bookingCabin._id,
-      userId: "u1",
-      date: "2026-07-01", // Default today's date
-      startTime,
-      endTime,
-      duration: 60,
-      attendees,
-      purpose,
-      department: dept
-    });
-
-    if (res.success) {
-      setBookingCabin(null);
-      setPurpose("");
-    } else {
-      setModalError(res.error || "Overlap conflict detected.");
-    }
-  };
-
-  const getFacilityIcon = (facility: string) => {
-    switch (facility) {
-      case "TV": return <Tv size={12} />;
-      case "Video Conference": return <Video size={12} />;
-      case "Projector": return <Projector size={12} />;
-      case "Whiteboard": return <FileText size={12} />;
-      case "Audio System": return <Volume2 size={12} />;
-      default: return <HelpCircle size={12} />;
-    }
-  };
+  // Handled by handleBook API submission hook
 
   useEffect(() => {
     if (buildingSelected) {
@@ -178,11 +139,81 @@ export default function FloorMapView() {
     fetchCabins();
   }, [floorSelected]);
 
+
+  const handleBook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitError("");
+    setSubmitLoading(true);
+
+    const cabinId = bookingCabin?._id;
+    const buildingId = bookingCabin?.buildingId || buildingSelected?._id;
+    const floorId = bookingCabin?.floorId || floorSelected?._id;
+    const date = "2026-07-01"; // Default today's date
+
+    if (!cabinId) {
+      setSubmitError("Please select a cabin.");
+      setSubmitLoading(false);
+      return;
+    }
+    if (!purpose.trim()) {
+      setSubmitError("Please describe the meeting purpose.");
+      setSubmitLoading(false);
+      return;
+    }
+    if (startTime >= endTime) {
+      setSubmitError("Start time must be earlier than End time.");
+      setSubmitLoading(false);
+      return;
+    }
+
+    const selectedDeptObj = departments.find(d => d._id === dept || d.name === dept);
+    if (!selectedDeptObj) {
+      setSubmitError("Please select a valid department.");
+      setSubmitLoading(false);
+      return;
+    }
+
+    try {
+      const response = await bookCabin({
+        buildingId,
+        floorId,
+        cabinId,
+        departmentId: selectedDeptObj._id,
+        date,
+        startTime,
+        endTime,
+        attendees,
+        meetingPurpose: purpose
+      });
+
+      if (response.data && response.data.success) {
+        setSubmitLoading(false);
+        setBookingCabin(null);
+        setPurpose("");
+        // Reload cabins list/availability
+        if (floorSelected?._id) {
+          const res = await getCabinsByFloorId(floorSelected._id);
+          setMapCabins(res?.data?.cabins || res?.data || []);
+        }
+        toast.success("Room booked successfully");
+      } else {
+        setSubmitError(response.data?.message || "Failed to book room.");
+        setSubmitLoading(false);
+        toast.error('Something went wrong')
+      }
+    } catch (error: any) {
+      console.error("Booking error:", error);
+      const msg = error.response?.data?.message || error.message || "Failed to book room.";
+      setSubmitError(msg);
+      setSubmitLoading(false);
+    }
+  };
+
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
       {/* Floor Filter Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 rounded-xl bg-white border border-slate-200/60 dark:bg-[#0F172B] dark:border-slate-800/80 shadow-xs">
         <div className="flex flex-wrap gap-4 items-center">
           {/* Building Select */}
           <div className="flex items-center gap-2">
@@ -267,7 +298,7 @@ export default function FloorMapView() {
       </div>
 
       {/* SVG Interactive Map Area */}
-      <div className="p-4 md:p-6 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs flex justify-center items-center relative overflow-x-auto min-h-112.5">
+      <div className="p-4 md:p-6 rounded-2xl bg-white border border-slate-200/60 dark:bg-[#0F172B] dark:border-slate-800/80 shadow-xs flex justify-center items-center relative overflow-x-auto min-h-112.5">
 
         {/* SVG Container */}
         <div className="w-full max-w-200 aspect-800/500 relative bg-slate-50 border border-slate-100 rounded-xl dark:bg-slate-950/40 dark:border-slate-800/50">
@@ -405,7 +436,7 @@ export default function FloorMapView() {
         {/* Dynamic Hover Card */}
         {hoveredCabin && (
           <div
-            className="fixed z-50 p-4 rounded-xl bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-900 shadow-xl space-y-2.5 max-w-xs pointer-events-none animate-enter"
+            className="fixed z-50 p-4 rounded-xl bg-white border border-slate-200 dark:border-slate-800 dark:bg-[#0F172B] shadow-xl space-y-2.5 max-w-xs pointer-events-none animate-enter"
             style={{
               left: `${hoverPos.x}px`,
               top: `${hoverPos.y}px`
@@ -416,7 +447,7 @@ export default function FloorMapView() {
                 {getBuildingName(hoveredCabin)} • {getFloorName(hoveredCabin)}
               </span>
               <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 leading-tight">{hoveredCabin.name}</h4>
-              <p className="text-[10px] text-slate-400 capitalize mt-0.5">Type: {hoveredCabin.typeId}</p>
+              <p className="text-[10px] text-slate-400 capitalize mt-0.5">Type: {types.find((type: any) => type._id === hoveredCabin.typeId)?.name}</p>
             </div>
 
             <div className="space-y-1.5 text-[10px]">
@@ -435,8 +466,7 @@ export default function FloorMapView() {
               <div className="flex flex-wrap gap-1 mt-0.5">
                 {hoveredCabin.facilities.map((fac: any, idx: number) => (
                   <div key={idx} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[8px] font-semibold">
-                    {getFacilityIcon(fac)}
-                    <span>{fac}</span>
+                    <span>{facilities.find((f: any) => f._id === fac)?.name}</span>
                   </div>
                 ))}
               </div>
@@ -448,7 +478,7 @@ export default function FloorMapView() {
       {/* Quick Booking Modal */}
       {bookingCabin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 space-y-4 animate-enter">
+          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0F172B] border border-slate-200/50 dark:border-slate-800 shadow-2xl p-5 space-y-4 animate-enter">
 
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2">
               <div>
@@ -463,12 +493,12 @@ export default function FloorMapView() {
               </button>
             </div>
 
-            <form onSubmit={handleQuickBookSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleBook} className="space-y-4 text-xs">
 
-              {modalError && (
+              {(submitError || modalError) && (
                 <div className="flex items-center gap-2 p-2.5 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-[10px]">
                   <AlertTriangle size={14} className="shrink-0" />
-                  <span>{modalError}</span>
+                  <span>{submitError || modalError}</span>
                 </div>
               )}
 
@@ -480,7 +510,7 @@ export default function FloorMapView() {
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-[#0F172B] dark:text-slate-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -489,7 +519,7 @@ export default function FloorMapView() {
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-[#0F172B] dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -504,7 +534,7 @@ export default function FloorMapView() {
                     max={bookingCabin.capacity}
                     value={attendees}
                     onChange={(e) => setAttendees(parseInt(e.target.value) || 1)}
-                    className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-[#0F172B] dark:text-slate-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -512,11 +542,11 @@ export default function FloorMapView() {
                   <select
                     value={dept}
                     onChange={(e) => setDept(e.target.value as any)}
-                    className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-[#0F172B] dark:text-slate-200"
                   >
                     {
                       departments.map((dept, i) => (
-                        <option key={i} value={dept}>{dept}</option>
+                        <option key={i} value={dept._id}>{dept.name}</option>
                       ))
                     }
                   </select>
@@ -531,16 +561,17 @@ export default function FloorMapView() {
                   placeholder="Meeting Agenda / Project Sync"
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  className="w-full px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-[#0F172B] dark:text-slate-200"
                 />
               </div>
 
               {/* Book button */}
               <button
                 type="submit"
-                className="w-full mt-2 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md shadow-blue-500/10 transition-colors"
+                disabled={submitLoading}
+                className="w-full mt-2 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md shadow-blue-500/10 transition-colors disabled:opacity-50 disabled:pointer-events-none"
               >
-                Confirm Booking
+                {submitLoading ? "Booking..." : "Confirm Booking"}
               </button>
             </form>
           </div>
