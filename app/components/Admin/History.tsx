@@ -1,11 +1,10 @@
 "use client";
 
 import {
-  FileSpreadsheet,
-  FileText
+  FileSpreadsheet
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { getHistory } from "../../http";
+import { useEffect, useState } from "react";
+import { getHistory, exportCSV } from "../../http";
 
 export default function History() {
   const [historyData, setHistoryData] = useState<any[]>([]);
@@ -27,25 +26,22 @@ export default function History() {
     fetchHistory();
   }, []);
 
-
-
-
-
-  // CSV Exporter Simulation
-  const handleExportCSV = (type: "excel" | "pdf") => {
-    // Generate simple CSV content of history logs
-    const headers = "Booking ID,Room,Host,Date,Time,Purpose,Department,Status\n";
-    const rows = historyData.map(b => {
-      return `"${b.bookingId || ''}","${b.room || ''}","${b.host || ''}","${b.date || ''}","${b.time || ''}","${b.purpose || ''}","${b.department || ''}","${b.status || ''}"`;
-    }).join("\n");
-
-    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(headers + rows);
-    const link = document.createElement("a");
-    link.setAttribute("href", csvContent);
-    link.setAttribute("download", `cospace_booking_report_${Date.now()}.${type === "excel" ? "csv" : "txt"}`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleExportCSV = async () => {
+    try {
+      const res = await exportCSV();
+      const csvContent = typeof res.data === 'string' ? res.data : JSON.stringify(res.data);
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `Booking_report.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error("Failed to export CSV:", error);
+    }
   };
 
   return (
@@ -60,19 +56,19 @@ export default function History() {
           {/* Export buttons */}
           <div className="flex gap-2">
             <button
-              onClick={() => handleExportCSV("excel")}
+              onClick={handleExportCSV}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-650 text-xs font-semibold dark:border-slate-800 dark:hover:bg-slate-800 dark:text-slate-350 transition-colors"
             >
               <FileSpreadsheet size={14} className="text-emerald-500" />
               <span>Export CSV Excel</span>
             </button>
-            <button
+            {/* <button
               onClick={() => handleExportCSV("pdf")}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-650 text-xs font-semibold dark:border-slate-800 dark:hover:bg-slate-800 dark:text-slate-350 transition-colors"
             >
               <FileText size={14} className="text-blue-500" />
               <span>Export PDF Log</span>
-            </button>
+            </button> */}
           </div>
         </div>
 

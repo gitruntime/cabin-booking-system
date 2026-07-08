@@ -59,6 +59,6 @@ export const createFacility = (data: any) => api.post("/cabins/createFacility", 
 export const updateFacility = (id: string, data: any) => api.put(`/cabins/updateFacility/${id}`, data)
 export const deleteFacility = (id: string) => api.delete(`/cabins/deleteFacility/${id}`)
 export const getHistory = () => api.get(`/cabins/history`)
-export const getReport = () => api.get(`/cabins/statistics`)
+export const exportCSV = () => api.get(`/cabins/exportCSV`)
 
 export default api;
