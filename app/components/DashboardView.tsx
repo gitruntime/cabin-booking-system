@@ -1,38 +1,84 @@
 "use client";
 
-import React from "react";
-import { useBooking } from "../context/BookingContext";
+import { useEffect, useState } from "react";
 import {
+  Activity,
   Calendar,
   CheckCircle,
+  CheckSquare,
+  Laptop,
   Map,
   Plus,
-  TrendingUp,
-  Activity,
-  Laptop,
-  CheckSquare
+  TrendingUp
 } from "lucide-react";
+import { useBooking } from "../context/BookingContext";
+import { calenderData } from "../http";
 
 export default function DashboardView() {
   const {
     currentUser,
-    cabins,
+    cabinList,
     bookings,
+    buildingList,
+    facilities,
     setCurrentTab,
     setSelectedBuilding,
     setSelectedFloor
   } = useBooking();
 
-  // Filter today's bookings (2026-07-01)
-  const todaysBookings = bookings
-    .filter(b => b.date === "2026-07-01" && b.status !== "cancelled")
-    .sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const getBuildingName = (cabin: any) => {
+    if (!cabin) return "";
+    if (typeof cabin.building === "string") return cabin.building;
+    if (cabin.building?.name) return cabin.building.name;
+    const bldId = cabin.buildingId?._id || cabin.buildingId || cabin.building?._id || cabin.building;
+    const found = buildingList?.find((b: any) => b._id === bldId);
+    return found ? found.name : "";
+  };
+
+  const getFloorName = (cabin: any) => {
+    if (!cabin) return "";
+    if (typeof cabin.floor === "string") return cabin.floor;
+    if (cabin.floor?.name) return cabin.floor.name;
+    const flrId = cabin.floorId?._id || cabin.floorId || cabin.floor?._id || cabin.floor;
+    const bldId = cabin.buildingId?._id || cabin.buildingId || cabin.building?._id || cabin.building;
+    const foundBld = buildingList?.find((b: any) => b._id === bldId);
+    const foundFloor = foundBld?.floors?.find((f: any) => f._id === flrId);
+    return foundFloor ? foundFloor.name : "";
+  };
+
+  const [todaysBookings, setTodaysBookings] = useState<any[]>([]);
+  const [loadingBookings, setLoadingBookings] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchTodaysBookings = async () => {
+      setLoadingBookings(true);
+      try {
+        const response = await calenderData({
+          startDate: "2026-07-01",
+          endDate: "2026-07-01"
+        });
+        if (response?.data?.success) {
+          const fetchedBookings = response.data.bookings || response.data.data || [];
+          const filtered = fetchedBookings
+            .filter((b: any) => b.status !== "cancelled")
+            .sort((a: any, b: any) => a.startTime.localeCompare(b.startTime));
+          setTodaysBookings(filtered);
+        }
+      } catch (error) {
+        console.error("Error fetching today's bookings:", error);
+      } finally {
+        setLoadingBookings(false);
+      }
+    };
+
+    fetchTodaysBookings();
+  }, [bookings]);
 
   // Count stats
-  const totalRooms = cabins.length;
-  const availableNow = cabins.filter(c => c.status === "available").length;
-  const activeNow = bookings.filter(b => b.date === "2026-07-01" && b.status === "checked-in").length;
-  const maintenanceCount = cabins.filter(c => c.status === "maintenance").length;
+  const totalRooms = cabinList.length;
+  const availableNow = cabinList.filter(c => c.status === "available").length;
+  const activeNow = todaysBookings.filter(b => b.status === "checked-in").length;
+  const maintenanceCount = cabinList.filter(c => c.status === "maintenance").length;
 
   // // Calculate cabin type distribution for micro chart
   // const cabinTypes = cabins.reduce((acc, cabin) => {
@@ -153,14 +199,34 @@ export default function DashboardView() {
             </div>
 
             <div className="space-y-3 max-h-87.5 overflow-y-auto pr-1">
-              {todaysBookings.length > 0 ? (
+              {loadingBookings ? (
+                <div className="py-12 text-center text-sm text-slate-400 dark:text-slate-500 flex flex-col items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                  <p className="font-medium mt-1">Loading schedule...</p>
+                </div>
+              ) : todaysBookings.length > 0 ? (
                 todaysBookings.map((b) => {
-                  const cabin = cabins.find(c => c._id === b.cabinId);
+                  const cabinIdStr = typeof b.cabinId === "object" ? b.cabinId?._id : b.cabinId;
+                  const cabin = cabinList.find(c => c._id === cabinIdStr);
+                  const cabinName = typeof b.cabinId === "object" ? b.cabinId?.name : cabin?.name || "Space";
+
+                  const bldId = typeof b.buildingId === "object" ? b.buildingId?._id : b.buildingId;
+                  const foundBld = buildingList?.find((x: any) => x._id === bldId);
+                  const bldName = typeof b.buildingId === "object" ? b.buildingId?.name : foundBld?.name || "";
+
+                  const flrId = typeof b.floorId === "object" ? b.floorId?._id : b.floorId;
+                  const flrName = typeof b.floorId === "object" ? b.floorId?.name : (foundBld?.floors?.find((f: any) => f._id === flrId)?.name || "");
+
+                  const bldDisplay = bldName || getBuildingName(cabin);
+                  const flrDisplay = flrName || getFloorName(cabin);
+
+                  const userName = typeof b.userId === "object" ? b.userId?.name : b.userName || "Guest";
                   const isCheckedIn = b.status === "checked-in";
+                  const purposeDisplay = b.meetingPurpose || b.purpose || "Meeting";
 
                   return (
                     <div
-                      key={b.id}
+                      key={b._id || b.id}
                       className={`
                         p-3.5 rounded-xl border flex items-center justify-between transition-colors
                         ${isCheckedIn
@@ -170,19 +236,19 @@ export default function DashboardView() {
                     >
                       <div className="flex gap-3">
                         {/* Time block badge */}
-                        <div className="flex flex-col justify-center items-center px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-w-17.5">
+                        <div className="flex flex-col justify-center items-center px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 min-w-20">
                           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase leading-none">Time</span>
-                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{b.startTime}</span>
+                          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{b.startTime} - {b.endTime}</span>
                         </div>
 
                         <div className="overflow-hidden">
-                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight">{b.purpose}</p>
+                          <p className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight">{purposeDisplay}</p>
                           <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-[11px] text-slate-400 dark:text-slate-500 items-center font-medium">
-                            <span className="font-semibold text-slate-600 dark:text-slate-300">{cabin?.name || "Deleted Cabin"}</span>
+                            <span className="font-semibold text-slate-600 dark:text-slate-300">{cabinName}</span>
                             <span>•</span>
-                            <span>Building: {cabin?.building} • Floor {cabin?.floor}</span>
+                            <span>Building: {bldDisplay} • Floor: {flrDisplay}</span>
                             <span>•</span>
-                            <span>By: {b.userName}</span>
+                            <span>By: {userName}</span>
                           </div>
                         </div>
                       </div>
@@ -218,14 +284,14 @@ export default function DashboardView() {
             <h3 className="font-bold text-slate-800 dark:text-slate-200">Available Cabins Today</h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {cabins.filter(c => c.status === "available").slice(0, 4).map((c, i) => (
+              {cabinList.filter(c => c.status === "available").slice(0, 4).map((c, i) => (
                 <div
                   key={i}
                   className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100/30 transition-all flex flex-col justify-between dark:border-slate-800/60 dark:bg-slate-800/20 dark:hover:bg-slate-800/40"
                 >
                   <div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">{c.building} • {c.floor}</span>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">{getBuildingName(c)} • {getFloorName(c)}</span>
                       <span className="h-2 w-2 rounded-full bg-emerald-500" />
                     </div>
                     <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 mt-1">{c.name}</h4>
@@ -235,7 +301,7 @@ export default function DashboardView() {
                     <div className="flex flex-wrap gap-1 mt-2.5">
                       {c.facilities.slice(0, 2).map((fac, idx) => (
                         <span key={idx} className="px-1.5 py-0.5 text-[9px] font-medium bg-slate-200/50 text-slate-500 rounded dark:bg-slate-700/50 dark:text-slate-400">
-                          {fac}
+                          {facilities?.find((f: any) => f._id === fac)?.name}
                         </span>
                       ))}
                       {c.facilities.length > 2 && (
@@ -246,8 +312,8 @@ export default function DashboardView() {
 
                   <button
                     onClick={() => {
-                      setSelectedBuilding(c.building);
-                      setSelectedFloor(c.floor);
+                      setSelectedBuilding(getBuildingName(c) as any);
+                      setSelectedFloor(getFloorName(c) as any);
                       setCurrentTab("book-cabin");
                     }}
                     className="w-full mt-3 py-1.5 rounded-lg border border-blue-500/20 bg-blue-50 hover:bg-blue-100 text-blue-600 font-bold text-[10px] transition-colors dark:border-blue-900/40 dark:bg-blue-950/20 dark:text-blue-400 dark:hover:bg-blue-950/40"
