@@ -405,7 +405,7 @@ export default function MyBookingsView() {
                   min={todayStr}
                   max={oneWeekLaterStr}
                   onChange={(e) => setNewDate(e.target.value)}
-                  className="w-full px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  className="w-full px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 />
               </div>
 
@@ -416,7 +416,7 @@ export default function MyBookingsView() {
                   <select
                     value={newStart}
                     onChange={(e) => setNewStart(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
                     {timeSlots.map((slot) => (
                       <option key={slot} value={slot} disabled={isTimeSlotDisabled(slot, newDate)}>
@@ -430,7 +430,7 @@ export default function MyBookingsView() {
                   <select
                     value={newEnd}
                     onChange={(e) => setNewEnd(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
                     {timeSlots.map((slot) => (
                       <option key={slot} value={slot} disabled={slot <= newStart}>

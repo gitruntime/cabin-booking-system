@@ -20,7 +20,7 @@
     --input: #e2e8f0;
     --ring: #3b82f6;
     --radius: 0.75rem;
-    
+
     /* Status Colors */
     --status-available: #10b981;
     --status-booked: #ef4444;
@@ -46,7 +46,7 @@
     --border: #334155;
     --input: #334155;
     --ring: #60a5fa;
-    
+
     /* Status Colors */
     --status-available: #34d399;
     --status-booked: #f87171;
@@ -71,12 +71,12 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  
+
   --color-status-available: var(--status-available);
   --color-status-booked: var(--status-booked);
   --color-status-reserved: var(--status-reserved);
   --color-status-maintenance: var(--status-maintenance);
-  
+
   --radius-xl: var(--radius);
 }
 
@@ -162,8 +162,17 @@ body {
 
 /* Micro-animations */
 @keyframes pulse-subtle {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(0.98); }
+
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
 }
 
 .animate-pulse-subtle {
@@ -171,8 +180,15 @@ body {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
 }
 
 .animate-float {
@@ -184,8 +200,15 @@ body {
   opacity: 0;
   transform: translateY(8px);
 }
+
 .tab-transition-enter-active {
   opacity: 1;
   transform: translateY(0);
   transition: opacity 0.2s ease-out, transform 0.2s ease-out;
+}
+
+/* Color scheme for native date and time pickers in dark mode */
+.dark input[type="date"],
+.dark input[type="time"] {
+  color-scheme: dark;
 }
