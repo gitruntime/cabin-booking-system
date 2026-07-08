@@ -277,7 +277,18 @@ export const BookingProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       }
     }
+
+    const savedTab = sessionStorage.getItem("active_tab");
+    if (savedTab) {
+      setCurrentTab(savedTab);
+    }
   }, []);
+
+  useEffect(() => {
+    if (currentTab) {
+      sessionStorage.setItem("active_tab", currentTab);
+    }
+  }, [currentTab]);
 
   const setTheme = (newTheme: "light" | "dark") => {
     setThemeState(newTheme);
