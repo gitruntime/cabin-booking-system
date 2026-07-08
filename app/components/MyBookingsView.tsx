@@ -72,7 +72,7 @@ export default function MyBookingsView() {
       const currentHH = now.getHours();
       const currentMM = now.getMinutes();
       const [startHH, startMM] = newStart.split(':').map(Number);
-      
+
       const isPast = startHH < currentHH || (startHH === currentHH && startMM <= currentMM);
       if (isPast) {
         const firstAvailable = timeSlots.find(slot => {
@@ -81,9 +81,9 @@ export default function MyBookingsView() {
           if (slotHH === currentHH && slotMM <= currentMM) return false;
           return true;
         }) || "09:00";
-        
+
         setNewStart(firstAvailable);
-        
+
         const [hours, minutes] = firstAvailable.split(":").map(Number);
         let totalMinutes = hours * 60 + minutes + 30;
         if (totalMinutes >= 24 * 60) {
@@ -256,7 +256,7 @@ export default function MyBookingsView() {
                 const cabin = cabins.find(c => c._id === cabinIdStr);
 
                 // Enable check in button only for today's bookings starting soon/active, and not yet checked-in
-                const isToday = b.date === "2026-07-01";
+                const isToday = b.date === todayStr;
                 const showCheckIn = isToday && b.status === "confirmed";
 
                 const cabinName = typeof b.cabinId === "object" ? b.cabinId?.name : cabin?.name || "Deleted Space";

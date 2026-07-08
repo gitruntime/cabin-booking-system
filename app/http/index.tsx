@@ -29,7 +29,12 @@ export const cancelMyBookings = (id: string) => api.put(`/bookings/cancelBooking
 export const masterData = () => api.get(`/bookings/master-data`)
 export const calenderData = (params?: any) => api.get(`/bookings/calendar`, { params })
 export const editMyProfile = (data: any) => api.put(`/auth/editProfile`, data)
-
+export const getHistory = () => api.get(`/cabins/history`)
+export const exportCSV = () => api.get(`/cabins/exportCSV`)
+export const getNotification = () => api.get(`/notifications/getNotifications`)
+export const readIndividualNotification = (id: string) => api.put(`/notifications/markRead/${id}`)
+export const readAllNotification = () => api.put(`/notifications/markAllRead`)
+export const deleteAllNotification = () => api.delete(`/notifications/deleteAll`)
 
 
 
@@ -58,7 +63,6 @@ export const deleteType = (id: string) => api.delete(`/cabins/deleteType/${id}`)
 export const createFacility = (data: any) => api.post("/cabins/createFacility", data);
 export const updateFacility = (id: string, data: any) => api.put(`/cabins/updateFacility/${id}`, data)
 export const deleteFacility = (id: string) => api.delete(`/cabins/deleteFacility/${id}`)
-export const getHistory = () => api.get(`/cabins/history`)
-export const exportCSV = () => api.get(`/cabins/exportCSV`)
+
 
 export default api;

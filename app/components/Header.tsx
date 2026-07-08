@@ -3,14 +3,13 @@
 import { Bell, Clock, UserCircle } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useBooking } from "../context/BookingContext";
+import { getNotification, readAllNotification } from "../http";
 
 export default function Header() {
   const {
     currentTab,
     setCurrentTab,
-    currentUser,
-    notifications,
-    markNotificationsAsRead
+    currentUser
   } = useBooking();
 
   const [timeStr, setTimeStr] = useState("");
@@ -93,13 +92,48 @@ export default function Header() {
     }
   };
 
-  const recentNotifications = notifications.slice(0, 4);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
 
-  const handleBellClick = () => {
-    setNotifOpen(!notifOpen);
-    if (!notifOpen && unreadCount > 0) {
-      markNotificationsAsRead();
+  const fetchNotifications = async () => {
+    try {
+      const res = await getNotification();
+      const list = res.data?.notifications || res.data?.data || res.data || [];
+      setNotificationsList(list);
+    } catch (error) {
+      console.error("Failed to fetch notifications in header:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [currentTab]);
+
+  const recentNotifications = notificationsList.slice(0, 4);
+  const unreadCount = notificationsList.filter(n => !(n.isRead ?? n.read)).length;
+
+  const handleBellClick = async () => {
+    const nextState = !notifOpen;
+    setNotifOpen(nextState);
+    if (nextState) {
+      await fetchNotifications();
+      try {
+        await readAllNotification();
+        setNotificationsList(prev => prev.map(n => ({ ...n, isRead: true, read: true })));
+      } catch (error) {
+        console.error("Failed to mark all read:", error);
+      }
+    }
+  };
+
+  const formatTime = (timeVal: any) => {
+    if (!timeVal) return "";
+    if (typeof timeVal === 'string' && timeVal.includes('ago')) return timeVal;
+    try {
+      const d = new Date(timeVal);
+      if (isNaN(d.getTime())) return timeVal;
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return timeVal;
     }
   };
 
@@ -157,8 +191,8 @@ export default function Header() {
 
               <div className="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
                 {recentNotifications.length > 0 ? (
-                  recentNotifications.map((n) => (
-                    <div key={n.id} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex gap-2">
+                  recentNotifications.map((n, idx) => (
+                    <div key={n._id || n.id || idx} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors flex gap-2">
                       <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${n.type === 'success' ? 'bg-emerald-500' :
                         n.type === 'warning' ? 'bg-amber-500' :
                           n.type === 'alert' ? 'bg-rose-500' : 'bg-blue-500'
@@ -166,7 +200,7 @@ export default function Header() {
                       <div className="overflow-hidden">
                         <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 leading-snug">{n.title}</p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
-                        <span className="text-[9px] text-slate-400 mt-1 block">{n.time}</span>
+                        <span className="text-[9px] text-slate-400 mt-1 block">{formatTime(n.time || n.createdAt)}</span>
                       </div>
                     </div>
                   ))

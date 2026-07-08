@@ -21,17 +21,33 @@ import {
   Users,
   X
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
-import { logoutUser } from "../http";
+import { logoutUser, getNotification } from "../http";
 
 export default function Sidebar() {
-  const { currentTab, setCurrentTab, theme, setTheme, notifications, currentUser } = useBooking();
+  const { currentTab, setCurrentTab, theme, setTheme, currentUser } = useBooking();
   const [isOpen, setIsOpen] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [loadingSignOut, setLoadingSignOut] = useState(false);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await getNotification();
+      const list = res.data?.notifications || res.data?.data || res.data || [];
+      setNotificationsList(list);
+    } catch (error) {
+      console.error("Failed to fetch notifications in sidebar:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [currentTab]);
+
+  const unreadCount = notificationsList.filter(n => !(n.isRead ?? n.read)).length;
 
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: ChartColumnDecreasing },
