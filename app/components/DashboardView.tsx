@@ -21,6 +21,8 @@ export default function DashboardView() {
     bookings,
     buildingList,
     facilities,
+    departments,
+    types,
     setCurrentTab,
     setSelectedBuilding,
     setSelectedFloor
@@ -86,24 +88,147 @@ export default function DashboardView() {
   //   return acc;
   // }, {} as Record<string, number>);
 
+  const getDeptName = (b: any) => {
+    let name = "";
+    if (typeof b.departmentId === "object" && b.departmentId?.name) {
+      name = b.departmentId.name;
+    } else if (b.departmentId) {
+      const found = departments?.find((d: any) => d._id === b.departmentId);
+      name = found?.name || "";
+    } else {
+      name = b.department || "";
+    }
+
+    const upper = name.toUpperCase();
+    if (upper === "IT" || upper === "INFORMATION TECHNOLOGY") return "IT";
+    if (upper === "HR" || upper === "HUMAN RESOURCES") return "HR";
+    if (upper === "EXECUTIVE" || upper === "EXEC") return "Executive";
+    if (upper === "FINANCE") return "Finance";
+    if (upper === "MARKETING") return "Marketing";
+    if (upper === "SALES") return "Sales";
+
+    return name || "Other";
+  };
+
   // Department booking metrics for visual chart
-  const deptBookings = bookings.reduce((acc, b) => {
+  const deptBookings = todaysBookings.reduce((acc, b) => {
     if (b.status !== "cancelled") {
-      acc[b.department] = (acc[b.department] || 0) + 1;
+      const deptName = getDeptName(b);
+      acc[deptName] = (acc[deptName] || 0) + 1;
     }
     return acc;
   }, {} as Record<string, number>);
 
-  const deptColors = {
-    Executive: "bg-blue-600 dark:bg-blue-500",
-    IT: "bg-cyan-500 dark:bg-cyan-400",
-    HR: "bg-indigo-500 dark:bg-indigo-400",
-    Finance: "bg-emerald-500 dark:bg-emerald-400",
-    Marketing: "bg-purple-500 dark:bg-purple-400",
-    Sales: "bg-amber-500 dark:bg-amber-400",
+  const deptColorsPalette = [
+    "bg-blue-600 dark:bg-blue-500",
+    "bg-cyan-500 dark:bg-cyan-400",
+    "bg-indigo-500 dark:bg-indigo-400",
+    "bg-emerald-500 dark:bg-emerald-400",
+    "bg-purple-500 dark:bg-purple-400",
+    "bg-amber-500 dark:bg-amber-400",
+    "bg-rose-500 dark:bg-rose-400",
+    "bg-pink-500 dark:bg-pink-400",
+    "bg-violet-500 dark:bg-violet-400",
+    "bg-teal-500 dark:bg-teal-400",
+    "bg-orange-500 dark:bg-orange-400"
+  ];
+
+  const getDeptColor = (deptName: string) => {
+    if (!deptName) return deptColorsPalette[0];
+    let hash = 0;
+    for (let i = 0; i < deptName.length; i++) {
+      hash = deptName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % deptColorsPalette.length;
+    return deptColorsPalette[index];
   };
 
-  const totalDeptBookings = Object.values(deptBookings).reduce((a, b) => a + b, 0) || 1;
+  const departmentNames = Array.from(new Set([
+    ...(departments?.map((d: any) => d.name) || []),
+    ...Object.keys(deptBookings)
+  ])).filter(Boolean);
+
+  const totalDeptBookings = departmentNames.reduce((a, dept) => a + (deptBookings[dept] || 0), 0) || 1;
+
+  const getTypeName = (cabin: any) => {
+    if (!cabin) return "Other";
+    if (typeof cabin.type === "string") return cabin.type;
+    if (cabin.type?.name) return cabin.type.name;
+    const rawType = cabin.typeId?._id || cabin.typeId || cabin.type?._id || cabin.type;
+    const found = types?.find((t: any) => t._id === rawType);
+    return found ? found.name : "Other";
+  };
+
+  const typeCounts = cabinList.reduce((acc, cabin) => {
+    const typeName = getTypeName(cabin);
+    acc[typeName] = (acc[typeName] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const totalRoomsCount = cabinList.length || 1;
+
+  const typeColorsPalette = [
+    "#2563eb", // Blue
+    "#06b6d4", // Cyan
+    "#10b981", // Emerald
+    "#8b5cf6", // Violet
+    "#ec4899", // Pink
+    "#f59e0b", // Amber
+    "#f43f5e", // Rose
+    "#3b82f6"  // Light Blue
+  ];
+
+  const getTypeColor = (index: number) => {
+    return typeColorsPalette[index % typeColorsPalette.length];
+  };
+
+  const roomAllocationMix = Object.entries(typeCounts).map(([name, count], index) => {
+    const percentage = Math.round((count / totalRoomsCount) * 100);
+    return {
+      name,
+      count,
+      percentage,
+      color: getTypeColor(index)
+    };
+  }).sort((a, b) => b.count - a.count);
+
+  let cumulativeOffset = 0;
+  const svgSegments = roomAllocationMix.map((segment) => {
+    const dashArray = `${segment.percentage} ${100 - segment.percentage}`;
+    const dashOffset = -cumulativeOffset;
+    cumulativeOffset += segment.percentage;
+    return {
+      ...segment,
+      dashArray,
+      dashOffset
+    };
+  });
+
+  const hourlyBlocks = [
+    { label: "9a", start: "09:00", end: "10:00" },
+    { label: "10a", start: "10:00", end: "11:00" },
+    { label: "11a", start: "11:00", end: "12:00" },
+    { label: "12p", start: "12:00", end: "13:00" },
+    { label: "1p", start: "13:00", end: "14:00" },
+    { label: "2p", start: "14:00", end: "15:00" },
+    { label: "3p", start: "15:00", end: "16:00" },
+    { label: "4p", start: "16:00", end: "17:00" },
+    { label: "5p", start: "17:00", end: "18:00" }
+  ];
+
+  const hourlyPeakDemands = hourlyBlocks.map((block) => {
+    const occupiedCabinIds = new Set(
+      todaysBookings
+        .filter((b) => b.startTime < block.end && b.endTime > block.start)
+        .map((b) => typeof b.cabinId === "object" ? b.cabinId?._id : b.cabinId)
+        .filter(Boolean)
+    );
+    const val = Math.round((occupiedCabinIds.size / totalRoomsCount) * 100);
+    return {
+      hour: block.label,
+      val: Math.min(100, val)
+    };
+  });
 
   return (
     <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -334,10 +459,10 @@ export default function DashboardView() {
             <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">Bookings by Department</h3>
 
             <div className="space-y-3">
-              {Object.keys(deptColors).map((dept) => {
-                const count = deptBookings[dept as any] || 0;
+              {departmentNames.map((dept) => {
+                const count = deptBookings[dept] || 0;
                 const percentage = Math.round((count / totalDeptBookings) * 100) || 0;
-                const color = deptColors[dept as keyof typeof deptColors];
+                const color = getDeptColor(dept);
 
                 return (
                   <div key={dept} className="space-y-1.5">
@@ -368,14 +493,21 @@ export default function DashboardView() {
                 <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
                   <circle cx="18" cy="18" r="15.91" fill="none" stroke="#e2e8f0" strokeWidth="2.5" className="dark:stroke-slate-800" />
 
-                  {/* Executive Board Rooms (approx 20%) */}
-                  <circle cx="18" cy="18" r="15.91" fill="none" stroke="#2563eb" strokeWidth="3" strokeDasharray="20 80" strokeDashoffset="0" />
-                  {/* Conference Halls (approx 25%) */}
-                  <circle cx="18" cy="18" r="15.91" fill="none" stroke="#3b82f6" strokeWidth="3" strokeDasharray="25 75" strokeDashoffset="-20" />
-                  {/* Meeting Rooms (approx 35%) */}
-                  <circle cx="18" cy="18" r="15.91" fill="none" stroke="#06b6d4" strokeWidth="3" strokeDasharray="35 65" strokeDashoffset="-45" />
-                  {/* Individual Cabins/Pods (approx 20%) */}
-                  <circle cx="18" cy="18" r="15.91" fill="none" stroke="#10b981" strokeWidth="3" strokeDasharray="20 80" strokeDashoffset="-80" />
+                  {/* Dynamic Segments */}
+                  {svgSegments.map((segment, idx) => (
+                    <circle
+                      key={idx}
+                      cx="18"
+                      cy="18"
+                      r="15.91"
+                      fill="none"
+                      stroke={segment.color}
+                      strokeWidth="3"
+                      strokeDasharray={segment.dashArray}
+                      strokeDashoffset={segment.dashOffset}
+                      className="transition-all duration-500"
+                    />
+                  ))}
                 </svg>
                 <div className="absolute inset-0 flex flex-col justify-center items-center">
                   <span className="text-lg font-bold leading-none text-slate-800 dark:text-white">{totalRooms}</span>
@@ -384,23 +516,16 @@ export default function DashboardView() {
               </div>
 
               {/* Legend */}
-              <div className="space-y-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-blue-600" />
-                  <span>Executive Boardrooms</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-blue-400" />
-                  <span>Conference Halls</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-cyan-500" />
-                  <span>Meeting Rooms</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                  <span>Cabins & Pods</span>
-                </div>
+              <div className="space-y-1.5 text-[10px] font-medium text-slate-500 dark:text-slate-400 max-h-28 overflow-y-auto pr-1">
+                {roomAllocationMix.map((segment, idx) => (
+                  <div key={idx} className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: segment.color }} />
+                      <span className="truncate max-w-28">{segment.name}</span>
+                    </div>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{segment.count} ({segment.percentage}%)</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -411,27 +536,17 @@ export default function DashboardView() {
 
             <div className="space-y-2">
               <div className="flex items-end justify-between h-28 px-2 pt-4 border-b border-slate-100 dark:border-slate-800">
-                {[
-                  { hour: "9a", val: 30 },
-                  { hour: "10a", val: 75 },
-                  { hour: "11a", val: 90 },
-                  { hour: "12p", val: 40 },
-                  { hour: "1p", val: 20 },
-                  { hour: "2p", val: 80 },
-                  { hour: "3p", val: 95 },
-                  { hour: "4p", val: 65 },
-                  { hour: "5p", val: 25 },
-                ].map((bar, idx) => (
+                {hourlyPeakDemands.map((bar, idx) => (
                   <div key={idx} className="flex flex-col items-center gap-1.5 flex-1 group">
                     <div className="relative w-full flex justify-center">
                       {/* Hover Tooltip */}
-                      <span className="absolute -top-6 bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-[8px] font-bold px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                        {bar.val}%
+                      <span className="absolute -top-6 bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-[8px] font-bold px-1 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                        {bar.val}% Occupied
                       </span>
                       {/* Bar fill */}
                       <div
                         className="w-4.5 rounded-t-sm bg-blue-500/20 group-hover:bg-blue-500 dark:bg-blue-400/20 dark:group-hover:bg-blue-400 transition-all duration-300"
-                        style={{ height: `${bar.val * 0.7}px` }}
+                        style={{ height: `${Math.max(3, bar.val * 0.8)}px` }}
                       />
                     </div>
                     <span className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase">{bar.hour}</span>

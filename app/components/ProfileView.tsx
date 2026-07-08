@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertCircle,
   CalendarDays,
   CheckCircle2,
   Hourglass,
@@ -10,35 +11,91 @@ import {
   Save,
   Shield,
   SlidersHorizontal,
-  User,
-  Video
+  User
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useBooking } from "../context/BookingContext";
+import { editMyProfile } from "../http";
 
 export default function ProfileView() {
-  const { currentUser, bookings, selectedBuilding, setSelectedBuilding, selectedFloor, setSelectedFloor, buildingList } = useBooking();
+  const { currentUser, setCurrentUser, setSelectedBuilding, setSelectedFloor, buildingList } = useBooking();
+
+
   const [successMsg, setSuccessMsg] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // Compute profile statistics
-  const userBookings = bookings.filter(b => b.userId === currentUser?.id && b.status !== "cancelled");
-  const totalMeetings = userBookings.length;
+  const [prefBuilding, setPrefBuilding] = useState<string>("");
+  const [prefFloor, setPrefFloor] = useState<string>("");
 
-  const totalHours = userBookings.reduce((sum, b) => {
-    return sum + (b.duration / 60);
-  }, 0);
+  useEffect(() => {
+    if (currentUser?.preference?.[0]) {
+      const pref = currentUser.preference[0];
+      setPrefBuilding(pref.buildingId || "");
+      setPrefFloor(pref.FloorId || "");
+    } else if (buildingList && buildingList.length > 0) {
+      setPrefBuilding(buildingList[0]._id);
+      setPrefFloor(buildingList[0].floors?.[0]?._id || "");
+    }
+  }, [currentUser, buildingList]);
 
-  const virtualMeetings = userBookings.filter(b => {
-    // Treat executive board room & IT Scrum Room as rooms likely used for video conferencing
-    return b.cabinId === "c2" || b.cabinId === "c7";
-  }).length;
+  useEffect(() => {
+    if (prefBuilding) {
+      const bld = buildingList.find(b => b._id === prefBuilding);
+      if (bld && bld.floors && bld.floors.length > 0) {
+        const hasFloor = bld.floors.some(f => f._id === prefFloor);
+        if (!hasFloor) {
+          setPrefFloor(bld.floors[0]._id);
+        }
+      }
+    }
+  }, [prefBuilding, prefFloor, buildingList]);
 
-  const handleSavePreferences = (e: React.FormEvent) => {
+  // Compute profile statistics from currentUser dynamic fields
+  const totalMeetings = Number(currentUser?.meetingsHosted || 0);
+  const totalHours = Number(currentUser?.totalBookingHours || 0);
+
+  const handleSavePreferences = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccessMsg(true);
-    setTimeout(() => {
-      setSuccessMsg(false);
-    }, 2500);
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg(false);
+    try {
+      const prefObj = {
+        buildingId: prefBuilding,
+        FloorId: prefFloor
+      };
+
+      const res = await editMyProfile({ preference: [prefObj] });
+
+      if (res.status === 200 || res.data?.success) {
+        // Update user state and storage
+        const updatedUser = {
+          ...currentUser,
+          preference: [prefObj]
+        };
+        setCurrentUser(updatedUser);
+        localStorage.setItem("current_user", JSON.stringify(updatedUser));
+
+        // Update active context filters
+        const bldObj = buildingList.find(b => b._id === prefBuilding);
+        const flrObj = bldObj?.floors?.find(f => f._id === prefFloor);
+        if (bldObj?.name) setSelectedBuilding(bldObj.name as any);
+        if (flrObj?.name) setSelectedFloor(flrObj.name as any);
+
+        setSuccessMsg(true);
+        setTimeout(() => {
+          setSuccessMsg(false);
+        }, 3000);
+      } else {
+        setErrorMsg(res.data?.message || "Failed to save preferences.");
+      }
+    } catch (error: any) {
+      console.error("Error saving preferences:", error);
+      setErrorMsg(error.response?.data?.message || "An error occurred while saving preferences.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,14 +128,6 @@ export default function ProfileView() {
             </div>
 
             <div className="flex items-center gap-2.5">
-              <User size={15} className="text-slate-400 shrink-0" />
-              <div>
-                <p className="text-[9px] text-slate-400 font-bold uppercase leading-none">Employee ID</p>
-                <p className="font-normal mt-0.5">{currentUser?.empId}</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2.5">
               <Shield size={15} className="text-slate-400 shrink-0" />
               <div>
                 <p className="text-[9px] text-slate-400 font-bold uppercase leading-none">System Privilege</p>
@@ -88,11 +137,9 @@ export default function ProfileView() {
           </div>
         </div>
 
-        {/* Right Columns: Metrics & Preferences settings */}
         <div className="md:col-span-2 space-y-6">
 
-          {/* Metrics Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             <div className="p-4 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs flex items-center gap-3">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
@@ -113,19 +160,8 @@ export default function ProfileView() {
                 <p className="text-base font-bold text-slate-800 dark:text-white mt-0.5">{totalHours.toFixed(1)} hrs</p>
               </div>
             </div>
-
-            <div className="p-4 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
-                <Video size={18} />
-              </div>
-              <div>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">VC Room Events</p>
-                <p className="text-base font-bold text-slate-800 dark:text-white mt-0.5">{virtualMeetings} Sessions</p>
-              </div>
-            </div>
           </div>
 
-          {/* Preferences Settings Form */}
           <div className="p-5 rounded-2xl bg-white border border-slate-200/60 dark:bg-slate-900 dark:border-slate-800/80 shadow-xs space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
               <SlidersHorizontal size={16} className="text-slate-400" />
@@ -141,6 +177,13 @@ export default function ProfileView() {
                 </div>
               )}
 
+              {errorMsg && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-400 text-xs">
+                  <AlertCircle size={16} className="shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Default Building Selection */}
                 <div className="space-y-1">
@@ -149,9 +192,9 @@ export default function ProfileView() {
                     <span>Preferred Building</span>
                   </label>
                   <select
-                    value={selectedBuilding}
-                    onChange={(e) => setSelectedBuilding(e.target.value as any)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-205 bg-slate-50 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    value={prefBuilding}
+                    onChange={(e) => setPrefBuilding(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-205 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
                     {
                       buildingList.map((bld, i) => (
@@ -168,19 +211,13 @@ export default function ProfileView() {
                     <span>Preferred Floor</span>
                   </label>
                   <select
-                    value={selectedFloor}
-                    onChange={(e) => setSelectedFloor(e.target.value as any)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-205 bg-slate-50 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    value={prefFloor}
+                    onChange={(e) => setPrefFloor(e.target.value)}
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-205 bg-slate-50 outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   >
-                    {selectedBuilding === "Main HQ" ? (
-                      <>
-                        <option value="Ground Floor">Ground Floor</option>
-                        <option value="1st Floor">1st Floor</option>
-                        <option value="2nd Floor">2nd Floor</option>
-                      </>
-                    ) : (
-                      <option value="1st Floor">1st Floor</option>
-                    )}
+                    {(buildingList.find(b => b._id === prefBuilding) || buildingList[0])?.floors?.map((flr, i) => (
+                      <option key={i} value={flr._id}>{flr.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -203,10 +240,11 @@ export default function ProfileView() {
               {/* Submit */}
               <button
                 type="submit"
-                className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                disabled={loading}
+                className="py-2 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-colors shadow-md shadow-blue-500/10 flex items-center justify-center gap-1.5 active:scale-[0.98] disabled:opacity-50"
               >
                 <Save size={14} />
-                <span>Save Preferences</span>
+                <span>{loading ? "Saving..." : "Save Preferences"}</span>
               </button>
             </form>
           </div>

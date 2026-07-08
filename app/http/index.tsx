@@ -28,6 +28,7 @@ export const rescheduleMyBookings = (id: string, data: any) => api.put(`/booking
 export const cancelMyBookings = (id: string) => api.put(`/bookings/cancelBooking/${id}`);
 export const masterData = () => api.get(`/bookings/master-data`)
 export const calenderData = (params?: any) => api.get(`/bookings/calendar`, { params })
+export const editMyProfile = (data: any) => api.put(`/auth/editProfile`, data)
 
 
 

@@ -30,7 +30,7 @@ function MainAppShell() {
     try {
       const response = await profile();
       if (response?.status === 200) {
-        setCurrentUser(response.data);
+        setCurrentUser(response.data?.user);
         setIsAuthenticated(true);
         setSplashVisible(false);
       }
