@@ -178,7 +178,7 @@ export default function Departments() {
                                     placeholder="E.g., Engineering"
                                     value={deptName}
                                     onChange={(e) => setDeptName(e.target.value)}
-                                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                                 />
                             </div>
 
@@ -190,7 +190,7 @@ export default function Departments() {
                                     min="0"
                                     value={deptOrder}
                                     onChange={(e) => setDeptOrder(parseInt(e.target.value) || 0)}
-                                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                                 />
                             </div>
 

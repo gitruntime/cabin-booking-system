@@ -373,7 +373,7 @@ export default function UsersList() {
                     placeholder="e.g. John Smith"
                     value={newUserName}
                     onChange={(e) => setNewUserName(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -384,7 +384,7 @@ export default function UsersList() {
                     placeholder="e.g. Senior Engineer"
                     value={newUserDesignation}
                     onChange={(e) => setNewUserDesignation(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -399,7 +399,7 @@ export default function UsersList() {
                     placeholder="user@company.com"
                     value={newUserEmail}
                     onChange={(e) => setNewUserEmail(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -410,7 +410,7 @@ export default function UsersList() {
                     placeholder="+1 234 567 8900"
                     value={newUserPhone}
                     onChange={(e) => setNewUserPhone(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -425,7 +425,7 @@ export default function UsersList() {
                     placeholder="Min. 8 characters"
                     value={newUserPassword}
                     onChange={(e) => setNewUserPassword(e.target.value)}
-                    className="w-full px-2.5 py-1.5 pr-9 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 pr-9 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                   <button
                     type="button"
@@ -556,7 +556,7 @@ export default function UsersList() {
                     required
                     value={editUserName}
                     onChange={(e) => setEditUserName(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -567,7 +567,7 @@ export default function UsersList() {
                     placeholder="e.g. Senior Engineer"
                     value={editUserDesignation}
                     onChange={(e) => setEditUserDesignation(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -581,7 +581,7 @@ export default function UsersList() {
                     required
                     value={editUserEmail}
                     onChange={(e) => setEditUserEmail(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -591,7 +591,7 @@ export default function UsersList() {
                     placeholder="+1 234 567 8900"
                     value={editUserPhone}
                     onChange={(e) => setEditUserPhone(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
               </div>

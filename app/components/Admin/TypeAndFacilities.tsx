@@ -322,7 +322,7 @@ export default function TypeAndFacilities() {
                   placeholder="E.g., Board Room"
                   value={typeName}
                   onChange={(e) => setTypeName(e.target.value)}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 />
               </div>
 
@@ -334,7 +334,7 @@ export default function TypeAndFacilities() {
                   min="0"
                   value={typeOrder}
                   onChange={(e) => setTypeOrder(parseInt(e.target.value) || 0)}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 />
               </div>
 
@@ -375,7 +375,7 @@ export default function TypeAndFacilities() {
                   placeholder="E.g., Projector"
                   value={facilityName}
                   onChange={(e) => setFacilityName(e.target.value)}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 />
               </div>
 
@@ -387,7 +387,7 @@ export default function TypeAndFacilities() {
                   min="0"
                   value={facilityOrder}
                   onChange={(e) => setFacilityOrder(parseInt(e.target.value) || 0)}
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 />
               </div>
 

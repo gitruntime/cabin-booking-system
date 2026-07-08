@@ -389,7 +389,7 @@ export default function CabinatesHandle() {
                     placeholder="E.g., Board Room C"
                     value={cabinName}
                     onChange={(e) => setCabinName(e.target.value)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
 
@@ -459,7 +459,7 @@ export default function CabinatesHandle() {
                     max="100"
                     value={capacity}
                     onChange={(e) => setCapacity(parseInt(e.target.value) || 1)}
-                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                    className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 font-normal outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                   />
                 </div>
               </div>
