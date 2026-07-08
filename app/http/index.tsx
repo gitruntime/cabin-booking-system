@@ -58,5 +58,7 @@ export const deleteType = (id: string) => api.delete(`/cabins/deleteType/${id}`)
 export const createFacility = (data: any) => api.post("/cabins/createFacility", data);
 export const updateFacility = (id: string, data: any) => api.put(`/cabins/updateFacility/${id}`, data)
 export const deleteFacility = (id: string) => api.delete(`/cabins/deleteFacility/${id}`)
+export const getHistory = () => api.get(`/cabins/history`)
+export const getReport = () => api.get(`/cabins/statistics`)
 
 export default api;

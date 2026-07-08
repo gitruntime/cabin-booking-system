@@ -4,13 +4,28 @@ import {
   FileSpreadsheet,
   FileText
 } from "lucide-react";
-import { useBooking } from "../../context/BookingContext";
+import React, { useEffect, useState } from "react";
+import { getHistory } from "../../http";
 
 export default function History() {
-  const {
-    cabins,
-    bookings,
-  } = useBooking();
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setLoading(true);
+      try {
+        const res = await getHistory();
+        const list = res.data?.data || res.data || [];
+        setHistoryData(list);
+      } catch (error) {
+        console.error("Failed to fetch history logs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHistory();
+  }, []);
 
 
 
@@ -18,11 +33,10 @@ export default function History() {
 
   // CSV Exporter Simulation
   const handleExportCSV = (type: "excel" | "pdf") => {
-    // Generate simple CSV content of bookings
-    const headers = "Booking ID,Room,User,Date,Start,End,Attendees,Purpose,Department,Status\n";
-    const rows = bookings.map(b => {
-      const cabin = cabins.find(c => c._id === b.cabinId);
-      return `"${b.id}","${cabin?.name || 'Deleted'}","${b.userName}","${b.date}","${b.startTime}","${b.endTime}",${b.attendees},"${b.purpose}","${b.department}","${b.status}"`;
+    // Generate simple CSV content of history logs
+    const headers = "Booking ID,Room,Host,Date,Time,Purpose,Department,Status\n";
+    const rows = historyData.map(b => {
+      return `"${b.bookingId || ''}","${b.room || ''}","${b.host || ''}","${b.date || ''}","${b.time || ''}","${b.purpose || ''}","${b.department || ''}","${b.status || ''}"`;
     }).join("\n");
 
     const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(headers + rows);
@@ -77,15 +91,26 @@ export default function History() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {bookings.map((b) => {
-                const cabin = cabins.find(c => c._id === b.cabinId);
-                return (
-                  <tr key={b.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-855/20 transition-colors">
-                    <td className="p-3 font-semibold text-slate-850 dark:text-slate-200">{cabin?.name || "Deleted Cabin"}</td>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                    <span className="inline-block animate-pulse">Loading utilization reports...</span>
+                  </td>
+                </tr>
+              ) : historyData.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-slate-400">
+                    No history logs found.
+                  </td>
+                </tr>
+              ) : (
+                historyData.map((b, idx) => (
+                  <tr key={b.bookingId || idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-855/20 transition-colors">
+                    <td className="p-3 font-semibold text-slate-850 dark:text-slate-200">{b.room}</td>
                     <td className="p-3 font-bold">{b.purpose}</td>
-                    <td className="p-3">{b.userName}</td>
+                    <td className="p-3">{b.host}</td>
                     <td className="p-3 font-mono">{b.date}</td>
-                    <td className="p-3 font-semibold">{b.startTime} - {b.endTime}</td>
+                    <td className="p-3 font-semibold">{b.time}</td>
                     <td className="p-3 uppercase">{b.department}</td>
                     <td className="p-3 text-right">
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${b.status === 'checked-in' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300' :
@@ -96,8 +121,8 @@ export default function History() {
                       </span>
                     </td>
                   </tr>
-                );
-              })}
+                ))
+              )}
             </tbody>
           </table>
         </div>
