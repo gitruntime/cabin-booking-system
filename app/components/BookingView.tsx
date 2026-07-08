@@ -39,11 +39,78 @@ export default function BookingView() {
   const buildingDropdownRef = useRef(null)
   const floorDropdownRef = useRef(null)
   const [floorList, setFloorList] = useState<FloorType[]>();
+  const getLocalDateString = (dateObj: Date = new Date()) => {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayStr = getLocalDateString();
+  const oneWeekLaterStr = getLocalDateString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const hh = String(h).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        slots.push(`${hh}:${mm}`);
+      }
+    }
+    return slots;
+  };
+  const timeSlots = generateTimeSlots();
+
+  const getThirtyMinsAfter = (timeStr: string): string => {
+    if (!timeStr) return "";
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    let totalMinutes = hours * 60 + minutes + 30;
+    if (totalMinutes >= 24 * 60) {
+      totalMinutes = 24 * 60 - 1;
+    }
+    const nextHours = Math.floor(totalMinutes / 60);
+    const nextMinutes = totalMinutes % 60;
+    const pad = (num: number) => String(num).padStart(2, "0");
+    return `${pad(nextHours)}:${pad(nextMinutes)}`;
+  };
+
+  const getFirstAvailableStartTime = () => {
+    const now = new Date();
+    const currentHH = now.getHours();
+    const currentMM = now.getMinutes();
+
+    const firstAvailable = timeSlots.find(slot => {
+      const [slotHH, slotMM] = slot.split(':').map(Number);
+      if (slotHH < currentHH) return false;
+      if (slotHH === currentHH && slotMM <= currentMM) return false;
+      return true;
+    });
+
+    return firstAvailable || "09:00";
+  };
+
+  const isTimeSlotDisabled = (slot: string) => {
+    if (date < todayStr) return true;
+    if (date === todayStr) {
+      const now = new Date();
+      const currentHH = now.getHours();
+      const currentMM = now.getMinutes();
+      const [slotHH, slotMM] = slot.split(':').map(Number);
+      if (slotHH < currentHH) return true;
+      if (slotHH === currentHH && slotMM <= currentMM) return true;
+    }
+    return false;
+  };
+
+  const initialStart = getFirstAvailableStartTime();
+  const initialEnd = getThirtyMinsAfter(initialStart);
+
   // Form states
   const [cabinId, setCabinId] = useState("");
-  const [date, setDate] = useState("2026-07-01");
-  const [startTime, setStartTime] = useState("14:30");
-  const [endTime, setEndTime] = useState("15:30");
+  const [date, setDate] = useState(todayStr);
+  const [startTime, setStartTime] = useState(initialStart);
+  const [endTime, setEndTime] = useState(initialEnd);
   const [isEndTimeManuallySet, setIsEndTimeManuallySet] = useState(false);
   const [attendees, setAttendees] = useState(4);
   const [purpose, setPurpose] = useState("");
@@ -151,6 +218,23 @@ export default function BookingView() {
     setRecommendations(recs.filter(r => r._id !== cabinId));
   }, [cabinId, date, startTime, endTime, attendees, cabinList]);
 
+  // Adjust time selections if date changes to today and previous time is selected
+  useEffect(() => {
+    if (date === todayStr) {
+      const now = new Date();
+      const currentHH = now.getHours();
+      const currentMM = now.getMinutes();
+      const [startHH, startMM] = startTime.split(':').map(Number);
+
+      const isPast = startHH < currentHH || (startHH === currentHH && startMM <= currentMM);
+      if (isPast) {
+        const nextAvailable = getFirstAvailableStartTime();
+        setStartTime(nextAvailable);
+        setEndTime(getThirtyMinsAfter(nextAvailable));
+      }
+    }
+  }, [date]);
+
   useEffect(() => {
     if (departments) {
       setDepartment(departments[0].name);
@@ -222,18 +306,6 @@ export default function BookingView() {
     return (eH * 60 + eM) - (sH * 60 + sM);
   };
 
-  const getThirtyMinsAfter = (timeStr: string): string => {
-    if (!timeStr) return "";
-    const [hours, minutes] = timeStr.split(":").map(Number);
-    let totalMinutes = hours * 60 + minutes + 30;
-    if (totalMinutes >= 24 * 60) {
-      totalMinutes = 24 * 60 - 1;
-    }
-    const nextHours = Math.floor(totalMinutes / 60);
-    const nextMinutes = totalMinutes % 60;
-    const pad = (num: number) => String(num).padStart(2, "0");
-    return `${pad(nextHours)}:${pad(nextMinutes)}`;
-  };
 
   const handleStartTimeChange = (val: string) => {
     setStartTime(val);
@@ -327,7 +399,7 @@ export default function BookingView() {
                   <button
                     type="button"
                     onClick={() => setIsBuildingDropdownOpen(!isBuildingDropdownOpen)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200 flex items-center justify-between"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 flex items-center justify-between"
                   >
                     <span>{selectedBuilding?.name}</span>
                     <ChevronDown
@@ -379,7 +451,7 @@ export default function BookingView() {
                   <button
                     type="button"
                     onClick={() => setIsFloorDropdownOpen(!isFloorDropdownOpen)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200 flex items-center justify-between"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 flex items-center justify-between"
                   >
                     <span>{selectedFloor?.name}</span>
                     <ChevronDown
@@ -430,7 +502,7 @@ export default function BookingView() {
                 <select
                   value={cabinId}
                   onChange={(e) => setCabinId(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   {filteredCabins.length > 0 ? (
                     filteredCabins.map((c, i) => (
@@ -458,37 +530,48 @@ export default function BookingView() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  min={todayStr}
+                  max={oneWeekLaterStr}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 />
               </div>
 
               {/* Start time */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-slate-650 dark:text-slate-350 flex items-center gap-1.5">
                   <Clock size={14} className="text-slate-400" />
                   <span>Start Time</span>
                 </label>
-                <input
-                  type="time"
+                <select
                   value={startTime}
                   onChange={(e) => handleStartTimeChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
-                />
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                >
+                  {timeSlots.map((slot) => (
+                    <option key={slot} value={slot} disabled={isTimeSlotDisabled(slot)}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {/* End time */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-slate-650 dark:text-slate-350 flex items-center gap-1.5">
                   <Clock size={14} className="text-slate-400" />
                   <span>End Time</span>
                 </label>
-                <input
-                  type="time"
+                <select
                   value={endTime}
-                  min={startTime}
                   onChange={(e) => handleEndTimeChange(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
-                />
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+                >
+                  {timeSlots.map((slot) => (
+                    <option key={slot} value={slot} disabled={slot <= startTime}>
+                      {slot}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -507,7 +590,7 @@ export default function BookingView() {
                   max="100"
                   value={attendees}
                   onChange={(e) => setAttendees(parseInt(e.target.value) || 1)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 />
               </div>
 
@@ -520,7 +603,7 @@ export default function BookingView() {
                 <select
                   value={department}
                   onChange={(e) => setDepartment(e.target.value as any)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 >
                   {
                     departments.map((dept, i) => (
@@ -541,9 +624,9 @@ export default function BookingView() {
                       : availability === "completed"
                         ? "bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-950/20 dark:border-blue-900/50 dark:text-blue-400"
                         : availability === "cancelled"
-                          ? "bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
+                          ? "bg-slate-50 border-slate-200 text-slate-500 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400"
                           : availability === "maintenance"
-                            ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900/50 dark:border-slate-800 dark:text-slate-400"
+                            ? "bg-slate-50 border-slate-200 text-slate-600 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-400"
                             : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-900/50 dark:text-emerald-400"
                   }`}>
                   <span className={`h-2.5 w-2.5 rounded-full shrink-0 animate-pulse ${availability === "available" ? "bg-emerald-500" :
@@ -576,7 +659,7 @@ export default function BookingView() {
                 onChange={(e) => setPurpose(e.target.value)}
                 placeholder="E.g., Weekly Sync, Budget Approval, Candidate Evaluation..."
                 rows={3}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200"
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-xs outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
               />
             </div>
 

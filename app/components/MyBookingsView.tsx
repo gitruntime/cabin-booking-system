@@ -22,12 +22,80 @@ export default function MyBookingsView() {
 
   const [myBookingsList, setMyBookingsList] = useState<any[]>([]);
   const [loading, setloading] = useState<boolean>(true);
+
+  const getLocalDateString = (dateObj: Date = new Date()) => {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const todayStr = getLocalDateString();
+  const oneWeekLaterStr = getLocalDateString(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const hh = String(h).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        slots.push(`${hh}:${mm}`);
+      }
+    }
+    return slots;
+  };
+  const timeSlots = generateTimeSlots();
+
+  const isTimeSlotDisabled = (slot: string, selectedDate: string) => {
+    if (selectedDate < todayStr) return true;
+    if (selectedDate === todayStr) {
+      const now = new Date();
+      const currentHH = now.getHours();
+      const currentMM = now.getMinutes();
+      const [slotHH, slotMM] = slot.split(':').map(Number);
+      if (slotHH < currentHH) return true;
+      if (slotHH === currentHH && slotMM <= currentMM) return true;
+    }
+    return false;
+  };
+
   // Reschedule Modal
   const [rescheduleItem, setRescheduleItem] = useState<any>(null);
   const [newDate, setNewDate] = useState("");
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
   const [editError, setEditError] = useState("");
+
+  useEffect(() => {
+    if (newDate === todayStr && newStart) {
+      const now = new Date();
+      const currentHH = now.getHours();
+      const currentMM = now.getMinutes();
+      const [startHH, startMM] = newStart.split(':').map(Number);
+      
+      const isPast = startHH < currentHH || (startHH === currentHH && startMM <= currentMM);
+      if (isPast) {
+        const firstAvailable = timeSlots.find(slot => {
+          const [slotHH, slotMM] = slot.split(':').map(Number);
+          if (slotHH < currentHH) return false;
+          if (slotHH === currentHH && slotMM <= currentMM) return false;
+          return true;
+        }) || "09:00";
+        
+        setNewStart(firstAvailable);
+        
+        const [hours, minutes] = firstAvailable.split(":").map(Number);
+        let totalMinutes = hours * 60 + minutes + 30;
+        if (totalMinutes >= 24 * 60) {
+          totalMinutes = 24 * 60 - 1;
+        }
+        const nextHours = Math.floor(totalMinutes / 60);
+        const nextMinutes = totalMinutes % 60;
+        const pad = (num: number) => String(num).padStart(2, "0");
+        setNewEnd(`${pad(nextHours)}:${pad(nextMinutes)}`);
+      }
+    }
+  }, [newDate]);
 
   // Cancel Modal
   const [cancelItem, setCancelItem] = useState<any>(null);
@@ -330,10 +398,12 @@ export default function MyBookingsView() {
 
               {/* Date */}
               <div className="space-y-1">
-                <label className="font-semibold text-slate-600 dark:text-slate-400">Meeting Date</label>
+                <label className="font-semibold text-slate-650 dark:text-slate-350">Meeting Date</label>
                 <input
                   type="date"
                   value={newDate}
+                  min={todayStr}
+                  max={oneWeekLaterStr}
                   onChange={(e) => setNewDate(e.target.value)}
                   className="w-full px-2.5 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                 />
@@ -342,22 +412,32 @@ export default function MyBookingsView() {
               {/* Start & End Times */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-600 dark:text-slate-400">Start Time</label>
-                  <input
-                    type="time"
+                  <label className="font-semibold text-slate-650 dark:text-slate-350">Start Time</label>
+                  <select
                     value={newStart}
                     onChange={(e) => setNewStart(e.target.value)}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                  />
+                  >
+                    {timeSlots.map((slot) => (
+                      <option key={slot} value={slot} disabled={isTimeSlotDisabled(slot, newDate)}>
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-1">
-                  <label className="font-semibold text-slate-600 dark:text-slate-400">End Time</label>
-                  <input
-                    type="time"
+                  <label className="font-semibold text-slate-650 dark:text-slate-350">End Time</label>
+                  <select
                     value={newEnd}
                     onChange={(e) => setNewEnd(e.target.value)}
                     className="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none focus:bg-white dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-                  />
+                  >
+                    {timeSlots.map((slot) => (
+                      <option key={slot} value={slot} disabled={slot <= newStart}>
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

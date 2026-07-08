@@ -34,11 +34,72 @@ export default function FloorMapView() {
   const [hoveredCabin, setHoveredCabin] = useState<CabinType | null>(null);
   const [hoverPos, setHoverPos] = useState({ x: 0, y: 0 });
 
+  const getLocalDateString = (dateObj: Date = new Date()) => {
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 30) {
+        const hh = String(h).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        slots.push(`${hh}:${mm}`);
+      }
+    }
+    return slots;
+  };
+  const timeSlots = generateTimeSlots();
+
+  const getFirstAvailableStartTime = () => {
+    const now = new Date();
+    const currentHH = now.getHours();
+    const currentMM = now.getMinutes();
+
+    const firstAvailable = timeSlots.find(slot => {
+      const [slotHH, slotMM] = slot.split(':').map(Number);
+      if (slotHH < currentHH) return false;
+      if (slotHH === currentHH && slotMM <= currentMM) return false;
+      return true;
+    });
+
+    return firstAvailable || "09:00";
+  };
+
+  const getThirtyMinsAfter = (timeStr: string): string => {
+    if (!timeStr) return "";
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    let totalMinutes = hours * 60 + minutes + 30;
+    if (totalMinutes >= 24 * 60) {
+      totalMinutes = 24 * 60 - 1;
+    }
+    const nextHours = Math.floor(totalMinutes / 60);
+    const nextMinutes = totalMinutes % 60;
+    const pad = (num: number) => String(num).padStart(2, "0");
+    return `${pad(nextHours)}:${pad(nextMinutes)}`;
+  };
+
+  const isTimeSlotDisabled = (slot: string) => {
+    const now = new Date();
+    const currentHH = now.getHours();
+    const currentMM = now.getMinutes();
+    const [slotHH, slotMM] = slot.split(':').map(Number);
+    if (slotHH < currentHH) return true;
+    if (slotHH === currentHH && slotMM <= currentMM) return true;
+    return false;
+  };
+
+  const initialStart = getFirstAvailableStartTime();
+  const initialEnd = getThirtyMinsAfter(initialStart);
+
   // Quick Book modal
   const [bookingCabin, setBookingCabin] = useState<CabinType | null>(null);
   const [purpose, setPurpose] = useState("");
-  const [startTime, setStartTime] = useState("14:00");
-  const [endTime, setEndTime] = useState("15:00");
+  const [startTime, setStartTime] = useState(initialStart);
+  const [endTime, setEndTime] = useState(initialEnd);
   const [attendees, setAttendees] = useState(4);
   const [dept, setDept] = useState<"HR" | "Finance" | "Executive" | "IT" | "Marketing" | "Sales">("IT");
   const [modalError, setModalError] = useState("");
@@ -98,6 +159,9 @@ export default function FloorMapView() {
     if (cabin.status === "maintenance") return;
     setBookingCabin(cabin);
     setAttendees(Math.min(4, cabin.capacity));
+    const nextStart = getFirstAvailableStartTime();
+    setStartTime(nextStart);
+    setEndTime(getThirtyMinsAfter(nextStart));
     setModalError("");
   };
 
@@ -148,7 +212,7 @@ export default function FloorMapView() {
     const cabinId = bookingCabin?._id;
     const buildingId = bookingCabin?.buildingId || buildingSelected?._id;
     const floorId = bookingCabin?.floorId || floorSelected?._id;
-    const date = "2026-07-01"; // Default today's date
+    const date = getLocalDateString();
 
     if (!cabinId) {
       setSubmitError("Please select a cabin.");
@@ -506,21 +570,31 @@ export default function FloorMapView() {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-600 dark:text-slate-400">Start Time</label>
-                  <input
-                    type="time"
+                  <select
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-[#0F172B] dark:text-slate-200"
-                  />
+                  >
+                    {timeSlots.map((slot) => (
+                      <option key={slot} value={slot} disabled={isTimeSlotDisabled(slot)}>
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="space-y-1">
                   <label className="font-semibold text-slate-600 dark:text-slate-400">End Time</label>
-                  <input
-                    type="time"
+                  <select
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 outline-none dark:border-slate-800 dark:bg-[#0F172B] dark:text-slate-200"
-                  />
+                  >
+                    {timeSlots.map((slot) => (
+                      <option key={slot} value={slot} disabled={slot <= startTime}>
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
