@@ -20,15 +20,10 @@ export default function Header() {
   const profileRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  // Time simulator starting at July 1, 2026 13:43:41 PM
+  // Actual current local time and date updater
   useEffect(() => {
-    // We'll advance a mock clock based on real elapsed time
-    const baseTime = new Date("2026-07-01T13:43:41").getTime();
-    const startTime = Date.now();
-
     const updateTime = () => {
-      const elapsed = Date.now() - startTime;
-      const currentSimulated = new Date(baseTime + elapsed);
+      const now = new Date();
 
       const timeFormatter = new Intl.DateTimeFormat("en-IN", {
         hour: "numeric",
@@ -46,8 +41,8 @@ export default function Header() {
         timeZone: "Asia/Kolkata"
       });
 
-      setTimeStr(timeFormatter.format(currentSimulated));
-      setDateStr(dateFormatter.format(currentSimulated));
+      setTimeStr(timeFormatter.format(now));
+      setDateStr(dateFormatter.format(now));
     };
 
     updateTime();
