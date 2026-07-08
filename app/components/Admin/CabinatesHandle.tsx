@@ -208,7 +208,7 @@ export default function CabinatesHandle() {
             </div>) :
             <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                   <th className="p-3">Room Name</th>
                   <th className="p-3">Type</th>
                   <th className="p-3">Capacity</th>
@@ -219,7 +219,7 @@ export default function CabinatesHandle() {
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {cabinList && cabinList.map((cabin, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                  <tr key={i} className="">
                     <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{cabin?.name}</td>
                     <td className="p-3 capitalize">
                       {(() => {
@@ -264,7 +264,7 @@ export default function CabinatesHandle() {
                       </button>
                       <button
                         onClick={() => handleOpenEdit(cabin)}
-                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 cursor-pointer"
                         title="Edit cabin details"
                       >
                         <Edit3 size={12} />

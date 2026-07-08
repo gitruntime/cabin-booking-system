@@ -211,7 +211,7 @@ export default function UsersList() {
               <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
                 <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                    <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                       <th className="p-3">Employee Name</th>
                       <th className="p-3">Email Address</th>
                       <th className="p-3">Department</th>
@@ -234,7 +234,7 @@ export default function UsersList() {
                             <td className="p-3 text-right space-x-1.5 shrink-0">
                               <button
                                 onClick={() => handleOpenEditUser(user)}
-                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 cursor-pointer"
                                 title="Edit user details"
                               >
                                 <Edit3 size={12} />

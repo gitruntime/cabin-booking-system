@@ -118,7 +118,7 @@ export default function Departments() {
                     ) : (
                         <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
                             <thead>
-                                <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                                <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                                     <th className="p-3">Department Name</th>
                                     <th className="p-3">Display Order</th>
                                     <th className="p-3 text-right">Actions</th>
@@ -126,20 +126,20 @@ export default function Departments() {
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {departments.map((dept, i) => (
-                                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                                    <tr key={i} className="">
                                         <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{dept.name}</td>
                                         <td className="p-3 font-semibold">{dept.order}</td>
                                         <td className="p-3 text-right space-x-1.5 shrink-0">
                                             <button
                                                 onClick={() => handleOpenEdit(dept)}
-                                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 cursor-pointer"
                                                 title="Edit department"
                                             >
                                                 <Edit3 size={12} />
                                             </button>
                                             <button
                                                 onClick={() => setDeptToDelete(dept)}
-                                                className="p-1.5 rounded-lg border border-red-200 hover:bg-red-55 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-955/20"
+                                                className="p-1.5 rounded-lg border border-red-200 hover:bg-red-55 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-955/20 cursor-pointer"
                                                 title="Delete department"
                                             >
                                                 <Trash2 size={12} />

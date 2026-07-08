@@ -76,7 +76,7 @@ export default function History() {
         <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
           <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+              <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                 <th className="p-3">Room</th>
                 <th className="p-3">Purpose</th>
                 <th className="p-3">Host</th>

@@ -295,7 +295,7 @@ export default function BuildingAndFloors() {
             <div className="overflow-x-auto border border-slate-100 rounded-xl dark:border-slate-800/60">
               <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                  <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                     <th className="p-3">Floor Name</th>
                     <th className="p-3">Level</th>
                     <th className="p-3 text-right">Actions</th>
@@ -303,7 +303,7 @@ export default function BuildingAndFloors() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredFloors.map(f => (
-                    <tr key={f._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                    <tr key={f._id} className="">
                       <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{f.name}</td>
                       <td className="p-3">
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
@@ -313,7 +313,7 @@ export default function BuildingAndFloors() {
                       <td className="p-3 text-right space-x-1.5 shrink-0">
                         <button
                           onClick={() => handleOpenEditFloor(f)}
-                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 cursor-pointer"
                           title="Edit floor"
                         >
                           <Edit3 size={12} />

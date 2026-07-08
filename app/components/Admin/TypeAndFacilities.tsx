@@ -197,7 +197,7 @@ export default function TypeAndFacilities() {
             ) : (
               <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                  <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                     <th className="p-3">Type Name</th>
                     <th className="p-3">Display Order</th>
                     <th className="p-3 text-right">Actions</th>
@@ -205,20 +205,20 @@ export default function TypeAndFacilities() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {types.map((type, i) => (
-                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                    <tr key={i} className="">
                       <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{type.name}</td>
                       <td className="p-3 font-semibold">{type.order}</td>
                       <td className="p-3 text-right space-x-1.5 shrink-0">
                         <button
                           onClick={() => handleOpenEditType(type)}
-                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 cursor-pointer"
                           title="Edit type"
                         >
                           <Edit3 size={12} />
                         </button>
                         <button
                           onClick={() => setTypeToDelete(type)}
-                          className="p-1.5 rounded-lg border border-red-200 hover:bg-red-55 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-955/20"
+                          className="p-1.5 rounded-lg border border-red-200 hover:bg-red-55 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-955/20 cursor-pointer"
                           title="Delete type"
                         >
                           <Trash2 size={12} />
@@ -260,7 +260,7 @@ export default function TypeAndFacilities() {
             ) : (
               <table className="w-full text-left border-collapse text-xs font-medium text-slate-650 dark:text-slate-350">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-850 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
+                  <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold border-b border-slate-100 dark:border-slate-800">
                     <th className="p-3">Facility Name</th>
                     <th className="p-3">Display Order</th>
                     <th className="p-3 text-right">Actions</th>
@@ -268,20 +268,20 @@ export default function TypeAndFacilities() {
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {facilities.map((fac, i) => (
-                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-850/20 transition-colors">
+                    <tr key={i} className="">
                       <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{fac.name}</td>
                       <td className="p-3 font-semibold">{fac.order}</td>
                       <td className="p-3 text-right space-x-1.5 shrink-0">
                         <button
                           onClick={() => handleOpenEditFacility(fac)}
-                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800"
+                          className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 transition-colors dark:border-slate-800 dark:text-slate-400 dark:hover:bg-slate-800 cursor-pointer"
                           title="Edit facility"
                         >
                           <Edit3 size={12} />
                         </button>
                         <button
                           onClick={() => setFacilityToDelete(fac)}
-                          className="p-1.5 rounded-lg border border-red-200 hover:bg-red-55 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-955/20"
+                          className="p-1.5 rounded-lg border border-red-200 hover:bg-red-55 text-red-600 transition-colors dark:border-red-900/40 dark:text-red-400 dark:hover:bg-red-955/20 cursor-pointer"
                           title="Delete facility"
                         >
                           <Trash2 size={12} />
